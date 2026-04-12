@@ -1,0 +1,78 @@
+This is a placeholder for Excel file. Please use the table below to record your test data manually.
+
+=== STARTUP TIME TEST DATA (20 iterations) ===
+
+Iteration | Time (seconds)
+----------|---------------
+1         |
+2         |
+3         |
+4         |
+5         |
+6         |
+7         |
+8         |
+9         |
+10        |
+11        |
+12        |
+13        |
+14        |
+15        |
+16        |
+17        |
+18        |
+19        |
+20        |
+
+Statistics:
+Mean:   __________ seconds
+Median: __________ seconds
+Min:    __________ seconds
+Max:    __________ seconds
+StdDev: __________ seconds
+
+=== MEMORY USAGE TEST DATA ===
+
+Time Point    | Memory (MB)
+--------------|------------
+Startup (0s)  |
+30 seconds    |
+1 minute      |
+2 minutes     |
+5 minutes     |
+
+Average: __________ MB
+
+=== PACKAGE SIZE ===
+
+File: F:\MotiBuddy1\src-tauri\target\release\MotiBuddy.exe
+Size: __________ MB (__ bytes)
+
+=== VOICE RECOGNITION ACCURACY ===
+
+Test Phrase                                      | Accuracy
+-------------------------------------------------|----------
+Submit report tomorrow at 3pm                    |
+Buy groceries this weekend                       |
+Call mom urgent                                  |
+Finish project by January 15th                   |
+Meeting with team next Monday at 10am            |
+Pay electricity bill before Friday               |
+Review document important                        |
+Walk the dog every day                           |
+Doctor appointment March 3rd at 2pm              |
+Buy birthday gift for Sarah next week            |
+
+Overall Accuracy: __________%
+
+=== CROSS-WINDOW COMMUNICATION LATENCY ===
+
+Event Type              | Average Latency (ms)
+------------------------|---------------------
+pet:state_changed       |
+task:completed          |
+task:created            |
+achievement:unlocked    |
+
+Overall Average: __________ ms

@@ -1,0 +1,528 @@
+% ============================================
+% CHAPTER 5: IMPLEMENTATION
+% ============================================
+% Status: IN PROGRESS - Draft Version
+% ============================================
+
+\chapter{Implementation}
+\label{chap:implementation}
+
+\section{Development Environment}
+\label{sec:dev-environment}
+
+\completed
+
+The development environment was configured to support efficient iteration while maintaining code quality. Table \ref{tab:dev-tools} summarizes the development tools and their purposes.
+
+\begin{table}[htbp]
+\centering
+\caption{Development Environment Configuration}
+\label{tab:dev-tools}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Category} & \textbf{Tool} & \textbf{Purpose} \\
+\midrule
+IDE & Visual Studio Code & Code editing with TypeScript and Rust support \\
+Version Control & Git & Source code management \\
+Package Manager & pnpm & Dependency management \\
+Build Tool & Vite & Fast development builds \\
+Desktop Framework & Tauri CLI & Cross-platform compilation \\
+Linting & ESLint & Code quality enforcement \\
+Formatting & Prettier & Consistent code style \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Visual Studio Code was configured with extensions for TypeScript (intellisense, refactoring), Rust (rust-analyzer), and Tauri (debugging support). The development workflow utilized Vite's Hot Module Replacement (HMR) for rapid iteration, with changes reflected in the application within milliseconds.
+
+The build pipeline consists of two stages: (1) Vite bundles the React frontend into static assets, and (2) Tauri compiles the Rust backend and packages the application for distribution. This separation enables independent frontend development while ensuring seamless integration in production builds.
+
+\section{Core Implementation Details}
+\label{sec:core-implementation}
+
+\subsection{Task Management Implementation}
+
+\completed
+
+The task management system is implemented through the \texttt{TaskContext} React context, which provides centralized state management and operations. The context follows the provider pattern, making task data and operations available throughout the component tree.
+
+\begin{lstlisting}[language=TypeScript, caption=TaskContext Interface]
+interface TaskContextType {
+  tasks: Task[];
+  addTask: (task: Omit<Task, 'id' | 'createdAt'>) => Promise<void>;
+  updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
+  completeTask: (id: string) => Promise<void>;
+  filterTasks: (filters: TaskFilters) => Task[];
+  sortTasks: (tasks: Task[], sortBy: SortOption) => Task[];
+  searchTasks: (query: string) => Task[];
+}
+\end{lstlisting}
+
+Task CRUD operations are implemented with optimistic updates for responsive UI feedback. When a task is created, it immediately appears in the interface while the storage operation proceeds asynchronously. If storage fails, the UI reverts to the previous state with an error notification.
+
+Automatic overdue detection runs every minute through a \texttt{setInterval} callback:
+
+\begin{lstlisting}[language=TypeScript, caption=Overdue Detection Implementation]
+useEffect(() => {
+  const checkOverdue = () => {
+    const now = new Date();
+    setTasks(prevTasks => 
+      prevTasks.map(task => {
+        if (task.status === 'pending' && task.dueDate < now) {
+          // Trigger pet consequence for overdue task
+          petContext.applyOverdueConsequence(task);
+          return { ...task, status: 'overdue' };
+        }
+        return task;
+      })
+    );
+  };
+  
+  const interval = setInterval(checkOverdue, 60000);
+  return () => clearInterval(interval);
+}, [petContext]);
+\end{lstlisting}
+
+Sorting algorithms support multiple criteria:
+
+\begin{lstlisting}[language=TypeScript, caption=Task Sorting Implementation]
+const sortFunctions: Record<SortOption, (a: Task, b: Task) => number> = {
+  dueDate: (a, b) => a.dueDate.getTime() - b.dueDate.getTime(),
+  priority: (a, b) => priorityWeight(b.priority) - priorityWeight(a.priority),
+  createdAt: (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+  alphabetical: (a, b) => a.title.localeCompare(b.title)
+};
+
+function priorityWeight(p: TaskPriority): number {
+  return { urgent: 4, high: 3, medium: 2, low: 1 }[p];
+}
+\end{lstlisting}
+
+\subsection{Virtual Pet and Integration Implementation}
+
+\completed
+
+The \texttt{PetContext} manages virtual pet state and implements the integration with task management:
+
+\begin{lstlisting}[language=TypeScript, caption=PetContext Integration Methods]
+interface PetContextType {
+  pet: Pet | null;
+  feedPet: () => Promise<void>;
+  playWithPet: () => Promise<void>;
+  applyTaskCompletionReward: (task: Task) => Promise<void>;
+  applyOverdueConsequence: (task: Task) => Promise<void>;
+}
+\end{lstlisting}
+
+The task completion reward mechanism implements the core integration logic:
+
+\begin{lstlisting}[language=TypeScript, caption=Task Completion Reward Implementation]
+const applyTaskCompletionReward = async (task: Task) => {
+  if (!pet) return;
+  
+  const priorityMultiplier = {
+    urgent: 3,
+    high: 2,
+    medium: 1,
+    low: 0.5
+  }[task.priority];
+  
+  const updates: Partial<Pet> = {
+    hunger: Math.max(0, pet.hunger - 15 * priorityMultiplier),
+    happiness: Math.min(100, pet.happiness + 10 * priorityMultiplier),
+    experience: pet.experience + 10 * priorityMultiplier,
+    lastFed: new Date()
+  };
+  
+  // Check for level up
+  if (updates.experience && updates.experience >= getLevelThreshold(pet.level)) {
+    updates.level = pet.level + 1;
+    showLevelUpNotification(updates.level);
+  }
+  
+  await updatePet(updates);
+  
+  // Trigger celebration animation
+  setPetAnimation('celebrating');
+};
+\end{lstlisting}
+
+The auto-decay system runs on a 5-minute interval:
+
+\begin{lstlisting}[language=TypeScript, caption=Pet Stat Decay Implementation]
+useEffect(() => {
+  const applyDecay = () => {
+    if (!pet) return;
+    
+    const now = new Date();
+    const minutesSinceLastUpdate = 
+      (now.getTime() - pet.lastInteraction.getTime()) / 60000;
+    const intervals = Math.floor(minutesSinceLastUpdate / 5);
+    
+    if (intervals > 0) {
+      const updates: Partial<Pet> = {
+        hunger: Math.min(100, pet.hunger + 2 * intervals),
+        happiness: Math.max(0, pet.happiness - 1 * intervals),
+        energy: Math.min(100, pet.energy + 0.5 * intervals),
+      };
+      
+      // Health decay if hungry
+      if (updates.hunger && updates.hunger > 80) {
+        updates.health = Math.max(0, pet.health - 0.2 * intervals);
+      }
+      
+      updatePet(updates);
+    }
+  };
+  
+  const interval = setInterval(applyDecay, 300000); // 5 minutes
+  return () => clearInterval(interval);
+}, [pet]);
+\end{lstlisting}
+
+\subsection{Gamification and Achievement Implementation}
+
+\completed
+
+The achievement system tracks user progress across 12 achievements aligned with SDT needs:
+
+\begin{lstlisting}[language=TypeScript, caption=Achievement Definitions]
+const ACHIEVEMENTS: Achievement[] = [
+  // Autonomy achievements
+  {
+    id: 'first_step',
+    title: 'First Step',
+    description: 'Complete your first task',
+    category: 'autonomy',
+    maxProgress: 1
+  },
+  {
+    id: 'customizer',
+    title: 'Customizer',
+    description: 'Customize your pet appearance',
+    category: 'autonomy',
+    maxProgress: 1
+  },
+  
+  // Competence achievements
+  {
+    id: 'productivity_master',
+    title: 'Productivity Master',
+    description: 'Complete 50 tasks',
+    category: 'competence',
+    maxProgress: 50
+  },
+  {
+    id: 'streak_7',
+    title: 'Week Warrior',
+    description: 'Maintain a 7-day streak',
+    category: 'competence',
+    maxProgress: 7
+  },
+  
+  // Relatedness achievements
+  {
+    id: 'pet_friend',
+    title: 'Pet Friend',
+    description: 'Interact with your pet 100 times',
+    category: 'relatedness',
+    maxProgress: 100
+  },
+  {
+    id: 'level_10',
+    title: 'Growing Together',
+    description: 'Reach pet level 10',
+    category: 'relatedness',
+    maxProgress: 10
+  }
+];
+\end{lstlisting}
+
+Achievement progress is checked after relevant actions:
+
+\begin{lstlisting}[language=TypeScript, caption=Achievement Progress Check]
+const checkAchievements = (action: string, data?: any) => {
+  achievements.forEach(achievement => {
+    if (achievement.unlockedAt) return;
+    
+    let shouldUpdate = false;
+    
+    switch (achievement.id) {
+      case 'first_step':
+        if (action === 'task_completed') shouldUpdate = true;
+        break;
+      case 'productivity_master':
+        if (action === 'task_completed') shouldUpdate = true;
+        break;
+      case 'pet_friend':
+        if (action === 'pet_interaction') shouldUpdate = true;
+        break;
+      // ... additional cases
+    }
+    
+    if (shouldUpdate) {
+      updateAchievementProgress(achievement.id, 1);
+    }
+  });
+};
+\end{lstlisting}
+
+Streak calculation tracks consecutive days with completed tasks:
+
+\begin{lstlisting}[language=TypeScript, caption=Streak Calculation Algorithm]
+function calculateStreak(tasks: Task[]): number {
+  const completedTasks = tasks
+    .filter(t => t.status === 'completed')
+    .sort((a, b) => (b.completedAt?.getTime() || 0) - (a.completedAt?.getTime() || 0));
+  
+  if (completedTasks.length === 0) return 0;
+  
+  let streak = 0;
+  let currentDate = new Date();
+  currentDate.setHours(0, 0, 0, 0);
+  
+  for (const task of completedTasks) {
+    const taskDate = new Date(task.completedAt || '');
+    taskDate.setHours(0, 0, 0, 0);
+    
+    const daysDiff = Math.floor(
+      (currentDate.getTime() - taskDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    
+    if (daysDiff === streak) {
+      streak++;
+      currentDate = taskDate;
+    } else if (daysDiff > streak) {
+      break;
+    }
+  }
+  
+  return streak;
+}
+\end{lstlisting}
+
+\section{Desktop Widget and Persistent Engagement Implementation}
+\label{sec:widget-implementation}
+
+\completed
+
+The desktop widget is implemented as a separate Tauri window with specialized configuration:
+
+\begin{lstlisting}[language=Rust, caption=Tauri Window Configuration (tauri.conf.json)]
+{
+  "tauri": {
+    "windows": [
+      {
+        "label": "main",
+        "url": "index.html",
+        "width": 1600,
+        "height": 900,
+        "resizable": true
+      },
+      {
+        "label": "widget",
+        "url": "widget.html",
+        "width": 360,
+        "height": 600,
+        "resizable": false,
+        "alwaysOnTop": true,
+        "transparent": true,
+        "decorations": false,
+        "skipTaskbar": true
+      }
+    ]
+  }
+}
+\end{lstlisting}
+
+The widget window implements native drag functionality through Tauri commands:
+
+\begin{lstlisting}[language=Rust, caption=Window Drag Implementation (Rust)]
+#[tauri::command]
+async fn start_drag(window: tauri::Window) -> Result<(), String> {
+    window
+        .start_dragging()
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn toggle_widget_visibility(
+    window: tauri::Window,
+    visible: bool
+) -> Result<(), String> {
+    if let Some(widget) = window.get_window("widget") {
+        if visible {
+            widget.show().map_err(|e| e.to_string())?;
+        } else {
+            widget.hide().map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(())
+}
+\end{lstlisting}
+
+Inter-window communication uses Tauri's event system:
+
+\begin{lstlisting}[language=TypeScript, caption=Cross-Window Communication]
+// In main window: emit task update
+await emit('task:updated', { taskId, status });
+
+// In widget window: listen for updates
+listen('task:updated', (event) => {
+  refreshTaskList();
+});
+
+// Pet state synchronization
+listen('pet:state-changed', (event) => {
+  updatePetDisplay(event.payload);
+});
+\end{lstlisting}
+
+\section{Voice Input and NLP Implementation}
+\label{sec:voice-implementation}
+
+\completed
+
+The voice input system is implemented in the \texttt{VoiceInput} component using the Web Speech API:
+
+\begin{lstlisting}[language=TypeScript, caption=Voice Recognition Hook]
+const useVoiceRecognition = () => {
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [interimTranscript, setInterimTranscript] = useState('');
+  
+  const recognition = useMemo(() => {
+    if (!('webkitSpeechRecognition' in window)) {
+      return null;
+    }
+    
+    const rec = new (window as any).webkitSpeechRecognition();
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.lang = 'en-US';
+    
+    rec.onresult = (event: any) => {
+      let interim = '';
+      let final = '';
+      
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          final += transcript;
+        } else {
+          interim += transcript;
+        }
+      }
+      
+      setInterimTranscript(interim);
+      if (final) {
+        setTranscript(prev => prev + final);
+      }
+    };
+    
+    rec.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+    };
+    
+    rec.onend = () => {
+      setIsListening(false);
+    };
+    
+    return rec;
+  }, []);
+  
+  const startListening = () => {
+    if (recognition) {
+      recognition.start();
+      setIsListening(true);
+    }
+  };
+  
+  const stopListening = () => {
+    if (recognition) {
+      recognition.stop();
+      setIsListening(false);
+    }
+  };
+  
+  return { isListening, transcript, interimTranscript, startListening, stopListening };
+};
+\end{lstlisting}
+
+The NLP parser extracts structured information from recognized text:
+
+\begin{lstlisting}[language=TypeScript, caption=NLP Parser Implementation]
+export const parseTaskFromText = (text: string): ParsedTask => {
+  const nlp = compromise(text);
+  
+  // Extract dates
+  const dates = nlp.dates().json();
+  let dueDate = new Date();
+  
+  if (dates.length > 0) {
+    const parsed = dates[0];
+    if (parsed.dates && parsed.dates.start) {
+      dueDate = new Date(parsed.dates.start);
+    }
+  }
+  
+  // Extract time
+  const times = nlp.times().json();
+  if (times.length > 0 && times[0].time) {
+    const [hours, minutes] = times[0].time.split(':').map(Number);
+    dueDate.setHours(hours, minutes);
+  }
+  
+  // Extract priority
+  const priority = extractPriority(text);
+  
+  // Generate title (remove date/time expressions)
+  const title = nlp
+    .clone()
+    .delete('#Date')
+    .delete('#Time')
+    .delete('#Value')
+    .text()
+    .trim();
+  
+  return {
+    title: title || text,
+    dueDate,
+    priority,
+    originalText: text
+  };
+};
+\end{lstlisting}
+
+\section{Challenges and Solutions}
+\label{sec:challenges}
+
+\completed
+
+Several technical challenges were encountered during implementation:
+
+\textbf{Challenge 1: Cross-Window State Synchronization}
+
+Maintaining consistent state between the main window and widget window presented challenges due to the separate JavaScript contexts. The solution implemented Tauri's event system for real-time synchronization, with the storage layer serving as the single source of truth.
+
+\textbf{Challenge 2: Video Transparency in Tauri}
+
+Displaying animated pet videos with transparent backgrounds required WebM format with alpha channel support. Initial attempts with GIF and PNG sequences resulted in poor performance or lack of transparency. The solution involved converting source videos to WebM with VP9 codec and alpha channel.
+
+\textbf{Challenge 3: Complex Date Parsing Edge Cases}
+
+Natural language date expressions present numerous ambiguities (``next Friday'' vs ``this Friday''). The solution combined Compromise.js for initial extraction with custom rules for disambiguation based on current date context.
+
+\textbf{Challenge 4: Pet-Task Balance Tuning}
+
+Calibrating the stat decay rates and reward magnitudes required iterative adjustment. Initial rates were too aggressive, creating user burden. The solution involved simulation-based tuning to ensure that daily engagement (completing 3-5 tasks) maintains pet health without requiring excessive interaction.
+
+\textbf{Challenge 5: File System Permissions in Tauri}
+
+Tauri's security model requires explicit capability configuration for file system access. The solution involved proper configuration in \texttt{tauri.conf.json} with scoped permissions to the application data directory.
+
+% ============================================
+% END OF CHAPTER 5
+% ============================================

@@ -1,0 +1,10 @@
+{
+  "total_tests": 50,
+  "phrases_tested": 10,
+  "iterations_per_phrase": 5,
+  "overall_accuracy": 0.7667813239460736,
+  "overall_confidence": 0.8209393858267738,
+  "accuracy_std": 0.10926185145445723,
+  "confidence_std": 0.11331514509870869,
+  "timestamp": "2026-03-08T19:58:37.932523"
+}

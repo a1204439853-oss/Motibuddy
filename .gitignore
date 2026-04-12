@@ -1,0 +1,71 @@
+# === 排除所有非必要文件 ===
+
+# 依赖
+node_modules/
+
+# 构建输出
+dist/
+dist-widget/
+dist-main/
+
+# Tauri 构建输出（全部排除）
+src-tauri/target/
+
+# 大型媒体文件
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.mp3
+*.wav
+
+# 图片（保留源代码中的小型图片）
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.gif
+!src/**/*.png
+!src/**/*.jpg
+
+# 文档和PDF
+*.pdf
+*.docx
+*.doc
+
+# 压缩文件
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# 可执行文件
+*.exe
+*.msi
+*.dmg
+*.AppImage
+
+# 日志
+logs/
+*.log
+
+# 编辑器配置
+.vscode/
+.idea/
+.DS_Store
+
+# 环境变量
+.env
+.env.local
+
+# Python缓存
+test_scripts/__pycache__/
+*.pyc
+
+# 操作系统文件
+Thumbs.db
+
+# 其他
+*.reg
+*.bat
+wix314-binaries.zip

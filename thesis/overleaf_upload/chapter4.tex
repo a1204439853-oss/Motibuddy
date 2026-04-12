@@ -1,0 +1,432 @@
+% ============================================
+% CHAPTER 4: TECHNICAL ASPECTS/SOLUTION DESIGN
+% ============================================
+% Status: IN PROGRESS - Draft Version
+% ============================================
+
+\chapter{Technical Aspects and Solution Design}
+\label{chap:technical-design}
+
+\section{System Architecture and Integration Design}
+\label{sec:system-architecture}
+
+\completed
+
+MotiBuddy employs a multi-layered architecture that separates presentation, business logic, and data access concerns while enabling tight integration between the virtual pet and task management systems. The architecture follows the Model-View-Controller (MVC) pattern adapted for React applications, with state management implemented through React Context API.
+
+\subsection{High-Level Architecture}
+
+The system architecture consists of four primary layers (Figure \ref{fig:architecture}):
+
+\begin{figure}[htbp]
+    \centering
+    \todo{Insert System Architecture Diagram}
+    \caption{MotiBuddy System Architecture}
+    \label{fig:architecture}
+\end{figure}
+
+\textbf{Presentation Layer:} The user interface is implemented using React components with TypeScript. The presentation layer includes two main windows: the primary application window and the desktop widget window. Both windows share component libraries but present different views optimized for their respective contexts.
+
+\textbf{Business Logic Layer:} Core application logic is encapsulated in React Contexts that manage state and provide operations:
+\begin{itemize}
+    \item \texttt{TaskContext}: Manages task CRUD operations, filtering, and sorting
+    \item \texttt{PetContext}: Manages virtual pet state, nurturing mechanics, and mood calculation
+    \item \texttt{AuthContext}: Handles user authentication and session management
+    \item \texttt{StatisticsContext}: Aggregates usage data and achievement progress
+\end{itemize}
+
+\textbf{Services Layer:} Business logic that operates independently of UI components:
+\begin{itemize}
+    \item \texttt{StorageService}: File-based persistence using Tauri filesystem API
+    \item \texttt{VoiceRecognitionService}: Web Speech API integration
+    \item \texttt{NLPParser}: Natural language processing for task extraction
+    \item \texttt{TauriCommands}: Rust backend command wrappers
+\end{itemize}
+
+\textbf{Data Access Layer:} Local file system storage with JSON serialization. Each user has separate data files for tasks, pet state, settings, and widget configuration.
+
+\subsection{Integration Mechanism Design}
+
+The integration between virtual pet and task management systems occurs through a bidirectional feedback mechanism:
+
+\textbf{Task Completion → Pet Rewards:} When a user marks a task as complete, the system triggers pet state updates:
+\begin{itemize}
+    \item Hunger stat decreases (pet is ``fed'')
+    \item Experience points increase based on task priority
+    \item Happiness stat increases
+    \item Mood evaluation recalculates
+\end{itemize}
+
+\textbf{Task Overdue → Pet Consequences:} When a task becomes overdue, the system applies gentle negative consequences:
+\begin{itemize}
+    \item Pet happiness decreases slightly
+    \item Health may decrease if multiple tasks are overdue
+    \item Mood changes to reflect concern
+\end{itemize}
+
+\textbf{Continuous Engagement → Pet Wellbeing:} Regular application usage positively impacts pet state:
+\begin{itemize}
+    \item Daily login provides small happiness boost
+    \item Streak maintenance increases pet energy
+    \item Achievement unlocks provide significant experience bonuses
+\end{itemize}
+
+This integration creates an emotional feedback loop where the user's productivity directly impacts their virtual companion's wellbeing, leveraging the psychological investment in the pet's welfare as motivation for task completion.
+
+\subsection{Dual-Window Architecture}
+
+The dual-window architecture enables persistent engagement through the desktop widget while maintaining a full-featured main application:
+
+\textbf{Main Window:} Provides complete functionality including task management, pet interaction, statistics, and settings. The main window operates as a standard application window that can be minimized, maximized, or closed to the system tray.
+
+\textbf{Widget Window:} A compact, always-on-top window displaying essential information:
+\begin{itemize}
+    \item Current pet state (mood, stats)
+    \item Upcoming tasks (sorted by priority and due date)
+    \item Quick interaction buttons (feed, play)
+    \item Expand/collapse functionality
+\end{itemize}
+
+Inter-window communication is implemented through Tauri's event system, ensuring real-time synchronization of data between windows.
+
+\section{Technology Stack Selection}
+\label{sec:technology-stack}
+
+\completed
+
+The technology stack was selected based on technical requirements, development efficiency, and alignment with the research objectives. Table \ref{tab:tech-stack} summarizes the selected technologies and their justifications.
+
+\begin{table}[htbp]
+\centering
+\caption{Technology Stack Selection}
+\label{tab:tech-stack}
+\begin{tabular}{@{}llp{6cm}@{}}
+\toprule
+\textbf{Category} & \textbf{Technology} & \textbf{Justification} \\
+\midrule
+Frontend Framework & React 18 & Component-based architecture, extensive ecosystem, strong TypeScript support \\
+Language & TypeScript 5 & Type safety for complex state management, improved developer experience \\
+Desktop Framework & Tauri 1.5 & Native performance, small bundle size, Rust backend security \\
+Styling & Tailwind CSS 3 & Rapid UI development, consistent design system \\
+Animation & Framer Motion & Smooth pet animations, gesture support \\
+Charts & Recharts 2 & React-native charting, statistics visualization \\
+NLP & Compromise.js & Client-side processing, privacy preservation \\
+Date Processing & date-fns 4 & Immutable date operations, tree-shakeable \\
+Icons & Lucide React & Consistent iconography, lightweight \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Frontend: React with TypeScript}
+
+React was selected for its component-based architecture that enables modular development of the complex UI requirements. TypeScript provides compile-time type checking that prevents common errors in state management and component props. The combination enables robust development of the integrated pet-task system where type safety is crucial for maintaining consistency between related data structures.
+
+\subsection{Desktop Framework: Tauri}
+
+Tauri was selected over Electron for several reasons:
+\begin{itemize}
+    \item \textbf{Bundle Size:} Tauri applications typically measure 5-15MB compared to Electron's 100MB+
+    \item \textbf{Memory Usage:} Lower runtime memory footprint due to native WebView usage
+    \item \textbf{Security:} Rust backend provides memory safety guarantees
+    \item \textbf{Performance:} Native WebView integration offers better performance than bundled Chromium
+\end{itemize}
+
+The Tauri architecture separates the frontend (React) from the backend (Rust), with communication through a command system. This separation enables secure file system access while maintaining the development efficiency of web technologies.
+
+\subsection{Styling: Tailwind CSS}
+
+Tailwind CSS provides utility-first styling that enables rapid UI development without context-switching between component files and stylesheets. The design system uses a consistent color palette:
+\begin{itemize}
+    \item Primary Red: \#FF5E5B (accents, urgent priorities)
+    \item Primary Cyan: \#00CECB (success, completed tasks)
+    \item Primary Yellow: \#FFD700 (warnings, medium priorities)
+    \item Dark: \#222222 (text, borders)
+\end{itemize}
+
+\section{Database and Data Model Design}
+\label{sec:data-model}
+
+\completed
+
+MotiBuddy employs a file-based JSON storage architecture that prioritizes user privacy and offline functionality. All data is stored locally on the user's device, with no cloud synchronization.
+
+\subsection{Storage Architecture}
+
+Data files are organized in the application's data directory:
+
+\begin{verbatim}
+MotiBuddyData/
+├── tasks_{userId}.json       # User tasks
+├── pet_{userId}.json         # Pet state and stats
+├── settings_{userId}.json    # User preferences
+├── achievements_{userId}.json # Achievement progress
+├── user.json                 # Global user registry
+└── widget_data_{userId}.json # Widget state
+\end{verbatim}
+
+\subsection{Entity Relationship Diagram}
+
+Figure \ref{fig:er-diagram} illustrates the relationships between data entities:
+
+\begin{figure}[htbp]
+    \centering
+    \todo{Insert Entity Relationship Diagram}
+    \caption{Data Model Entity Relationships}
+    \label{fig:er-diagram}
+\end{figure}
+
+\subsection{Task Entity}
+
+The Task entity represents individual tasks with the following structure:
+
+\begin{lstlisting}[language=TypeScript, caption=Task Interface Definition]
+interface Task {
+  id: string;                    // UUID
+  title: string;                 // Task description
+  description?: string;          // Optional details
+  dueDate: Date;                 // Deadline
+  priority: TaskPriority;        // low | medium | high | urgent
+  status: TaskStatus;            // pending | in-progress | completed | overdue
+  createdAt: Date;               // Creation timestamp
+  completedAt?: Date;            // Completion timestamp
+  estimatedDuration?: number;    // Estimated minutes
+  tags?: string[];               // Categorization tags
+}
+\end{lstlisting}
+
+\subsection{Pet Entity}
+
+The Pet entity represents the virtual companion with comprehensive state tracking:
+
+\begin{lstlisting}[language=TypeScript, caption=Pet Interface Definition]
+interface Pet {
+  id: string;                    // UUID
+  userId: string;                // Owner reference
+  name: string;                  // Pet name
+  type: PetType;                 // cat | dog | panda | bird
+  level: number;                 // Current level (1-100)
+  experience: number;            // XP toward next level
+  
+  // Stats (0-100 scale)
+  health: number;
+  happiness: number;
+  hunger: number;                // 0 = full, 100 = starving
+  energy: number;
+  
+  // State tracking
+  mood: PetMood;                 // derived from stats
+  lastInteraction: Date;
+  lastFed: Date;
+  createdAt: Date;
+}
+\end{lstlisting}
+
+\subsection{Achievement Entity}
+
+The Achievement entity tracks user progress toward gamification goals:
+
+\begin{lstlisting}[language=TypeScript, caption=Achievement Interface Definition]
+interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  category: 'autonomy' | 'competence' | 'relatedness';
+  condition: AchievementCondition;
+  unlockedAt?: Date;
+  progress: number;
+  maxProgress: number;
+}
+\end{lstlisting}
+
+\section{Virtual Pet System and Task Integration Design}
+\label{sec:pet-system-design}
+
+\completed
+
+The virtual pet system is designed to create meaningful emotional connections while maintaining motivational effectiveness. The design follows principles identified in the literature review while adapting them for the productivity context.
+
+\subsection{Pet Types and Characteristics}
+
+Four pet types are available, each with distinct visual characteristics but identical mechanical behavior:
+
+\begin{itemize}
+    \item \textbf{Cat:} Playful and independent personality
+    \item \textbf{Dog:} Loyal and affectionate personality
+    \item \textbf{Panda:} Calm and gentle personality
+    \item \textbf{Bird:} Energetic and curious personality
+\end{itemize}
+
+Pet type selection provides autonomy support within SDT by allowing users to choose a companion that appeals to their preferences.
+
+\subsection{Stat System Design}
+
+The stat system uses five primary attributes on a 0-100 scale:
+
+\textbf{Health:} Represents overall wellbeing. Decreases when hunger is high or tasks are overdue. Recovers through feeding and task completion.
+
+\textbf{Happiness:} Represents emotional state. Increases with positive interactions and task completion. Decreases with neglect or overdue tasks.
+
+\textbf{Hunger:} Represents need for sustenance. Increases over time (inverse scale: 0 = full, 100 = starving). Decreases through feeding, which is triggered by task completion.
+
+\textbf{Energy:} Represents activity capacity. Decreases with play interactions. Recovers over time and through rest.
+
+\textbf{Experience:} Accumulates toward level progression. Gained through task completion, achievement unlocks, and daily engagement.
+
+\subsection{Decay Algorithm}
+
+Stats decay over time to create nurturing requirements:
+
+\begin{lstlisting}[language=TypeScript, caption=Stat Decay Algorithm]
+const DECAY_RATES = {
+  hunger: 2,        // +2 per 5 minutes
+  happiness: 1,     // -1 per 5 minutes (if not interacted)
+  energy: 0.5,      // +0.5 per 5 minutes (recovers)
+  health: 0.2       // -0.2 per 5 minutes (if hunger > 80)
+};
+
+function applyDecay(pet: Pet, elapsedMinutes: number): Pet {
+  const intervals = Math.floor(elapsedMinutes / 5);
+  return {
+    ...pet,
+    hunger: Math.min(100, pet.hunger + DECAY_RATES.hunger * intervals),
+    happiness: Math.max(0, pet.happiness - DECAY_RATES.happiness * intervals),
+    // ... additional stat updates
+  };
+}
+\end{lstlisting}
+
+Decay rates were calibrated to require daily engagement without creating excessive burden. A pet left unattended for 24 hours will have high hunger but will not suffer permanent damage.
+
+\subsection{Mood Determination Logic}
+
+Pet mood is derived from current stats using a weighted algorithm:
+
+\begin{lstlisting}[language=TypeScript, caption=Mood Calculation Algorithm]
+function calculateMood(pet: Pet): PetMood {
+  const { health, happiness, hunger, energy } = pet;
+  
+  // Critical conditions take precedence
+  if (health < 20 || hunger > 90) return 'sick';
+  if (happiness > 80 && hunger < 30) return 'happy';
+  if (happiness < 30) return 'sad';
+  if (energy < 20) return 'tired';
+  if (hunger > 60) return 'hungry';
+  
+  return 'neutral';
+}
+\end{lstlisting}
+
+\subsection{Video State Machine}
+
+Visual feedback is provided through animated videos representing pet states:
+
+\begin{itemize}
+    \item \textbf{Idle:} Default looping animation
+    \item \textbf{Feeding:} Triggered when task completion feeds the pet
+    \item \textbf{Playing:} Triggered during play interaction
+    \item \textbf{Sick:} Displayed when health is critically low
+    \item \textbf{Happy:} Displayed when mood is positive
+    \item \textbf{Completed:} Celebration animation for task completion
+\end{itemize}
+
+\section{Voice Recognition and Intelligent Task Parsing Design}
+\label{sec:voice-design}
+
+\completed
+
+The voice input system enables natural language task creation, reducing friction in the capture process. The design balances automation with user control through a confirmation workflow.
+
+\subsection{NLP Pipeline Architecture}
+
+The voice-to-task pipeline consists of four stages (Figure \ref{fig:nlp-pipeline}):
+
+\begin{figure}[htbp]
+    \centering
+    \todo{Insert NLP Pipeline Diagram}
+    \caption{Voice Input Processing Pipeline}
+    \label{fig:nlp-pipeline}
+\end{figure}
+
+\textbf{Stage 1: Speech Recognition} converts audio input to text using the Web Speech API. The implementation uses continuous recognition mode with interim results for real-time feedback.
+
+\textbf{Stage 2: Text Normalization} preprocesses the recognized text:
+\begin{itemize}
+    \item Removes disfluencies (``um,'' ``uh'')
+    \item Standardizes punctuation
+    \item Corrects common speech-to-text errors
+\end{itemize}
+
+\textbf{Stage 3: Information Extraction} uses Compromise.js to identify:
+\begin{itemize}
+    \item Dates and times (relative and absolute)
+    \item Priority indicators (``urgent,'' ``important,'' ``ASAP'')
+    \item Task verbs and objects
+\end{itemize}
+
+\textbf{Stage 4: Task Construction} assembles the extracted information into a Task object with sensible defaults for missing fields.
+
+\subsection{Date/Time Parsing}
+
+The date parsing system handles multiple expression types:
+
+\textbf{Relative Dates:}
+\begin{itemize}
+    \item ``today,'' ``tomorrow,'' ``the day after tomorrow''
+    \item ``next Monday,'' ``this Friday''
+    \item ``in 3 days,'' ``in a week''
+\end{itemize}
+
+\textbf{Absolute Dates:}
+\begin{itemize}
+    \item ``January 15, 2024''
+    \item ``3/15/2024''
+    \item ``15th of March''
+\end{itemize}
+
+\textbf{Time Expressions:}
+\begin{itemize}
+    \item ``3 PM,'' ``15:00''
+    \item ``morning'' (9:00 AM), ``afternoon'' (2:00 PM)
+    \item ``evening'' (6:00 PM), ``night'' (8:00 PM)
+\end{itemize}
+
+\subsection{Priority Extraction}
+
+Priority is inferred from keywords in the input:
+
+\begin{lstlisting}[language=TypeScript, caption=Priority Extraction Rules]
+const PRIORITY_KEYWORDS = {
+  urgent: ['urgent', 'asap', 'immediately', 'critical', 'emergency'],
+  high: ['important', 'high priority', 'crucial', 'essential'],
+  low: ['low priority', 'whenever', 'someday', 'eventually']
+};
+
+function extractPriority(text: string): TaskPriority {
+  const lowerText = text.toLowerCase();
+  if (PRIORITY_KEYWORDS.urgent.some(kw => lowerText.includes(kw))) {
+    return 'urgent';
+  }
+  if (PRIORITY_KEYWORDS.high.some(kw => lowerText.includes(kw))) {
+    return 'high';
+  }
+  if (PRIORITY_KEYWORDS.low.some(kw => lowerText.includes(kw))) {
+    return 'low';
+  }
+  return 'medium'; // default
+}
+\end{lstlisting}
+
+\subsection{Confirmation Workflow}
+
+Parsed tasks are presented in a confirmation dialog allowing users to:
+\begin{itemize}
+    \item Review extracted information
+    \item Edit task title, date, or priority
+    \item Confirm creation or cancel
+\end{itemize}
+
+This workflow ensures that NLP errors can be corrected before task creation, maintaining data quality while preserving the efficiency benefits of voice input.
+
+% ============================================
+% END OF CHAPTER 4
+% ============================================

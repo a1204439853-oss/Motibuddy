@@ -1,0 +1,107 @@
+{
+  "build": {
+    "beforeBuildCommand": "",
+    "beforeDevCommand": "npm run dev",
+    "devPath": "http://localhost:3000",
+    "distDir": "dist"
+  },
+  "package": {
+    "productName": "MotiBuddy",
+    "version": "0.1.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "fs": {
+        "all": true,
+        "scope": ["$APPDATA/**", "$APPCONFIG/**", "$RESOURCE/**"]
+      },
+      "path": {
+        "all": true
+      },
+      "shell": {
+        "open": true
+      },
+      "window": {
+        "all": true
+      },
+      "notification": {
+        "all": true
+      },
+      "dialog": {
+        "all": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "category": "Productivity",
+      "copyright": "",
+      "deb": {
+        "depends": []
+      },
+      "externalBin": [],
+      "icon": [
+        "icons/icon.ico"
+      ],
+      "identifier": "com.motibuddy.app",
+      "longDescription": "",
+      "macOS": {
+        "entitlements": null,
+        "exceptionDomain": "",
+        "frameworks": [],
+        "providerShortName": null,
+        "signingIdentity": null
+      },
+      "resources": [
+        "dist/**/*"
+      ],
+      "shortDescription": "",
+      "targets": ["msi"],
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
+    },
+    "security": {
+      "csp": null,
+      "dangerousDisableAssetCspModification": false
+    },
+    "updater": {
+      "active": false
+    },
+    "systemTray": {
+      "iconPath": "icons/icon.ico",
+      "iconAsTemplate": true,
+      "menuOnLeftClick": false
+    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "height": 900,
+        "resizable": true,
+        "title": "MotiBuddy",
+        "width": 1600,
+        "minWidth": 1200,
+        "minHeight": 675
+      },
+      {
+        "label": "widget",
+        "url": "widget.html",
+        "title": "MotiBuddy Widget",
+        "width": 360,
+        "height": 800,
+        "minWidth": 360,
+        "minHeight": 800,
+        "maxWidth": 360,
+        "maxHeight": 800,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": false
+      }
+    ]
+  }
+}

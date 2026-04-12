@@ -1,0 +1,1287 @@
+{
+  "total_tests": 50,
+  "phrases_tested": 10,
+  "iterations_per_phrase": 5,
+  "overall_accuracy": 0.6314285714285715,
+  "overall_confidence": 0.8428121549113302,
+  "accuracy_std": 0.2509024953147576,
+  "confidence_std": 0.06070557825847449,
+  "all_results": [
+    {
+      "input": "Submit report tomorrow at 3pm",
+      "iteration": 1,
+      "confidence": 0.7959402038526024,
+      "accuracy": 1.0,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          1.0,
+          0.3
+        ],
+        [
+          "time",
+          1.0,
+          0.2
+        ]
+      ],
+      "parsed": {
+        "title": "Submit report",
+        "date": "tomorrow",
+        "time": "15:00",
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Submit report tomorrow at 3pm",
+      "iteration": 2,
+      "confidence": 0.8759461101049718,
+      "accuracy": 1.0,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          1.0,
+          0.3
+        ],
+        [
+          "time",
+          1.0,
+          0.2
+        ]
+      ],
+      "parsed": {
+        "title": "Submit report",
+        "date": "tomorrow",
+        "time": "15:00",
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Submit report tomorrow at 3pm",
+      "iteration": 3,
+      "confidence": 0.8117807907312403,
+      "accuracy": 1.0,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          1.0,
+          0.3
+        ],
+        [
+          "time",
+          1.0,
+          0.2
+        ]
+      ],
+      "parsed": {
+        "title": "Submit report",
+        "date": "tomorrow",
+        "time": "15:00",
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Submit report tomorrow at 3pm",
+      "iteration": 4,
+      "confidence": 0.8872848982544634,
+      "accuracy": 1.0,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          1.0,
+          0.3
+        ],
+        [
+          "time",
+          1.0,
+          0.2
+        ]
+      ],
+      "parsed": {
+        "title": "Submit report",
+        "date": "tomorrow",
+        "time": "15:00",
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Submit report tomorrow at 3pm",
+      "iteration": 5,
+      "confidence": 0.8401389602363145,
+      "accuracy": 1.0,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          1.0,
+          0.3
+        ],
+        [
+          "time",
+          1.0,
+          0.2
+        ]
+      ],
+      "parsed": {
+        "title": "Submit report",
+        "date": "tomorrow",
+        "time": "15:00",
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Buy groceries this weekend",
+      "iteration": 1,
+      "confidence": 0.7845379223304215,
+      "accuracy": 0.5714285714285715,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Buy groceries",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Buy groceries this weekend",
+      "iteration": 2,
+      "confidence": 0.8170379128337942,
+      "accuracy": 0.5714285714285715,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Buy groceries",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Buy groceries this weekend",
+      "iteration": 3,
+      "confidence": 0.782912548946342,
+      "accuracy": 0.5714285714285715,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Buy groceries",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Buy groceries this weekend",
+      "iteration": 4,
+      "confidence": 0.7715930107896153,
+      "accuracy": 0.5714285714285715,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Buy groceries",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Buy groceries this weekend",
+      "iteration": 5,
+      "confidence": 0.8430600474819832,
+      "accuracy": 0.5714285714285715,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Buy groceries",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Call mom urgent",
+      "iteration": 1,
+      "confidence": 0.8140746893278895,
+      "accuracy": 1.0,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "priority",
+          1.0,
+          0.1
+        ]
+      ],
+      "parsed": {
+        "title": "Call mom",
+        "date": null,
+        "time": null,
+        "priority": "high"
+      }
+    },
+    {
+      "input": "Call mom urgent",
+      "iteration": 2,
+      "confidence": 0.887005835390519,
+      "accuracy": 1.0,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "priority",
+          1.0,
+          0.1
+        ]
+      ],
+      "parsed": {
+        "title": "Call mom",
+        "date": null,
+        "time": null,
+        "priority": "high"
+      }
+    },
+    {
+      "input": "Call mom urgent",
+      "iteration": 3,
+      "confidence": 0.8603703931721614,
+      "accuracy": 1.0,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "priority",
+          1.0,
+          0.1
+        ]
+      ],
+      "parsed": {
+        "title": "Call mom",
+        "date": null,
+        "time": null,
+        "priority": "high"
+      }
+    },
+    {
+      "input": "Call mom urgent",
+      "iteration": 4,
+      "confidence": 0.7607907531031661,
+      "accuracy": 1.0,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "priority",
+          1.0,
+          0.1
+        ]
+      ],
+      "parsed": {
+        "title": "Call mom",
+        "date": null,
+        "time": null,
+        "priority": "high"
+      }
+    },
+    {
+      "input": "Call mom urgent",
+      "iteration": 5,
+      "confidence": 0.9204198745519558,
+      "accuracy": 1.0,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "priority",
+          1.0,
+          0.1
+        ]
+      ],
+      "parsed": {
+        "title": "Call mom",
+        "date": null,
+        "time": null,
+        "priority": "high"
+      }
+    },
+    {
+      "input": "Finish project by January 15th",
+      "iteration": 1,
+      "confidence": 0.9052115887336728,
+      "accuracy": 0.5714285714285715,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Finish project",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Finish project by January 15th",
+      "iteration": 2,
+      "confidence": 0.8461556885492456,
+      "accuracy": 0.5714285714285715,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Finish project",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Finish project by January 15th",
+      "iteration": 3,
+      "confidence": 0.9394252059167891,
+      "accuracy": 0.5714285714285715,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Finish project",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Finish project by January 15th",
+      "iteration": 4,
+      "confidence": 0.7540270659040146,
+      "accuracy": 0.5714285714285715,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Finish project",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Finish project by January 15th",
+      "iteration": 5,
+      "confidence": 0.7685662539570491,
+      "accuracy": 0.5714285714285715,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Finish project",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Meeting with team next Monday at 10am",
+      "iteration": 1,
+      "confidence": 0.9421225569051008,
+      "accuracy": 0.3555555555555556,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ],
+        [
+          "time",
+          0.0,
+          0.2
+        ]
+      ],
+      "parsed": {
+        "title": "Meeting with",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Meeting with team next Monday at 10am",
+      "iteration": 2,
+      "confidence": 0.8033255047567055,
+      "accuracy": 0.3555555555555556,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ],
+        [
+          "time",
+          0.0,
+          0.2
+        ]
+      ],
+      "parsed": {
+        "title": "Meeting with",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Meeting with team next Monday at 10am",
+      "iteration": 3,
+      "confidence": 0.8910570459169203,
+      "accuracy": 0.3555555555555556,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ],
+        [
+          "time",
+          0.0,
+          0.2
+        ]
+      ],
+      "parsed": {
+        "title": "Meeting with",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Meeting with team next Monday at 10am",
+      "iteration": 4,
+      "confidence": 0.7653617739105734,
+      "accuracy": 0.3555555555555556,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ],
+        [
+          "time",
+          0.0,
+          0.2
+        ]
+      ],
+      "parsed": {
+        "title": "Meeting with",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Meeting with team next Monday at 10am",
+      "iteration": 5,
+      "confidence": 0.7909839909400989,
+      "accuracy": 0.3555555555555556,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ],
+        [
+          "time",
+          0.0,
+          0.2
+        ]
+      ],
+      "parsed": {
+        "title": "Meeting with",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Pay electricity bill before Friday",
+      "iteration": 1,
+      "confidence": 0.7779894102018112,
+      "accuracy": 0.45714285714285724,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Pay electricity",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Pay electricity bill before Friday",
+      "iteration": 2,
+      "confidence": 0.791895039714535,
+      "accuracy": 0.45714285714285724,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Pay electricity",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Pay electricity bill before Friday",
+      "iteration": 3,
+      "confidence": 0.7850207586004407,
+      "accuracy": 0.45714285714285724,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Pay electricity",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Pay electricity bill before Friday",
+      "iteration": 4,
+      "confidence": 0.9190679414903881,
+      "accuracy": 0.45714285714285724,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Pay electricity",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Pay electricity bill before Friday",
+      "iteration": 5,
+      "confidence": 0.8812969990348897,
+      "accuracy": 0.45714285714285724,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Pay electricity",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Review document important",
+      "iteration": 1,
+      "confidence": 0.9199148732057232,
+      "accuracy": 1.0,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "priority",
+          1.0,
+          0.1
+        ]
+      ],
+      "parsed": {
+        "title": "Review document",
+        "date": null,
+        "time": null,
+        "priority": "high"
+      }
+    },
+    {
+      "input": "Review document important",
+      "iteration": 2,
+      "confidence": 0.9099701415714145,
+      "accuracy": 1.0,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "priority",
+          1.0,
+          0.1
+        ]
+      ],
+      "parsed": {
+        "title": "Review document",
+        "date": null,
+        "time": null,
+        "priority": "high"
+      }
+    },
+    {
+      "input": "Review document important",
+      "iteration": 3,
+      "confidence": 0.7796739588074317,
+      "accuracy": 1.0,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "priority",
+          1.0,
+          0.1
+        ]
+      ],
+      "parsed": {
+        "title": "Review document",
+        "date": null,
+        "time": null,
+        "priority": "high"
+      }
+    },
+    {
+      "input": "Review document important",
+      "iteration": 4,
+      "confidence": 0.9074608938781974,
+      "accuracy": 1.0,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "priority",
+          1.0,
+          0.1
+        ]
+      ],
+      "parsed": {
+        "title": "Review document",
+        "date": null,
+        "time": null,
+        "priority": "high"
+      }
+    },
+    {
+      "input": "Review document important",
+      "iteration": 5,
+      "confidence": 0.8785280611200578,
+      "accuracy": 1.0,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "priority",
+          1.0,
+          0.1
+        ]
+      ],
+      "parsed": {
+        "title": "Review document",
+        "date": null,
+        "time": null,
+        "priority": "high"
+      }
+    },
+    {
+      "input": "Walk the dog every day",
+      "iteration": 1,
+      "confidence": 0.9061139943488457,
+      "accuracy": 0.45714285714285724,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Walk the",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Walk the dog every day",
+      "iteration": 2,
+      "confidence": 0.7601048151604375,
+      "accuracy": 0.45714285714285724,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Walk the",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Walk the dog every day",
+      "iteration": 3,
+      "confidence": 0.835640638810802,
+      "accuracy": 0.45714285714285724,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Walk the",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Walk the dog every day",
+      "iteration": 4,
+      "confidence": 0.9099248678536098,
+      "accuracy": 0.45714285714285724,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Walk the",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Walk the dog every day",
+      "iteration": 5,
+      "confidence": 0.915149423502968,
+      "accuracy": 0.45714285714285724,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Walk the",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Doctor appointment March 3rd at 2pm",
+      "iteration": 1,
+      "confidence": 0.9081610315431264,
+      "accuracy": 0.4444444444444445,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ],
+        [
+          "time",
+          0.0,
+          0.2
+        ]
+      ],
+      "parsed": {
+        "title": "Doctor appointment",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Doctor appointment March 3rd at 2pm",
+      "iteration": 2,
+      "confidence": 0.8248242174403054,
+      "accuracy": 0.4444444444444445,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ],
+        [
+          "time",
+          0.0,
+          0.2
+        ]
+      ],
+      "parsed": {
+        "title": "Doctor appointment",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Doctor appointment March 3rd at 2pm",
+      "iteration": 3,
+      "confidence": 0.9417350064693653,
+      "accuracy": 0.4444444444444445,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ],
+        [
+          "time",
+          0.0,
+          0.2
+        ]
+      ],
+      "parsed": {
+        "title": "Doctor appointment",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Doctor appointment March 3rd at 2pm",
+      "iteration": 4,
+      "confidence": 0.8450056233520475,
+      "accuracy": 0.4444444444444445,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ],
+        [
+          "time",
+          0.0,
+          0.2
+        ]
+      ],
+      "parsed": {
+        "title": "Doctor appointment",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Doctor appointment March 3rd at 2pm",
+      "iteration": 5,
+      "confidence": 0.8393194728068157,
+      "accuracy": 0.4444444444444445,
+      "details": [
+        [
+          "title",
+          1.0,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ],
+        [
+          "time",
+          0.0,
+          0.2
+        ]
+      ],
+      "parsed": {
+        "title": "Doctor appointment",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Buy birthday gift for Sarah next week",
+      "iteration": 1,
+      "confidence": 0.7755368584117572,
+      "accuracy": 0.45714285714285724,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Buy birthday",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Buy birthday gift for Sarah next week",
+      "iteration": 2,
+      "confidence": 0.7622609205781912,
+      "accuracy": 0.45714285714285724,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Buy birthday",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Buy birthday gift for Sarah next week",
+      "iteration": 3,
+      "confidence": 0.8373279280459263,
+      "accuracy": 0.45714285714285724,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Buy birthday",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Buy birthday gift for Sarah next week",
+      "iteration": 4,
+      "confidence": 0.9159278154444493,
+      "accuracy": 0.45714285714285724,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Buy birthday",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    },
+    {
+      "input": "Buy birthday gift for Sarah next week",
+      "iteration": 5,
+      "confidence": 0.7536264275753647,
+      "accuracy": 0.45714285714285724,
+      "details": [
+        [
+          "title",
+          0.8,
+          0.4
+        ],
+        [
+          "date",
+          0.0,
+          0.3
+        ]
+      ],
+      "parsed": {
+        "title": "Buy birthday",
+        "date": null,
+        "time": null,
+        "priority": "medium"
+      }
+    }
+  ],
+  "timestamp": "2026-03-08T11:53:18.827556"
+}

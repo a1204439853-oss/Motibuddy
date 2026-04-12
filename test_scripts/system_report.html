@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotiBuddy System Resource Report</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+        }
+        h2 {
+            color: #667eea;
+            margin-top: 30px;
+        }
+        .timestamp {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+            display: inline-block;
+            min-width: 200px;
+        }
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        .screenshot-area {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+            background: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MotiBuddy System Resource Report</h1>
+        <p class="timestamp">Generated: 2026-03-08 11:19:58</p>
+        
+        <h2>Package Information</h2>        <table>
+            <tr>
+                <th>File Name</th>
+                <th>Type</th>
+                <th>Size (MB)</th>
+                <th>Size (Bytes)</th>
+                <th>Modified</th>
+                <th>Full Path</th>
+            </tr>            <tr>
+                <td><strong>MotiBuddy.exe</strong></td>
+                <td>Release</td>
+                <td style="color: #667eea; font-weight: bold;">225.23 MB</td>
+                <td>236,171,264</td>
+                <td>03/03/2026 20:49:28</td>
+                <td style="font-size: 0.85em;">F:\MotiBuddy1\src-tauri\target\release\MotiBuddy.exe</td>
+            </tr>            <tr>
+                <td><strong>motibuddy.exe</strong></td>
+                <td>Release</td>
+                <td style="color: #667eea; font-weight: bold;">225.23 MB</td>
+                <td>236,171,264</td>
+                <td>03/03/2026 20:49:28</td>
+                <td style="font-size: 0.85em;">F:\MotiBuddy1\src-tauri\target\release\deps\motibuddy.exe</td>
+            </tr>            <tr>
+                <td><strong>MotiBuddy.exe</strong></td>
+                <td>Debug</td>
+                <td style="color: #667eea; font-weight: bold;">225.23 MB</td>
+                <td>236,171,264</td>
+                <td>03/03/2026 20:49:30</td>
+                <td style="font-size: 0.85em;">C:\Program Files\MotiBuddy\MotiBuddy.exe</td>
+            </tr></table>        <div class="metric-card">
+            <div class="metric-value">225.23 MB</div>
+            <div class="metric-label">Main Package Size</div>
+        </div>        <h2>System Information</h2>
+        <div class="info-box">
+            <strong>Operating System:</strong> Windows 10 Home China (2009)<br>
+            <strong>Total Memory:</strong> 0 GB<br>
+            <strong>Processor:</strong> AMD Ryzen 7 6800H with Radeon Graphics         
+        </div>
+        
+        <h2>Runtime Resource Usage</h2>        <table>
+            <tr>
+                <th>Process Name</th>
+                <th>PID</th>
+                <th>Working Set (MB)</th>
+                <th>Paged Memory (MB)</th>
+                <th>CPU Time (sec)</th>
+                <th>Start Time</th>
+            </tr>            <tr>
+                <td><strong>MotiBuddy</strong></td>
+                <td>34600</td>
+                <td style="color: #667eea; font-weight: bold;">21.87 MB</td>
+                <td>39.32 MB</td>
+                <td>6.95</td>
+                <td>03/08/2026 11:12:05</td>
+            </tr>            <tr>
+                <td><strong>MotiBuddy</strong></td>
+                <td>38036</td>
+                <td style="color: #667eea; font-weight: bold;">6.37 MB</td>
+                <td>40.07 MB</td>
+                <td>53.62</td>
+                <td>03/07/2026 21:03:54</td>
+            </tr>            <tr>
+                <td><strong>MotiBuddy</strong></td>
+                <td>113328</td>
+                <td style="color: #667eea; font-weight: bold;">5.5 MB</td>
+                <td>39.32 MB</td>
+                <td>7.75</td>
+                <td>03/08/2026 11:04:03</td>
+            </tr></table>        <div class="metric-card">
+            <div class="metric-value">11.25 MB</div>
+            <div class="metric-label">Average Memory Usage</div>
+        </div>        <h2>Screenshot Evidence Area</h2>
+        <div class="screenshot-area">
+            <p><strong>Paste screenshots here:</strong></p>
+            <p>1. File Explorer showing package size</p>
+            <p>2. Task Manager showing memory usage</p>
+            <p style="color: #999; font-size: 0.9em;">(Use Win + Shift + S to capture and paste above)</p>
+        </div>
+        
+        <h2>Test Notes</h2>
+        <div class="info-box">
+            <strong>Package Size Notes:</strong><br>
+            鈥?Tauri applications include WebView2 runtime and Rust binaries<br>
+            鈥?Typical size range: 200-300 MB<br>
+            鈥?Release builds are 10-20% smaller than Debug builds
+        </div>
+        <div class="info-box">
+            <strong>Memory Usage Notes:</strong><br>
+            鈥?Base: Chromium WebView ~80-120 MB<br>
+            鈥?App Logic: React state management ~30-80 MB<br>
+            鈥?Virtual Pet Rendering: Canvas animations ~20-50 MB<br>
+            鈥?Voice Processing: Web Speech API ~10-30 MB
+        </div>
+        
+        <p style="text-align: center; margin-top: 40px; color: #666;">
+            <em>This report was automatically generated by MotiBuddy test scripts</em>
+        </p>
+    </div>
+</body>
+</html>
