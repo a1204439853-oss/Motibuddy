@@ -35,11 +35,10 @@ Thumbs.db
 *.reg
 wix314-binaries.zip
 
-# 文档和PDF（保留使用说明）
+# 文档和PDF
 *.pdf
 *.docx
 *.doc
-!使用说明.md
 
 # 压缩文件
 *.tar.gz
