@@ -1,58 +1,60 @@
-# === 排除所有非必要文件 ===
-
-# 依赖
+# === Dependencies ===
 node_modules/
 
-# 构建输出
+# === Build outputs ===
 dist/
 dist-widget/
 dist-main/
 
-# Tauri 构建输出（全部排除）
+# === Tauri build outputs ===
 src-tauri/target/
 
-# 日志
+# === Logs ===
 logs/
 *.log
 
-# 编辑器配置
+# === Editor directories and files ===
 .vscode/
 .idea/
 .DS_Store
 
-# 环境变量
+# === Environment variables ===
 .env
 .env.local
 
-# Python缓存
-test_scripts/__pycache__/
+# === Python cache ===
+__pycache__/
 *.pyc
+.pytest_cache/
 
-# 操作系统文件
+# === OS files ===
 Thumbs.db
 
-# 其他
+# === Other ===
 *.reg
 wix314-binaries.zip
 
-# 文档和PDF
+# === Documents ===
 *.pdf
 *.docx
 *.doc
 
-# 压缩文件
+# === Archives ===
 *.tar.gz
 *.rar
 *.7z
 
-# 可执行文件
+# === Executables ===
 *.exe
 *.msi
 *.dmg
 *.AppImage
 
-# 视频文件（全部排除，通过Release分发）
+# === Videos ===
 *.mp4
 *.avi
 *.mov
 *.wmv
+
+# === npm lock file (using pnpm) ===
+package-lock.json
