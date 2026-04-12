@@ -11,40 +11,6 @@ dist-main/
 # Tauri 构建输出（全部排除）
 src-tauri/target/
 
-# 大型媒体文件
-*.mp4
-*.avi
-*.mov
-*.wmv
-*.mp3
-*.wav
-
-# 图片（保留源代码中的小型图片）
-*.jpg
-*.jpeg
-*.png
-*.webp
-*.gif
-!src/**/*.png
-!src/**/*.jpg
-
-# 文档和PDF
-*.pdf
-*.docx
-*.doc
-
-# 压缩文件
-*.zip
-*.tar.gz
-*.rar
-*.7z
-
-# 可执行文件
-*.exe
-*.msi
-*.dmg
-*.AppImage
-
 # 日志
 logs/
 *.log
@@ -67,5 +33,27 @@ Thumbs.db
 
 # 其他
 *.reg
-*.bat
 wix314-binaries.zip
+
+# 文档和PDF（保留使用说明）
+*.pdf
+*.docx
+*.doc
+!使用说明.md
+
+# 压缩文件
+*.tar.gz
+*.rar
+*.7z
+
+# 可执行文件
+*.exe
+*.msi
+*.dmg
+*.AppImage
+
+# 视频文件（全部排除，通过Release分发）
+*.mp4
+*.avi
+*.mov
+*.wmv
