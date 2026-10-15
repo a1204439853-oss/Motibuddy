@@ -19,7 +19,7 @@ const PetCreationPage = () => {
   const [question2Id, setQuestion2Id] = useState<SecurityQuestionId | ''>('');
   const [answer2, setAnswer2] = useState<string>('');
   
-  const { currentUser, setCurrentPet, updateUserProfile } = useContext(AuthContext);
+  const { currentUser, createPet, updateUserProfile } = useContext(AuthContext);
   const navigate = useNavigate();
   
   // Pet type options
@@ -50,7 +50,8 @@ const PetCreationPage = () => {
     }
   ];
   
-  const handleCreatePet = () => {
+  const handleCreatePet = async () => {
+    if (isLoading) return;
     if (!currentUser) {
       toast.error('User not authenticated');
       navigate('/login');
@@ -86,10 +87,12 @@ const PetCreationPage = () => {
       createdAt: new Date()
     };
     
-    // Save pet to localStorage
-    localStorage.setItem(`pet_${currentUser.id}`, JSON.stringify(newPet));
-    localStorage.setItem('currentPet', JSON.stringify(newPet));
-    setCurrentPet(newPet);
+    try {
+      await createPet(newPet);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Your pet could not be saved. Please retry.');
+      return;
+    } finally { setIsLoading(false); }
     
     toast.success(`Welcome to MotiBuddy, ${newPet.name}!`);
     

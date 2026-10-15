@@ -9,9 +9,12 @@ import { AuthProvider } from "@/contexts/authContext";
 import { TaskProvider } from "@/contexts/taskContext";
 import { PetProvider } from "@/contexts/petContext";
 import { StatisticsProvider } from "@/contexts/statisticsContext";
+import { useSafeExit } from '@/hooks/useSafeExit';
 
 export default function App() {
+  const { closing, cancel } = useSafeExit();
   return (
+    <>
     <AuthProvider>
       <TaskProvider>
         <PetProvider>
@@ -28,5 +31,10 @@ export default function App() {
         </PetProvider>
       </TaskProvider>
     </AuthProvider>
+    {closing && <div role="dialog" aria-modal="true" aria-label="正在退出" style={{ position: 'fixed', inset: 0, zIndex: 100000, background: 'rgba(255,255,255,.96)', display: 'grid', placeContent: 'center', textAlign: 'center', gap: 16 }}>
+      <p>正在等待保存完成，请稍候…</p>
+      <button onClick={() => { void cancel(); }}>取消退出</button>
+    </div>}
+    </>
   );
 }

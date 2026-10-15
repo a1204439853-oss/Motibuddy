@@ -51,8 +51,9 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
     }
   }, [task]);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     
     // Validate form
     if (!title.trim()) {
@@ -88,10 +89,10 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
     try {
       if (task) {
         // Update existing task
-        updateTask(task.id, taskData);
+        await updateTask(task.id, taskData);
       } else {
         // Add new task
-        addTask(taskData);
+        await addTask(taskData);
       }
       
       // Reset form and close
@@ -161,6 +162,7 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
           whileTap={{ scale: 0.9 }}
           type="button"
           onClick={onClose}
+          disabled={isSubmitting}
           className="p-1 text-gray-500 hover:text-gray-700 transition-colors"
         >
           <i className="fa-solid fa-xmark text-sm"></i>
@@ -339,6 +341,7 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
           whileTap={{ scale: 0.98 }}
           type="button"
           onClick={onClose}
+          disabled={isSubmitting}
           style={{
             backgroundColor: '#f0f0f0',
             color: '#222222',

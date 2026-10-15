@@ -61,6 +61,10 @@ Download the latest release from [GitHub Releases](../../releases).
 
 ## 🛠️ Development
 
+Current reliability work uses Node.js 24.x. Run `npm run check:desktop` for TypeScript, Node regression tests, Rust storage tests and desktop compilation. The Tauri release build runs this gate before packaging. Normal task, pet, achievement and interaction-limit changes now commit together in `business_<userId>.json`; legacy source files are retained during migration. Credentials still use the legacy account store.
+
+The current source has not yet passed GUI, installer or upgrade acceptance. Existing EXE/MSI files do not contain these changes. See [the verification guide](MANUAL_VERIFICATION_GUIDE.md) and [the latest implementation record](DESKTOP_RELIABILITY_IMPROVEMENT_PLAN.md#16-第三批实施记录账户原子快照退出等待与小组件权威读取) for current scope and remaining work. Account deletion is temporarily unavailable until backup and cleanup cover the authoritative data.
+
 ### Tech Stack
 - **Frontend**: React 18 + TypeScript + Vite
 - **Backend**: Tauri (Rust)
@@ -69,7 +73,7 @@ Download the latest release from [GitHub Releases](../../releases).
 - **NLP**: Compromise.js
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) (v18 or higher)
+- [Node.js](https://nodejs.org/) (24.x; verified runtime for the reliability tests)
 - [pnpm](https://pnpm.io/) (package manager)
 - [Rust](https://www.rust-lang.org/) (for Tauri)
 
@@ -86,9 +90,14 @@ pnpm install
 # Run in development mode
 pnpm run tauri:dev
 
+# Check types and run isolated reliability tests
+pnpm run check
+
 # Build for production
 pnpm run tauri:build
 ```
+
+Desktop builds run the frontend checks and build automatically, and embed the project-root `dist/` output. They no longer depend on a manually copied `src-tauri/dist/` directory. See `tests/README.md` for the test scope and `DESKTOP_RELIABILITY_IMPROVEMENT_PLAN.md` for remaining release requirements. Existing EXE/MSI files are not rebuilt by editing the source.
 
 ## 📁 Project Structure
 

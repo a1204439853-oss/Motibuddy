@@ -65,6 +65,16 @@ export enum PetType {
   BIRD = 'bird'
 }
 
+export interface TaskRewardReceipt {
+  version: 1;
+  health: number;
+  happiness: number;
+  hunger: number;
+  energy: number;
+  experience: number;
+  grantedAt: string;
+}
+
 export interface Pet {
   id: string;
   userId: string;
@@ -79,6 +89,7 @@ export interface Pet {
   lastInteraction: Date;
   lastFed: Date;
   createdAt: Date;
+  taskRewardReceipts?: Record<string, TaskRewardReceipt>;
 }
 
 // Achievement types

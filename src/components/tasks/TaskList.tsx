@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect, useRef } from 'react';
+import { useState, useContext, useEffect, useRef, useMemo } from 'react';
 import { TaskContext } from '@/contexts/taskContext';
 import { TaskStatus, Task } from '@/types';
 import { formatDate, getTimeRemaining } from '@/lib/utils';
@@ -11,11 +11,10 @@ interface TaskListProps {
 }
 
 const TaskList = ({ onEditTask }: TaskListProps) => {
-  const { tasks, sortTasks, filterTasks, searchTasks } = useContext(TaskContext);
+  const { tasks, sortTasks, filterTasks, searchTasks, isLoading, isSaving, loadError, saveError, retryLoad } = useContext(TaskContext);
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all');
   const [sortCriteria, setSortCriteria] = useState<'dueDate' | 'priority' | 'createdAt'>('dueDate');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [visibleTasks, setVisibleTasks] = useState(tasks);
   const [isScrollable, setIsScrollable] = useState(false);
   const [scrollTop, setScrollTop] = useState(0);
   const [isAtBottom, setIsAtBottom] = useState(false);
@@ -23,7 +22,7 @@ const TaskList = ({ onEditTask }: TaskListProps) => {
   const taskListRef = useRef<HTMLDivElement>(null);
   
   // Update visible tasks when filters, sort criteria, search query, or tasks change
-  useEffect(() => {
+  const visibleTasks = useMemo(() => {
     let filtered = filterTasks(filterStatus);
     let searched = searchTasks(searchQuery);
     
@@ -67,7 +66,7 @@ const TaskList = ({ onEditTask }: TaskListProps) => {
     // Combine: non-completed first, then completed
     const sorted = [...sortedNonCompleted, ...sortedCompleted];
     
-    setVisibleTasks(sorted);
+    return sorted;
   }, [tasks, filterStatus, sortCriteria, searchQuery, filterTasks, searchTasks]);
   
   // Handle scroll events and check if task list is scrollable
@@ -116,6 +115,15 @@ const TaskList = ({ onEditTask }: TaskListProps) => {
   
   return (
     <div className="space-y-3 h-full flex flex-col">
+      {(loadError || saveError) && (
+        <div role="alert" className="rounded-lg border-2 border-red-600 bg-white p-3 text-sm text-red-800">
+          <p>{loadError || saveError}</p>
+          {loadError && <button type="button" onClick={() => { void retryLoad(); }} className="mt-2 underline">Retry reading tasks</button>}
+        </div>
+      )}
+      <p role="status" aria-live="polite" className="text-xs text-gray-700">
+        {isLoading ? 'Loading tasks…' : isSaving ? 'Saving task changes…' : loadError ? 'Task editing is paused.' : saveError ? 'The last change was not saved.' : 'Tasks are up to date.'}
+      </p>
       {/* Search and filters */}
       <div className="bg-white p-3 rounded-lg border-2 border-black" style={{ boxShadow: '3px 3px 0 #222222' }}>
         <div className="flex flex-col md:flex-row gap-2">

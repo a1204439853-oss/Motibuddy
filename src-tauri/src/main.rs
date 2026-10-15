@@ -5,8 +5,61 @@ use tauri::{Manager, SystemTray, SystemTrayMenu, SystemTrayMenuItem, CustomMenuI
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::sync::Mutex;
-use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
+mod storage_paths;
+mod business_store;
+mod instance_lock;
+
+#[derive(Default)]
+struct ShutdownState { pending: Mutex<Option<String>>, approved: AtomicBool }
+
+fn request_shutdown(app: &tauri::AppHandle) {
+    let state = app.state::<ShutdownState>();
+    if let Ok(mut pending) = state.pending.lock() {
+        let id = pending.get_or_insert_with(|| format!("exit-{}", chrono::Utc::now().timestamp_millis()));
+        if app.emit_to("main", "prepare-exit", id.clone()).is_err() { *pending = None; }
+    };
+}
+
+fn main_window_only(window: &tauri::Window) -> Result<(), String> {
+    if window.label() == "main" { Ok(()) } else { Err("Only the main window may change business data".into()) }
+}
+
+#[tauri::command]
+fn read_business_state(user_id: String, store: tauri::State<business_store::BusinessStore>) -> Result<Option<business_store::Snapshot>, String> {
+    store.read(&user_id)
+}
+
+#[tauri::command]
+fn initialize_business_state(window: tauri::Window, user_id: String, data: business_store::BusinessData, store: tauri::State<business_store::BusinessStore>) -> Result<business_store::Snapshot, String> {
+    main_window_only(&window)?;
+    store.initialize(&user_id, data)
+}
+
+#[tauri::command]
+fn commit_business_state(window: tauri::Window, user_id: String, expected_revision: u64, operation_id: String, data: business_store::BusinessData, store: tauri::State<business_store::BusinessStore>, shutdown: tauri::State<ShutdownState>) -> Result<business_store::Snapshot, String> {
+    main_window_only(&window)?;
+    if shutdown.approved.load(Ordering::SeqCst) { return Err("Application is closing".into()); }
+    store.commit(&user_id, expected_revision, &operation_id, data)
+}
+
+#[tauri::command]
+fn complete_shutdown(window: tauri::Window, request_id: String, app: tauri::AppHandle, state: tauri::State<ShutdownState>) -> Result<(), String> {
+    main_window_only(&window)?;
+    let mut pending = state.pending.lock().map_err(|_| "Exit state unavailable")?;
+    if pending.as_deref() != Some(&request_id) { return Err("Exit request has changed".into()); }
+    state.approved.store(true, Ordering::SeqCst);
+    *pending = None;
+    app.exit(0);
+    Ok(())
+}
+
+#[tauri::command]
+fn cancel_shutdown(window: tauri::Window, state: tauri::State<ShutdownState>) -> Result<(), String> {
+    main_window_only(&window)?;
+    *state.pending.lock().map_err(|_| "Exit state unavailable")? = None;
+    Ok(())
+}
 
 // 全局日志文件句柄
 struct Logger {
@@ -39,47 +92,19 @@ impl Logger {
     }
 }
 
-// Widget 数据结构
-#[derive(Serialize, Deserialize, Clone, Debug)]
-struct WidgetData {
-    user_id: Option<String>,
-    tasks: Vec<Task>,
-    pet: Option<Pet>,
-    timestamp: i64,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-struct Task {
-    id: String,
-    title: String,
-    due_date: String,
-    priority: String,
-    status: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-struct Pet {
-    name: String,
-    pet_type: String,
-    level: i32,
-    health: i32,
-    happiness: i32,
-    hunger: i32,
-    energy: i32,
-}
-
-impl Default for WidgetData {
-    fn default() -> Self {
-        WidgetData {
-            user_id: None,
-            tasks: vec![],
-            pet: None,
-            timestamp: 0,
-        }
-    }
-}
-
 fn main() {
+    let context = tauri::generate_context!();
+    let Some(app_directory) = tauri::api::path::app_data_dir(context.config()) else {
+        eprintln!("Application data directory is unavailable"); return;
+    };
+    // Acquire before any WebView or writable application state is created.
+    let _instance_lock = match instance_lock::InstanceLock::acquire(&app_directory) {
+        Ok(lock) => lock,
+        Err(error) => {
+            tauri::api::dialog::blocking::message(None::<&tauri::Window>, "MotiBuddy", format!("应用已在运行，或数据目录无法锁定。请使用已打开的窗口。\n{error}"));
+            return;
+        }
+    };
     // 创建系统托盘菜单
     let tray_menu = SystemTrayMenu::new()
         .add_item(CustomMenuItem::new("toggle_main", "Show/Hide Main Window"))
@@ -90,12 +115,14 @@ fn main() {
     let system_tray = SystemTray::new().with_menu(tray_menu);
 
     tauri::Builder::default()
+        .manage(ShutdownState::default())
+        .manage(business_store::BusinessStore::new(app_directory.join("MotiBuddyData")))
         .system_tray(system_tray)
         .on_system_tray_event(|app, event| match event {
             SystemTrayEvent::MenuItemClick { id, .. } => {
                 match id.as_str() {
                     "quit" => {
-                        std::process::exit(0);
+                        request_shutdown(app);
                     }
                     "toggle_main" => {
                         if let Some(main_window) = app.get_window("main") {
@@ -211,17 +238,24 @@ fn main() {
             toggle_widget_window,
             get_data_directory,
             log_message,
-            save_widget_data,
             load_widget_data,
             start_dragging,
             move_widget_window,
             log_widget_debug,
+            data_file_exists,
+            read_business_state,
+            initialize_business_state,
+            commit_business_state,
+            complete_shutdown,
+            cancel_shutdown,
         ])
-        .build(tauri::generate_context!())
+        .build(context)
         .expect("error while running tauri application")
         .run(|_app_handle, event| match event {
             RunEvent::ExitRequested { api, .. } => {
-                api.prevent_exit();
+                if !_app_handle.state::<ShutdownState>().approved.load(Ordering::SeqCst) {
+                    api.prevent_exit();
+                }
             }
             RunEvent::Exit => {
                 // 应用退出时关闭小组件窗口
@@ -233,71 +267,24 @@ fn main() {
         });
 }
 
-// 获取 widget 数据文件路径 - 按用户ID分别存储
-fn get_widget_data_path(app_handle: &tauri::AppHandle, user_id: &str) -> PathBuf {
-    let app_dir = app_handle.path_resolver().app_data_dir().expect("Failed to get app data dir");
-    app_dir.join(format!("widget_data_{}.json", user_id))
+#[tauri::command]
+fn data_file_exists(filename: String, app_handle: tauri::AppHandle) -> Result<bool, String> {
+    if !storage_paths::valid_data_filename(&filename) {
+        return Err("Invalid data filename".to_string());
+    }
+    let root = app_handle.path_resolver().app_data_dir().ok_or("App data directory unavailable")?;
+    storage_paths::data_file_exists(&root.join("MotiBuddyData").join(filename))
+        .map_err(|_| "Data file metadata could not be read; existing data has been preserved".to_string())
 }
 
-// 保存 widget 数据到文件 - 按用户ID分别存储
+// Widget views are projections of the committed account snapshot.
 #[tauri::command]
-fn save_widget_data(
-    user_id: Option<String>,
-    tasks: Vec<Task>,
-    pet: Option<Pet>,
-    app_handle: tauri::AppHandle
-) -> Result<(), String> {
-    let logger = app_handle.state::<std::sync::Arc<Logger>>();
-    logger.log(&format!("save_widget_data called with {} tasks", tasks.len()));
-    
-    // 必须有 user_id 才能保存
-    let uid = user_id.clone().unwrap_or_default();
-    if uid.is_empty() {
-        logger.log("No user_id provided, skipping save");
-        return Ok(());
-    }
-    
-    let data = WidgetData {
-        user_id,
-        tasks,
-        pet,
-        timestamp: chrono::Local::now().timestamp(),
+fn load_widget_data(user_id: Option<String>, store: tauri::State<business_store::BusinessStore>) -> Result<serde_json::Value, String> {
+    let Some(owner) = user_id.filter(|id| !id.is_empty()) else {
+        return Ok(serde_json::json!({ "user_id": null, "tasks": [], "pet": null, "timestamp": 0, "revision": 0 }));
     };
-    
-    let file_path = get_widget_data_path(&app_handle, &uid);
-    let json = serde_json::to_string_pretty(&data).map_err(|e| format!("Failed to serialize data: {}", e))?;
-    
-    std::fs::write(&file_path, json).map_err(|e| format!("Failed to write file: {}", e))?;
-    logger.log(&format!("Widget data saved to: {:?}", file_path));
-    
-    Ok(())
-}
-
-// 从文件加载 widget 数据 - 需要传入 user_id
-#[tauri::command]
-fn load_widget_data(user_id: Option<String>, app_handle: tauri::AppHandle) -> Result<WidgetData, String> {
-    let logger = app_handle.state::<std::sync::Arc<Logger>>();
-    logger.log(&format!("load_widget_data called for user: {:?}", user_id));
-    
-    // 必须有 user_id 才能加载
-    let uid = user_id.unwrap_or_default();
-    if uid.is_empty() {
-        logger.log("No user_id provided, returning default");
-        return Ok(WidgetData::default());
-    }
-    
-    let file_path = get_widget_data_path(&app_handle, &uid);
-    
-    if !file_path.exists() {
-        logger.log(&format!("Widget data file not found for user: {}, returning default", uid));
-        return Ok(WidgetData::default());
-    }
-    
-    let json = std::fs::read_to_string(&file_path).map_err(|e| format!("Failed to read file: {}", e))?;
-    let data: WidgetData = serde_json::from_str(&json).map_err(|e| format!("Failed to parse data: {}", e))?;
-    
-    logger.log(&format!("Widget data loaded for user {}: {} tasks", uid, data.tasks.len()));
-    Ok(data)
+    let snapshot = store.read(&owner)?.ok_or("Account data is unavailable; sign in again")?;
+    Ok(business_store::widget_projection(&snapshot))
 }
 
 // 显示主窗口

@@ -1,11 +1,10 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Pet } from '@/types';
 import { motion } from 'framer-motion';
 import { invoke } from '@tauri-apps/api/tauri';
 import { isTauri } from '@/services/tauriCommands';
 import { toast } from 'sonner';
-import { TaskContext } from '@/contexts/taskContext';
 
 interface SidebarProps {
   activeView: 'tasks' | 'statistics';
@@ -18,51 +17,6 @@ interface SidebarProps {
 const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthenticated }: SidebarProps) => {
   const navigate = useNavigate();
   const [widgetVisible, setWidgetVisible] = useState(false);
-  
-  // Get tasks from TaskContext
-  const taskContext = useContext(TaskContext);
-  const tasks = taskContext?.tasks || [];
-  
-  // Auto sync data to widget when pet or tasks change
-  useEffect(() => {
-    const syncToWidget = async () => {
-      if (!isTauri() || !widgetVisible || !currentUser) return;
-      
-      try {
-        console.log('Auto syncing data to widget...');
-        await invoke('save_widget_data', {
-          userId: currentUser?.id || null,
-          tasks: (tasks || []).map(t => ({
-            id: t.id,
-            title: t.title,
-            due_date: t.dueDate?.toISOString ? t.dueDate.toISOString() : new Date(t.dueDate).toISOString(),
-            priority: t.priority,
-            status: t.status
-          })),
-          pet: currentPet ? {
-            name: currentPet.name,
-            pet_type: currentPet.type,
-            level: currentPet.level,
-            health: currentPet.health,
-            happiness: currentPet.happiness,
-            hunger: currentPet.hunger,
-            energy: currentPet.energy
-          } : null
-        });
-        console.log('Auto sync completed');
-      } catch (error) {
-        console.error('Auto sync failed:', error);
-      }
-    };
-    
-    // Sync immediately when data changes
-    syncToWidget();
-    
-    // Also sync periodically every 3 seconds when widget is visible
-    const intervalId = setInterval(syncToWidget, 3000);
-    
-    return () => clearInterval(intervalId);
-  }, [currentPet, tasks, currentUser, widgetVisible]);
   
   // Inspirational quotes array
   const quotes = [
@@ -178,34 +132,6 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
     
     if (tauriAvailable) {
       try {
-        // Always sync data before showing widget to ensure latest data
-        if (!widgetVisible) {
-          console.log('Syncing data before showing widget...');
-          console.log('Current user ID:', currentUser?.id);
-          console.log('Tasks count:', tasks?.length || 0);
-          
-          await invoke('save_widget_data', {
-            userId: currentUser?.id || null,
-            tasks: (tasks || []).map(t => ({
-              id: t.id,
-              title: t.title,
-              due_date: t.dueDate?.toISOString ? t.dueDate.toISOString() : new Date(t.dueDate).toISOString(),
-              priority: t.priority,
-              status: t.status
-            })),
-            pet: currentPet ? {
-              name: currentPet.name,
-              pet_type: currentPet.type,
-              level: currentPet.level,
-              health: currentPet.health,
-              happiness: currentPet.happiness,
-              hunger: currentPet.hunger,
-              energy: currentPet.energy
-            } : null
-          });
-          console.log('Data synced before showing widget');
-        }
-        
         console.log('Calling toggle_widget_window...');
         const isVisible = await invoke<boolean>('toggle_widget_window');
         console.log('toggle_widget_window returned:', isVisible);

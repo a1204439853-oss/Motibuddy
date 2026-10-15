@@ -2,6 +2,7 @@ import { useContext, useState, useEffect, useLayoutEffect, useRef, useCallback }
 import { AuthContext } from '@/contexts/authContext';
 import { PetContext } from '@/contexts/petContext';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 // Video type definitions
 const VIDEOS = {
@@ -148,7 +149,8 @@ const PetDisplay = () => {
     });
 
     // 更新交互播放标志
-    const isInteraction = [VIDEOS.FEEDING, VIDEOS.PLAYING, VIDEOS.RANDOM, VIDEOS.COMPLETED, VIDEOS.OVERDUE].includes(newVideo);
+    const interactionVideos: readonly VideoType[] = [VIDEOS.FEEDING, VIDEOS.PLAYING, VIDEOS.RANDOM, VIDEOS.COMPLETED, VIDEOS.OVERDUE];
+    const isInteraction = interactionVideos.includes(newVideo);
     isInteractionPlayingRef.current = isInteraction;
 
     // 切换视频
@@ -209,6 +211,8 @@ const PetDisplay = () => {
       setPetDialogue(getPetDialogue('fed'));
       setShowDialogue(true);
       setTimeout(() => setShowDialogue(false), 4000);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Pet changes were not saved. Please retry.');
     } finally {
       // Clear processing flag after a short delay to allow state updates to settle
       setTimeout(() => {
@@ -246,6 +250,8 @@ const PetDisplay = () => {
       setPetDialogue(getPetDialogue('play'));
       setShowDialogue(true);
       setTimeout(() => setShowDialogue(false), 4000);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Pet changes were not saved. Please retry.');
     } finally {
       // Clear processing flag after a short delay to allow state updates to settle
       setTimeout(() => {
@@ -255,7 +261,7 @@ const PetDisplay = () => {
   }, [canSwitchTo, getBusyMessage, playWithPet, getPetDialogue, switchVideo]);
 
   // Handle pet click
-  const handlePetClick = useCallback(() => {
+  const handlePetClick = useCallback(async () => {
     if (!canSwitchTo(VIDEOS.RANDOM)) {
       setPetDialogue(getBusyMessage());
       setShowDialogue(true);
@@ -263,7 +269,8 @@ const PetDisplay = () => {
       return;
     }
 
-    interactWithPet();
+    try { await interactWithPet(); }
+    catch { toast.error('Pet changes were not saved. Please retry.'); return; }
     setPetDialogue(getPetDialogue());
     switchVideo(VIDEOS.RANDOM);
     setShowDialogue(true);

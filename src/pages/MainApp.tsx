@@ -2,7 +2,6 @@ import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/contexts/authContext';
 import { TaskContext } from '@/contexts/taskContext';
-import { PetContext } from '@/contexts/petContext';
 import TaskList from '@/components/tasks/TaskList';
 import TaskForm from '@/components/tasks/TaskForm';
 import PetDisplay from '@/components/pet/PetDisplay';
@@ -15,9 +14,8 @@ import { motion } from 'framer-motion';
 import { TaskPriority } from '@/types';
 
 const MainApp = () => {
-  const { currentUser, currentPet, setCurrentPet, logout, isAuthenticated } = useContext(AuthContext);
+  const { currentUser, currentPet, logout, isAuthenticated } = useContext(AuthContext);
   const { addTask } = useContext(TaskContext);
-  const { savePet, interactionDataRef } = useContext(PetContext) || {};
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [activeView, setActiveView] = useState<'tasks' | 'statistics'>('tasks');
   const [isTaskFormOpen, setIsTaskFormOpen] = useState<boolean>(false);
@@ -26,22 +24,22 @@ const MainApp = () => {
   const navigate = useNavigate();
 
   // Handle voice task creation
-  const handleVoiceTaskCreated = (task: {
+  const handleVoiceTaskCreated = async (task: {
     title: string;
     description?: string;
     dueDate?: Date;
     priority?: TaskPriority;
   }) => {
     try {
-      addTask({
+      await addTask({
         title: task.title,
         description: task.description || '',
         dueDate: task.dueDate || new Date(Date.now() + 24 * 60 * 60 * 1000),
         priority: task.priority || TaskPriority.MEDIUM
       });
-      toast.success('Task created successfully!');
     } catch (error) {
       toast.error('Failed to create task: ' + (error as Error).message);
+      throw error;
     }
   };
 
@@ -53,121 +51,6 @@ const MainApp = () => {
       navigate('/create-pet');
     }
   }, [currentUser, currentPet, navigate]);
-
-  // Listen for widget events via Tauri event system
-  useEffect(() => {
-    const logDebug = async (message: string) => {
-      try {
-        const { invoke } = await import('@tauri-apps/api/tauri');
-        await invoke('log_widget_debug', { message });
-      } catch (e) {
-        console.log('[DEBUG]', message);
-      }
-    };
-
-    // Listen for Tauri events from widget
-    const listenForWidgetEvents = async () => {
-      try {
-        const { listen } = await import('@tauri-apps/api/event');
-        
-        // Listen for widget action events
-        const unlistenAction = await listen('widget-action', (event: any) => {
-          const { action } = event.payload;
-          logDebug(`Received widget action: ${action}`);
-          
-          if (action === 'close') {
-            // Hide widget window
-            const hideWidget = async () => {
-              try {
-                const { invoke } = await import('@tauri-apps/api/tauri');
-                await invoke('hide_widget_window');
-                logDebug('Widget hidden via Tauri event');
-              } catch (error) {
-                logDebug(`Failed to hide widget: ${error}`);
-              }
-            };
-            hideWidget();
-          } else if (action === 'open-main') {
-            // Show main window
-            const showMain = async () => {
-              try {
-                const { invoke } = await import('@tauri-apps/api/tauri');
-                await invoke('show_main_window');
-                logDebug('Main window shown via Tauri event');
-              } catch (error) {
-                logDebug(`Failed to show main window: ${error}`);
-              }
-            };
-            showMain();
-          } else if (action === 'start-drag') {
-            // Start dragging widget window
-            const startDrag = async () => {
-              try {
-                const { invoke } = await import('@tauri-apps/api/tauri');
-                await invoke('start_dragging');
-                logDebug('Widget drag started via Tauri event');
-              } catch (error) {
-                logDebug(`Failed to start dragging: ${error}`);
-              }
-            };
-            startDrag();
-          }
-        });
-        
-        // Listen for widget pet action events (feed/play from widget)
-        const unlistenPetAction = await listen('widget-pet-action', async (event: any) => {
-          const { action, pet: updatedPet, interactionData } = event.payload;
-          logDebug(`Received widget pet action: ${action}`);
-          
-          // Update and save pet data from widget
-          if (updatedPet && currentPet && savePet) {
-            const newPet = {
-              ...currentPet,
-              hunger: updatedPet.hunger,
-              energy: updatedPet.energy,
-              happiness: updatedPet.happiness,
-              health: updatedPet.health
-            };
-            
-            // Update local state
-            setCurrentPet(newPet);
-            
-            // Save to database (real persistence)
-            await savePet(newPet);
-            logDebug(`Pet data saved from widget action: ${action}`);
-          }
-          
-          // Update interaction data in petContext
-          if (interactionData && interactionDataRef) {
-            interactionDataRef.current = interactionData;
-            localStorage.setItem('interaction_data', JSON.stringify(interactionData));
-            logDebug('Interaction data updated from widget');
-          }
-        });
-        
-        logDebug('Tauri event listeners registered');
-        
-        // Return combined unlisten function
-        return () => {
-          unlistenAction();
-          unlistenPetAction();
-        };
-      } catch (error) {
-        logDebug(`Failed to register event listener: ${error}`);
-      }
-    };
-    
-    let unlistenFn: (() => void) | undefined;
-    listenForWidgetEvents().then(fn => {
-      unlistenFn = fn;
-    });
-    
-    return () => {
-      if (unlistenFn) {
-        unlistenFn();
-      }
-    };
-  }, []);
 
   // If no user or pet, show loading
   if (!currentUser || !currentPet) {

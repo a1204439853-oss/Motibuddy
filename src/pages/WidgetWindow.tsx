@@ -1,5 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { readSessionStamp } from '@/services/runtimeSession';
+import { requestWidgetPetAction } from '@/services/widgetPetCommands';
+import { isTauri } from '@/services/tauriCommands';
 
 interface Task {
   id: string;
@@ -24,17 +27,21 @@ interface WidgetData {
   tasks: Task[];
   pet: Pet | null;
   timestamp: number;
+  revision: number;
 }
 
 /**
  * Desktop Widget Window
- * Uses localStorage for communication with main app
+ * Reads committed backend snapshots; localStorage only identifies the active session.
  */
 const WidgetWindow = () => {
   const [mode, setMode] = useState<'compact' | 'full'>('compact');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [pet, setPet] = useState<Pet | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const displayedSession = useRef<string | null>(null);
+  const displayedRevision = useRef(0);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
 
@@ -50,16 +57,9 @@ const WidgetWindow = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Interaction data for feed/play limits
-  const [interactionData, setInteractionData] = useState({
-    feedCount2Hour: 0,
-    playCount2Hour: 0,
-    feedWindowStart: null as string | null,
-    playWindowStart: null as string | null
-  });
-
-  // Track if data was updated locally (to prevent override)
-  const [lastLocalUpdate, setLastLocalUpdate] = useState<number>(0);
+  const [isPetActionPending, setPetActionPending] = useState(false);
+  const petActionPending = useRef(false);
+  const reloadData = useRef<() => Promise<void>>(async () => {});
 
   // Task sorting state
   const [sortBy, setSortBy] = useState<'dueDate' | 'priority' | 'created'>('dueDate');
@@ -87,156 +87,67 @@ const WidgetWindow = () => {
     }
   }, [sortBy]);
   
-  // Load data from Tauri backend or localStorage
+  // Read one committed revision for both tasks and pet. Never fall back to stale caches.
   useEffect(() => {
+    let disposed = false;
     const loadData = async (force: boolean = false) => {
+      const stamp = readSessionStamp(localStorage);
       try {
-        // Skip loading if we just made a local update (within last 2 seconds)
-        if (!force && Date.now() - lastLocalUpdate < 2000) {
-          console.log('Widget: Skipping load due to recent local update');
+        if (disposed) return;
+        if (!stamp) {
+          displayedSession.current = null;
+          displayedRevision.current = 0;
+          setUserId(null);
+          setTasks([]);
+          setPet(null);
+          setIsLoading(false);
+          setLoadError(null);
           return;
         }
-        
-        console.log('Widget: Loading data...');
-        
-        let data: WidgetData | null = null;
-        
-        // If userId is null, try to get it from localStorage first
-        let effectiveUserId = userId;
-        if (!effectiveUserId) {
-          const widgetDataStr = localStorage.getItem('widget_data');
-          if (widgetDataStr) {
-            try {
-              const cachedData = JSON.parse(widgetDataStr);
-              if (cachedData.user_id) {
-                effectiveUserId = cachedData.user_id;
-                console.log('Widget: Got userId from localStorage:', effectiveUserId);
-              }
-            } catch (e) {
-              console.log('Widget: Failed to parse cached data');
-            }
-          }
+        const changedSession = displayedSession.current !== stamp.token;
+        if (changedSession) {
+          displayedSession.current = stamp.token;
+          displayedRevision.current = 0;
+          setTasks([]);
+          setPet(null);
+          setUserId(null);
         }
+        if (!isTauri()) throw new Error('Desktop data is unavailable.');
+        const { invoke } = await import('@tauri-apps/api/tauri');
+        const data = await invoke<WidgetData>('load_widget_data', { userId: stamp.userId });
         
-        // Try to load from Tauri backend first (most up-to-date) - pass effective user_id
-        if (effectiveUserId) {
-          try {
-            // @ts-ignore
-            if (window.__TAURI__) {
-              // @ts-ignore
-              const { invoke } = await import('@tauri-apps/api/tauri');
-              // @ts-ignore
-              data = await invoke('load_widget_data', { userId: effectiveUserId });
-              console.log('Widget: Data loaded from Tauri backend for user:', effectiveUserId, data);
-            }
-          } catch (e) {
-            console.log('Widget: Failed to load from Tauri, falling back to localStorage');
-          }
-        } else {
-          console.log('Widget: No userId available, skipping Tauri load');
-        }
-        
-        // Fallback to localStorage if Tauri load failed or no userId
-        if (!data) {
-          const widgetDataStr = localStorage.getItem('widget_data');
-          if (widgetDataStr) {
-            data = JSON.parse(widgetDataStr);
-            console.log('Widget: Data loaded from localStorage:', data);
-          }
-        }
-        
+        if (disposed || readSessionStamp(localStorage)?.token !== stamp.token) return;
+        if (data.user_id !== stamp.userId || !Number.isSafeInteger(data.revision) || data.revision < 1) throw new Error('Invalid saved widget data.');
+        if (data.revision < displayedRevision.current) return;
         if (data) {
-          // Validate user ID - only update if user ID matches or is new
-          const currentUserId = userId;
-          const newUserId = data.user_id;
-          
-          if (currentUserId && newUserId && currentUserId !== newUserId) {
-            console.log('Widget: User ID mismatch detected!', { current: currentUserId, new: newUserId });
-            // User switched, clear all data first then set new data
-            setUserId(newUserId);
-            setTasks([]);
-            setPet(null);
-            // Small delay to ensure clear happens before setting new data
-            setTimeout(() => {
-              setTasks(data.tasks || []);
-              setPet(data.pet);
-            }, 0);
-            setLastLocalUpdate(0);
-          } else {
-            // Same user or first load, update normally
-            setUserId(newUserId);
-            // Only update tasks if they actually changed to prevent flashing
-            setTasks(prevTasks => {
-              const newTasks = data?.tasks || [];
-              if (JSON.stringify(prevTasks) !== JSON.stringify(newTasks)) {
-                console.log('Widget: Tasks updated');
-                return newTasks;
-              }
-              return prevTasks;
-            });
-            
-            // Only update pet from external source if no recent local update
-            if (Date.now() - lastLocalUpdate > 3000) {
-              setPet(data.pet);
-              console.log('Widget: Updated pet from external source');
-            } else {
-              console.log('Widget: Skipping pet update due to recent local activity');
-            }
-          }
+          displayedRevision.current = data.revision;
+          setLoadError(null);
+          setUserId(stamp.userId);
+          setTasks(previous => JSON.stringify(previous) === JSON.stringify(data.tasks ?? []) ? previous : data.tasks ?? []);
+          setPet(data.pet);
         }
-        
-        // Load interaction data from main app (sync via localStorage)
-        const interactionStr = localStorage.getItem('interaction_data');
-        if (interactionStr) {
-          try {
-            const parsed = JSON.parse(interactionStr);
-            // Ensure all required fields exist
-            setInteractionData({
-              feedCount2Hour: parsed.feedCount2Hour ?? 0,
-              playCount2Hour: parsed.playCount2Hour ?? 0,
-              feedWindowStart: parsed.feedWindowStart ?? null,
-              playWindowStart: parsed.playWindowStart ?? null
-            });
-            console.log('Widget: Loaded interaction data from main app');
-          } catch (e) {
-            console.log('Widget: Failed to parse interaction data, using defaults');
-            // Reset to defaults on parse error
-            setInteractionData({
-              feedCount2Hour: 0,
-              playCount2Hour: 0,
-              feedWindowStart: null,
-              playWindowStart: null
-            });
-          }
-        } else {
-          // No interaction data found, ensure defaults are set
-          console.log('Widget: No interaction data found, using defaults');
-          setInteractionData({
-            feedCount2Hour: 0,
-            playCount2Hour: 0,
-            feedWindowStart: null,
-            playWindowStart: null
-          });
-        }
-        
+
         // Only set loading to false on first load
         if (isLoading) {
           setIsLoading(false);
         }
       } catch (error) {
+        if (disposed || readSessionStamp(localStorage)?.token !== stamp?.token) return;
         console.error('Widget: Error loading data:', error);
+        setLoadError('Saved progress could not be refreshed. Please check the main window.');
         if (isLoading) {
           setIsLoading(false);
         }
       }
     };
 
+    reloadData.current = () => loadData(true);
     // Load immediately
     loadData(true);
     
     // Listen for storage changes (from main app)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'widget_data') {
+      if (e.key === 'widget_data' || e.key === 'activeSession' || e.key === 'currentUserId') {
         console.log('Widget: Data updated from main app (storage event)');
         loadData(true);
       }
@@ -248,43 +159,49 @@ const WidgetWindow = () => {
     const intervalId = setInterval(() => loadData(false), 1500);
     
     return () => {
+      disposed = true;
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(intervalId);
     };
-  }, [lastLocalUpdate, isLoading]);
+  }, [isLoading]);
 
-  // Check and reset 2-hour window
-  const checkAndResetWindow = (data: typeof interactionData, now: Date): typeof interactionData => {
-    const newData = { ...data };
-
-    // Check feed window
-    if (newData.feedWindowStart) {
-      const windowStart = new Date(newData.feedWindowStart);
-      const hoursPassed = (now.getTime() - windowStart.getTime()) / (1000 * 60 * 60);
-      if (hoursPassed >= 2) {
-        newData.feedCount2Hour = 0;
-        newData.feedWindowStart = null;
+  const requestPetAction = async (action: 'feed' | 'play') => {
+    const stamp = readSessionStamp(localStorage);
+    if (petActionPending.current || !pet || !stamp || stamp.userId !== userId || stamp.token !== displayedSession.current) return;
+    petActionPending.current = true;
+    setPetActionPending(true);
+    const isActive = () => readSessionStamp(localStorage)?.token === stamp.token;
+    try {
+      if (!isTauri()) throw new Error('Desktop interactions are unavailable.');
+      const { listen, emit } = await import('@tauri-apps/api/event');
+      const result = await requestWidgetPetAction({
+        listen: handler => listen('widget-pet-result', event => handler(event.payload)),
+        emit: request => emit('widget-pet-action', request),
+      }, { requestId: crypto.randomUUID(), userId: stamp.userId, sessionToken: stamp.token, action }, isActive);
+      if (!isActive()) return;
+      await reloadData.current();
+      if (!result.success) { showPetDialogue(result.message); return; }
+      showPetDialogue(action === 'feed' ? 'Yum yum! That was delicious!' : "That was fun! Let's play again soon!");
+      const video = document.querySelector('video');
+      if (video) {
+        video.loop = false;
+        video.src = '/' + pet.pet_type + '_' + action + '.mp4';
+        void video.play().catch(() => {});
+        video.addEventListener('ended', () => {
+          video.loop = true;
+          video.src = '/' + pet.pet_type + '_idle.mp4';
+          void video.play().catch(() => {});
+        }, { once: true });
       }
-    }
-
-    // Check play window
-    if (newData.playWindowStart) {
-      const windowStart = new Date(newData.playWindowStart);
-      const hoursPassed = (now.getTime() - windowStart.getTime()) / (1000 * 60 * 60);
-      if (hoursPassed >= 2) {
-        newData.playCount2Hour = 0;
-        newData.playWindowStart = null;
+    } catch (error) {
+      if (isActive()) {
+        showPetDialogue(error instanceof Error ? error.message : 'The interaction result could not be confirmed.');
+        await reloadData.current();
       }
+    } finally {
+      petActionPending.current = false;
+      setPetActionPending(false);
     }
-
-    return newData;
-  };
-
-  // Save interaction data (sync with main app via localStorage)
-  const saveInteractionData = (data: typeof interactionData) => {
-    setInteractionData(data);
-    localStorage.setItem('interaction_data', JSON.stringify(data));
-    console.log('Widget: Saved interaction data');
   };
 
   // Get all sorted tasks
@@ -307,11 +224,10 @@ const WidgetWindow = () => {
     console.log('Widget: Closing...');
     try {
       // @ts-ignore
-      if (window.__TAURI__) {
+      if (isTauri()) {
         // @ts-ignore
-        const { emit } = await import('@tauri-apps/api/event');
-        // @ts-ignore
-        await emit('widget-action', { action: 'close' });
+        const { invoke } = await import('@tauri-apps/api/tauri');
+        await invoke('hide_widget_window');
         console.log('Widget: Close event emitted');
       }
     } catch (e) {
@@ -324,11 +240,10 @@ const WidgetWindow = () => {
     console.log('Widget: Opening main app...');
     try {
       // @ts-ignore
-      if (window.__TAURI__) {
+      if (isTauri()) {
         // @ts-ignore
-        const { emit } = await import('@tauri-apps/api/event');
-        // @ts-ignore
-        await emit('widget-action', { action: 'open-main' });
+        const { invoke } = await import('@tauri-apps/api/tauri');
+        await invoke('show_main_window');
         console.log('Widget: Open main event emitted');
       }
     } catch (e) {
@@ -354,7 +269,7 @@ const WidgetWindow = () => {
     
     try {
       // @ts-ignore
-      if (window.__TAURI__) {
+      if (isTauri()) {
         // @ts-ignore
         const { invoke } = await import('@tauri-apps/api/tauri');
         // Use Tauri's native window dragging - much smoother than manual implementation
@@ -384,7 +299,7 @@ const WidgetWindow = () => {
       if (deltaX !== 0 || deltaY !== 0) {
         try {
           // @ts-ignore
-          if (window.__TAURI__) {
+          if (isTauri()) {
             // @ts-ignore
             const { invoke } = await import('@tauri-apps/api/tauri');
             // @ts-ignore
@@ -438,6 +353,7 @@ const WidgetWindow = () => {
           flexDirection: 'column'
         }}
       >
+        {loadError && <p role="alert" className="p-3 text-sm text-red-700 bg-red-50">{loadError}</p>}
         {/* Header - Draggable */}
         <div 
           className="px-3 py-1.5 flex items-center justify-between"
@@ -716,76 +632,8 @@ const WidgetWindow = () => {
                 {/* Interaction Buttons */}
                 <div className="flex gap-2">
                   <button
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      
-                      // Check feed limit (2 times per 2 hours)
-                      const now = new Date();
-                      let newInteractionData = checkAndResetWindow({ ...interactionData }, now);
-                      
-                      if (newInteractionData.feedCount2Hour >= 2) {
-                        showPetDialogue("I'm full now! Let me rest for a while~");
-                        return;
-                      }
-                      
-                      // Update interaction data
-                      if (newInteractionData.feedCount2Hour === 0) {
-                        newInteractionData.feedWindowStart = now.toISOString();
-                      }
-                      newInteractionData.feedCount2Hour++;
-                      saveInteractionData(newInteractionData);
-                      
-                      // Update pet data locally
-                      if (pet) {
-                        const updatedPet = {
-                          ...pet,
-                          hunger: Math.max(0, pet.hunger - 20),
-                          energy: Math.min(100, pet.energy + 20)
-                        };
-                        setPet(updatedPet);
-                        setLastLocalUpdate(Date.now());
-                        
-                        // Save to localStorage for persistence
-                        localStorage.setItem('widget_pet_data', JSON.stringify(updatedPet));
-                        
-                        // Sync to main app via Tauri event
-                        try {
-                          // @ts-ignore
-                          if (window.__TAURI__) {
-                            // @ts-ignore
-                            const { emit } = await import('@tauri-apps/api/event');
-                            // @ts-ignore
-                            await emit('widget-pet-action', { 
-                              action: 'feed', 
-                              pet: updatedPet,
-                              interactionData: newInteractionData
-                            });
-                          }
-                        } catch (err) {
-                          console.log('Failed to sync feed action:', err);
-                        }
-                      }
-                      
-                      // Show dialogue
-                      showPetDialogue("Yum yum! That was delicious!");
-                      
-                      // Play feed video
-                      const video = document.querySelector('video') as HTMLVideoElement;
-                      if (video) {
-                        video.loop = false;
-                        video.src = `/${pet.pet_type}_feed.mp4`;
-                        video.play();
-                        
-                        const handleEnded = () => {
-                          video.loop = true;
-                          video.src = `/${pet.pet_type}_idle.mp4`;
-                          video.play();
-                          video.removeEventListener('ended', handleEnded);
-                        };
-                        
-                        video.addEventListener('ended', handleEnded);
-                      }
-                    }}
+                    disabled={isPetActionPending || !!loadError}
+                    onClick={e => { e.stopPropagation(); void requestPetAction('feed'); }}
                     className="flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all"
                     style={{
                       backgroundColor: '#FF5E5B',
@@ -806,76 +654,8 @@ const WidgetWindow = () => {
                     Feed
                   </button>
                   <button
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      
-                      // Check play limit (2 times per 2 hours)
-                      const now = new Date();
-                      let newInteractionData = checkAndResetWindow({ ...interactionData }, now);
-                      
-                      if (newInteractionData.playCount2Hour >= 2) {
-                        showPetDialogue("I'm tired from playing! Let me rest for a while~");
-                        return;
-                      }
-                      
-                      // Update interaction data
-                      if (newInteractionData.playCount2Hour === 0) {
-                        newInteractionData.playWindowStart = now.toISOString();
-                      }
-                      newInteractionData.playCount2Hour++;
-                      saveInteractionData(newInteractionData);
-                      
-                      // Update pet data locally
-                      if (pet) {
-                        const updatedPet = {
-                          ...pet,
-                          happiness: Math.min(100, pet.happiness + 15),
-                          energy: Math.max(0, pet.energy - 15)
-                        };
-                        setPet(updatedPet);
-                        setLastLocalUpdate(Date.now());
-                        
-                        // Save to localStorage for persistence
-                        localStorage.setItem('widget_pet_data', JSON.stringify(updatedPet));
-                        
-                        // Sync to main app via Tauri event
-                        try {
-                          // @ts-ignore
-                          if (window.__TAURI__) {
-                            // @ts-ignore
-                            const { emit } = await import('@tauri-apps/api/event');
-                            // @ts-ignore
-                            await emit('widget-pet-action', { 
-                              action: 'play', 
-                              pet: updatedPet,
-                              interactionData: newInteractionData
-                            });
-                          }
-                        } catch (err) {
-                          console.log('Failed to sync play action:', err);
-                        }
-                      }
-                      
-                      // Show dialogue
-                      showPetDialogue("That was fun! Let's play again soon!");
-                      
-                      // Play play video
-                      const video = document.querySelector('video') as HTMLVideoElement;
-                      if (video) {
-                        video.loop = false;
-                        video.src = `/${pet.pet_type}_play.mp4`;
-                        video.play();
-                        
-                        const handleEnded = () => {
-                          video.loop = true;
-                          video.src = `/${pet.pet_type}_idle.mp4`;
-                          video.play();
-                          video.removeEventListener('ended', handleEnded);
-                        };
-                        
-                        video.addEventListener('ended', handleEnded);
-                      }
-                    }}
+                    disabled={isPetActionPending || !!loadError}
+                    onClick={e => { e.stopPropagation(); void requestPetAction('play'); }}
                     className="flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all"
                     style={{
                       backgroundColor: '#00CECB',

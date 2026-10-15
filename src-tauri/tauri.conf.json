@@ -1,9 +1,9 @@
 {
   "build": {
-    "beforeBuildCommand": "",
+    "beforeBuildCommand": "npm run build:desktop",
     "beforeDevCommand": "npm run dev",
     "devPath": "http://localhost:3000",
-    "distDir": "dist"
+    "distDir": "../dist"
   },
   "package": {
     "productName": "MotiBuddy",
@@ -52,9 +52,7 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": [
-        "dist/**/*"
-      ],
+      "resources": [],
       "shortDescription": "",
       "targets": ["msi"],
       "windows": {

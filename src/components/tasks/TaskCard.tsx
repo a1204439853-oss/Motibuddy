@@ -16,6 +16,7 @@ const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationS
   const { completeTask, uncompleteTask, updateTask, deleteTask } = useContext(TaskContext);
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+  const [isPending, setIsPending] = useState(false);
   
   // Get priority color
   const getPriorityColor = (priority: string) => {
@@ -50,36 +51,42 @@ const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationS
   };
   
   // Handle complete/uncomplete task
-  const handleToggleComplete = () => {
-    if (task.status === 'completed') {
-      uncompleteTask(task.id);
-    } else {
-      // Trigger animation before completing
-      if (onCompleteAnimationStart) {
-        onCompleteAnimationStart();
+  const handleToggleComplete = async () => {
+    if (isPending) return;
+    setIsPending(true);
+    try {
+      if (task.status === 'completed') await uncompleteTask(task.id);
+      else {
+        await completeTask(task.id);
+        onCompleteAnimationStart?.();
       }
-      // Delay the actual completion to allow animation
-      setTimeout(() => {
-        completeTask(task.id);
-      }, 600);
-    }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Task changes were not saved. Please retry.');
+    } finally { setIsPending(false); }
   };
   
   // Handle delete task
-  const handleDeleteTask = () => {
+  const handleDeleteTask = async () => {
+    if (isPending) return;
     const isCompleted = task.status === 'completed';
     const message = isCompleted 
       ? 'This task has been completed. Are you sure you want to delete it?'
       : 'Are you sure you want to delete this task?';
     
     if (window.confirm(message)) {
-      deleteTask(task.id);
-      toast.success('Task deleted successfully');
+      setIsPending(true);
+      try {
+        await deleteTask(task.id);
+        toast.success('Task deleted successfully');
+      } catch {
+        toast.error('Task was not deleted. Please retry.');
+      } finally { setIsPending(false); }
     }
   };
 
   return (
     <motion.div
+      aria-busy={isPending}
       layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ 
@@ -119,6 +126,7 @@ const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationS
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={handleToggleComplete}
+              disabled={isPending}
               className="mt-0.5 flex-shrink-0"
             >
               {task.status === 'completed' ? (
@@ -223,6 +231,7 @@ const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationS
               }}
             >
               <button
+                disabled={isPending}
                 onClick={() => {
                   if (onEditTask) {
                     onEditTask(task);
@@ -236,8 +245,9 @@ const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationS
               </button>
               
               <button
+                disabled={isPending}
                 onClick={() => {
-                  handleDeleteTask();
+                  void handleDeleteTask();
                   setIsMenuOpen(false);
                 }}
                 className="w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"

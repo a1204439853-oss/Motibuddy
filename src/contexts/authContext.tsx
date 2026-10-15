@@ -1,186 +1,196 @@
-import { useState, ReactNode, useEffect } from "react";
-import { User, Pet } from "@/types";
-import { AuthContext } from "./authContext";
+import { useState, useRef, useCallback, useEffect, ReactNode } from 'react';
+import { User, Pet } from '@/types';
+import { AuthContext } from './authContext';
+import { petRepository, businessRepository, initializeBusiness } from '@/services/storage';
+import { decodePet } from '@/services/petData';
+import { SessionEpoch } from '@/services/sessionEpoch';
+import { clearRuntimeSession } from '@/services/runtimeSession';
+import { PetRecoveryDialog } from '@/components/pet/PetRecoveryDialog';
+import type { PetLoad, PetSource } from '@/services/petRepository';
 
-// Mock implementation for bcrypt
-const mockHash = async (password: string): Promise<string> => {
-  // Simple mock hashing for development
-  return `hashed_${password}`;
-};
+type Conflict = Extract<PetLoad, { status: 'conflict' }>;
+interface PendingRecovery { user: User; version: number; conflict: Conflict }
 
-const mockCompare = async (password: string, hash: string): Promise<boolean> => {
-  // Simple mock comparison for development
-  return hash === `hashed_${password}`;
-};
+// Password storage is still the legacy format; its replacement is a separate A01 task.
+const mockHash = async (password: string) => `hashed_${password}`;
+const mockCompare = async (password: string, hash: string) => hash === `hashed_${password}`;
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-// Mock implementation for AuthProvider
-export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [currentPet, setCurrentPet] = useState<Pet | null>(null);
-  
-  // Initialize authentication state
+  const [currentPet, setPetState] = useState<Pet | null>(null);
+  const [sessionVersion, setSessionVersion] = useState(0);
+  const [pendingRecovery, setPendingRecovery] = useState<PendingRecovery | null>(null);
+  const [recoveryBusy, setRecoveryBusy] = useState(false);
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
+  const epoch = useRef(new SessionEpoch());
+  const userRef = useRef(currentUser);
+  userRef.current = currentUser;
+
   useEffect(() => {
-    // No longer clearing all localStorage data on initialization
-    // This allows pet data and other user data to persist
+    clearRuntimeSession(localStorage);
+    return () => { epoch.current.begin(); };
   }, []);
-  
+
+  const beginSession = () => {
+    const version = epoch.current.begin();
+    clearRuntimeSession(localStorage);
+    userRef.current = null;
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setPetState(null);
+    setSessionVersion(version);
+    setPendingRecovery(null);
+    setRecoveryError(null);
+    setRecoveryBusy(false);
+    window.dispatchEvent(new CustomEvent('user-logout'));
+    return version;
+  };
+
+  const finishSignIn = (user: User, pet: Pet | null, version: number) => {
+    epoch.current.assertCurrent(version);
+    localStorage.setItem('currentUserId', user.id);
+    localStorage.setItem('activeSession', JSON.stringify({ userId: user.id, token: crypto.randomUUID() }));
+    userRef.current = user;
+    setCurrentUser(user);
+    setPetState(pet);
+    setIsAuthenticated(true);
+    setPendingRecovery(null);
+  };
+
+  useEffect(() => businessRepository.subscribe(snapshot => {
+    const user = userRef.current;
+    if (!user || user.id !== snapshot.userId) return;
+    const updated = { ...user, achievements: snapshot.data.achievements };
+    userRef.current = updated;
+    setCurrentUser(updated);
+    setPetState(snapshot.data.pet);
+  }), []);
+
+  const migrateAndSignIn = async (user: User, pet: Pet | null, version: number) => {
+    const snapshot = await initializeBusiness(user, pet, () => epoch.current.isCurrent(version));
+    finishSignIn({ ...user, achievements: snapshot.data.achievements }, snapshot.data.pet, version);
+  };
 
   const login = async (identifier: string, password: string): Promise<boolean> => {
+    const version = beginSession();
+    const users: User[] = JSON.parse(localStorage.getItem('users') ?? '[]');
+    if (!Array.isArray(users)) throw new Error('Account records could not be read. Existing data has been preserved.');
+    const user = users.find(entry => entry.username === identifier || entry.email === identifier);
+    if (!user || !await mockCompare(password, user.password)) return false;
+    epoch.current.assertCurrent(version);
+    const existing = await businessRepository.read(user.id);
+    epoch.current.assertCurrent(version);
+    if (existing) {
+      finishSignIn({ ...user, achievements: existing.data.achievements }, existing.data.pet, version);
+      return true;
+    }
+    let loaded: PetLoad;
+    try { loaded = await petRepository.load(user.id, () => epoch.current.isCurrent(version)); }
+    catch (error) {
+      epoch.current.assertCurrent(version);
+      throw new Error(error instanceof Error ? `Pet data could not be loaded: ${error.message}` : 'Pet data could not be read. Existing data has been preserved.');
+    }
+    epoch.current.assertCurrent(version);
+    if (loaded.status === 'conflict') {
+      setPendingRecovery({ user, version, conflict: loaded });
+      throw new Error('Different pet copies need your choice before sign-in can finish.');
+    }
+    await migrateAndSignIn(user, loaded.pet, version);
+    return true;
+  };
+
+  const selectPetCopy = async (source: PetSource) => {
+    const pending = pendingRecovery;
+    if (!pending || recoveryBusy) return;
+    setRecoveryBusy(true);
+    setRecoveryError(null);
     try {
-      // Mock implementation using localStorage
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
-      // Find user by either username or email
-      const user = users.find((u: any) => u.username === identifier || u.email === identifier);
-      
-      if (user && await mockCompare(password, user.password)) {
-        setIsAuthenticated(true);
-        setCurrentUser(user);
-        
-        // Store current user ID in localStorage for data isolation
-        localStorage.setItem('currentUserId', user.id);
-        
-        // Load pet if exists
-        let userPet = null;
-        
-        // Try to load from pet_${userId}
-        const petData = localStorage.getItem(`pet_${user.id}`);
-        if (petData) {
-          try {
-            userPet = JSON.parse(petData);
-          } catch (error) {
-            console.error(`Error parsing pet_${user.id}:`, error);
-          }
-        }
-        
-        // If not found, try loading from currentPet
-        if (!userPet) {
-          const currentPetData = localStorage.getItem("currentPet");
-          if (currentPetData) {
-            try {
-              const pet = JSON.parse(currentPetData);
-              if (pet.userId === user.id) {
-                userPet = pet;
-              }
-            } catch (error) {
-              console.error("Error parsing currentPet:", error);
-            }
-          }
-        }
-        
-        // If found, set current pet
-        if (userPet) {
-          setCurrentPet(userPet);
-        }
-        
-        return true;
-      }
-      return false;
+      const pet = await petRepository.resolve(pending.user.id, source, pending.conflict.revision, () => epoch.current.isCurrent(pending.version));
+      await migrateAndSignIn(pending.user, pet, pending.version);
     } catch (error) {
-      console.error("Login error:", error);
-      return false;
+      if (epoch.current.isCurrent(pending.version)) setRecoveryError(error instanceof Error ? error.message : 'The choice could not be saved. Existing copies have been preserved.');
+    } finally {
+      if (epoch.current.isCurrent(pending.version)) setRecoveryBusy(false);
     }
   };
 
   const register = async (username: string, email: string, password: string): Promise<boolean> => {
-    try {
-      // Load existing users instead of clearing them
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
-      
-      // Check if username or email already exists
-      const existingUser = users.find((u: any) => u.username === username || u.email === email);
-      if (existingUser) {
-        console.error("Username or email already exists");
-        return false;
-      }
-      
-      // Hash password
-      const hashedPassword = await mockHash(password);
-      
-      // Create new user
-      const newUser: User = {
-        id: Date.now().toString(),
-        username,
-        email,
-        password: hashedPassword,
-        avatar: undefined, // No default avatar, will use pet image
-        createdAt: new Date().toISOString(),
-        achievements: []
-      };
-      
-      // Save to localStorage - append to existing users
-      users.push(newUser);
-      localStorage.setItem("users", JSON.stringify(users));
-      
-      // Auto login after registration
-      setIsAuthenticated(true);
-      setCurrentUser(newUser);
-      
-      // Store current user ID in localStorage for data isolation
-      localStorage.setItem('currentUserId', newUser.id);
-      
-      return true;
-    } catch (error) {
-      console.error("Registration error:", error);
-      return false;
-    }
+    const version = beginSession();
+    const users: User[] = JSON.parse(localStorage.getItem('users') ?? '[]');
+    if (!Array.isArray(users)) throw new Error('Account records could not be read.');
+    if (users.some(user => user.username === username || user.email === email)) return false;
+    const hash = await mockHash(password);
+    epoch.current.assertCurrent(version);
+    const user: User = {
+      id: crypto.randomUUID(), username, email, password: hash, avatar: '',
+      createdAt: new Date().toISOString(), achievements: [],
+    };
+    localStorage.setItem('users', JSON.stringify([...users, user]));
+    // Registration UI explicitly asks the user to sign in; no hidden active session.
+    return true;
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
-    setCurrentUser(null);
-    setCurrentPet(null);
-    // Clear any authentication-related data from localStorage
-    localStorage.removeItem('currentPet');
-    // Clear current user ID to prevent data leakage between users
-    localStorage.removeItem('currentUserId');
-    // 触发登出事件，通知其他组件（如小组件）隐藏
-    window.dispatchEvent(new CustomEvent('user-logout'));
-  };
+  const logout = () => { beginSession(); };
+
+  const createPet = useCallback(async (pet: Pet): Promise<void> => {
+    const user = userRef.current;
+    const version = sessionVersion;
+    if (!user || pet.userId !== user.id) throw new Error('A matching account is required.');
+    const snapshot = await businessRepository.transact(user.id, data => {
+      if (data.pet) throw new Error('This account already has a pet.');
+      return { ...data, pet: decodePet(pet, user.id) };
+    }, () => epoch.current.isCurrent(version));
+    epoch.current.assertCurrent(version);
+    setPetState(snapshot.data.pet);
+  }, [sessionVersion]);
+
+  const updatePet = useCallback(async (change: (pet: Pet) => Pet): Promise<Pet> => {
+    const user = userRef.current;
+    const version = sessionVersion;
+    if (!user) throw new Error('Sign in before updating a pet.');
+    const snapshot = await businessRepository.transact(user.id, data => {
+      if (!data.pet) throw new Error('Pet data is unavailable.');
+      const pet = decodePet(change(data.pet), user.id);
+      if (pet.id !== data.pet.id) throw new Error('An update cannot replace a pet identity.');
+      return { ...data, pet };
+    }, () => epoch.current.isCurrent(version));
+    epoch.current.assertCurrent(version);
+    setPetState(snapshot.data.pet);
+    return snapshot.data.pet!;
+  }, [sessionVersion]);
 
   const updateUserProfile = async (updates: Partial<User>): Promise<boolean> => {
-    try {
-      if (!currentUser) return false;
-      
-      // Update user in localStorage
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
-      const userIndex = users.findIndex((u: any) => u.id === currentUser.id);
-      
-      if (userIndex !== -1) {
-        users[userIndex] = { ...users[userIndex], ...updates };
-        localStorage.setItem("users", JSON.stringify(users));
-        
-        // Update current user state
-        setCurrentUser({ ...currentUser, ...updates });
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error("Update profile error:", error);
-      return false;
-    }
+    const user = userRef.current;
+    const version = sessionVersion;
+    if (!user || !epoch.current.isCurrent(version) || (updates.id && updates.id !== user.id) || updates.achievements !== undefined) return false;
+    const users: User[] = JSON.parse(localStorage.getItem('users') ?? '[]');
+    if (!Array.isArray(users)) return false;
+    const index = users.findIndex(entry => entry.id === user.id);
+    if (index < 0) return false;
+    const updated = { ...users[index], ...updates, id: user.id };
+    if (users.some(entry => entry.id !== user.id && (entry.username === updated.username || entry.email === updated.email))) return false;
+    epoch.current.assertCurrent(version);
+    users[index] = updated;
+    localStorage.setItem('users', JSON.stringify(users));
+    const visible = { ...updated, achievements: userRef.current?.achievements ?? [] };
+    userRef.current = visible;
+    setCurrentUser(visible);
+    return true;
   };
 
-  const contextValue = {
-    isAuthenticated,
-    currentUser,
-    currentPet,
-    login,
-    register,
-    logout,
-    setIsAuthenticated,
-    setCurrentPet,
-    updateUserProfile
-  };
-
-  return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{
+    isAuthenticated, currentUser, currentPet, sessionVersion,
+    login, register, logout, createPet, updatePet, updateUserProfile,
+  }}>
+    {children}
+    {pendingRecovery && <PetRecoveryDialog
+      key={pendingRecovery.version}
+      candidates={pendingRecovery.conflict.candidates}
+      busy={recoveryBusy}
+      error={recoveryError}
+      onSelect={selectPetCopy}
+      onCancel={logout}
+    />}
+  </AuthContext.Provider>;
 };

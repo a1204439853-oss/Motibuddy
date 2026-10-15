@@ -127,35 +127,9 @@ const ProfilePage = () => {
       toast.error('Incorrect password. Please try again.');
       return;
     }
-    
-    try {
-      // Remove user from users list
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const updatedUsers = users.filter((u: any) => u.id !== currentUser.id);
-      localStorage.setItem('users', JSON.stringify(updatedUsers));
-      
-      // Remove pet data
-      localStorage.removeItem(`pet_${currentUser.id}`);
-      localStorage.removeItem('currentPet');
-      
-      // Remove tasks
-      localStorage.removeItem('tasks');
-      
-      // Remove statistics
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('statistics_') || key.startsWith('achievements_')) {
-          localStorage.removeItem(key);
-        }
-      });
-      
-      // Logout
-      logout();
-      
-      toast.success('Your account has been deleted');
-      navigate('/welcome');
-    } catch (error) {
-      toast.error('Failed to delete account. Please try again.');
-    }
+    // The former localStorage-only deletion orphaned authoritative files and erased
+    // other accounts' caches. Keep the operation fail-closed until A02 is complete.
+    toast.error('Account deletion is temporarily unavailable. Your account and saved progress have been preserved.');
   };
   
   // Handle change password

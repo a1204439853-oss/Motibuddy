@@ -11,7 +11,7 @@ interface VoiceInputProps {
     description?: string;
     dueDate?: Date;
     priority?: TaskPriority;
-  }) => void;
+  }) => void | Promise<void>;
 }
 
 const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
@@ -21,6 +21,7 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
   const [parsedTask, setParsedTask] = useState<ParsedTaskInfo | null>(null);
   const [isSupported, setIsSupported] = useState<boolean>(true);
   const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
+  const [isCreating, setIsCreating] = useState(false);
   const recognitionService = useRef(getVoiceRecognitionService());
 
   // Check browser support
@@ -190,8 +191,8 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
   }, []);
 
   // Confirm create task
-  const confirmCreateTask = useCallback(() => {
-    if (!parsedTask) return;
+  const confirmCreateTask = useCallback(async () => {
+    if (!parsedTask || isCreating) return;
 
     const validation = validateParsedTask(parsedTask);
     if (!validation.isValid) {
@@ -212,22 +213,25 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
     }
 
     // Create task
-    if (onTaskCreated) {
-      onTaskCreated({
+    setIsCreating(true);
+    try {
+      if (!onTaskCreated) throw new Error('Task creation is unavailable');
+      await onTaskCreated({
         title: parsedTask.title,
         description: parsedTask.description,
         dueDate: parsedTask.dueDate,
         priority
       });
-    }
+      toast.success('Task created successfully!');
 
-    toast.success('Task created successfully!');
-
-    // Reset state
-    setRecognizedText('');
-    setParsedTask(null);
-    setShowConfirmation(false);
-  }, [parsedTask, onTaskCreated]);
+      // Reset only after the task has been saved.
+      setRecognizedText('');
+      setParsedTask(null);
+      setShowConfirmation(false);
+    } catch {
+      toast.error('Task was not saved. Your recognized text has been kept. Please retry.');
+    } finally { setIsCreating(false); }
+  }, [parsedTask, onTaskCreated, isCreating]);
 
   // Cancel creation
   const cancelCreateTask = useCallback(() => {
@@ -432,6 +436,7 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button
                   onClick={confirmCreateTask}
+                  disabled={isCreating}
                   style={{
                     flex: 1,
                     backgroundColor: '#00CECB',

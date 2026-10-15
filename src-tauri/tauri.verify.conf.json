@@ -1,0 +1,10 @@
+{
+  "package": {
+    "productName": "MotiBuddy Verify"
+  },
+  "tauri": {
+    "bundle": {
+      "identifier": "com.motibuddy.verify"
+    }
+  }
+}
