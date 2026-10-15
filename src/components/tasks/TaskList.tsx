@@ -1,3 +1,5 @@
+import { t, label } from '@/i18n/core';
+import { useLocale } from '@/i18n/react';
 import { useState, useContext, useEffect, useRef, useMemo } from 'react';
 import { TaskContext } from '@/contexts/taskContext';
 import { TaskStatus, Task } from '@/types';
@@ -11,6 +13,7 @@ interface TaskListProps {
 }
 
 const TaskList = ({ onEditTask }: TaskListProps) => {
+  useLocale();
   const { tasks, sortTasks, filterTasks, searchTasks, isLoading, isSaving, loadError, saveError, retryLoad } = useContext(TaskContext);
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all');
   const [sortCriteria, setSortCriteria] = useState<'dueDate' | 'priority' | 'createdAt'>('dueDate');
@@ -117,12 +120,12 @@ const TaskList = ({ onEditTask }: TaskListProps) => {
     <div className="space-y-3 h-full flex flex-col">
       {(loadError || saveError) && (
         <div role="alert" className="rounded-lg border-2 border-red-600 bg-white p-3 text-sm text-red-800">
-          <p>{loadError || saveError}</p>
-          {loadError && <button type="button" onClick={() => { void retryLoad(); }} className="mt-2 underline">Retry reading tasks</button>}
+          <p>{t(loadError || saveError || "")}</p>
+          {loadError && <button type="button" onClick={() => { void retryLoad(); }} className="mt-2 underline">{t("Retry reading tasks")}</button>}
         </div>
       )}
       <p role="status" aria-live="polite" className="text-xs text-gray-700">
-        {isLoading ? 'Loading tasks…' : isSaving ? 'Saving task changes…' : loadError ? 'Task editing is paused.' : saveError ? 'The last change was not saved.' : 'Tasks are up to date.'}
+        {isLoading ? t("Loading tasks…") : isSaving ? t("Saving task changes…") : loadError ? t("Task editing is paused.") : saveError ? t("The last change was not saved.") : t("Tasks are up to date.")}
       </p>
       {/* Search and filters */}
       <div className="bg-white p-3 rounded-lg border-2 border-black" style={{ boxShadow: '3px 3px 0 #222222' }}>
@@ -132,7 +135,7 @@ const TaskList = ({ onEditTask }: TaskListProps) => {
             <i className="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
             <input
               type="text"
-              placeholder="Search tasks..."
+              placeholder={t("Search tasks...")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
@@ -167,19 +170,19 @@ const TaskList = ({ onEditTask }: TaskListProps) => {
               fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif'
             }}
           >
-            <option value="dueDate" style={{ fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>Sort by Due Date</option>
-            <option value="priority" style={{ fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>Sort by Priority</option>
-            <option value="createdAt" style={{ fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>Sort by Creation Date</option>
+            <option value="dueDate" style={{ fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{t("Sort by Due Date")}</option>
+            <option value="priority" style={{ fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{t("Sort by Priority")}</option>
+            <option value="createdAt" style={{ fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{t("Sort by Creation Date")}</option>
           </select>
         </div>
         
         {/* Status filters */}
         <div className="mt-3 flex flex-wrap gap-2">
           {[
-            { value: 'all', label: 'All' },
-            { value: TaskStatus.IN_PROGRESS, label: 'In Progress' },
-            { value: TaskStatus.COMPLETED, label: 'Completed' },
-            { value: TaskStatus.OVERDUE, label: 'Overdue' }
+            { value: 'all', label: t("All") },
+            { value: TaskStatus.IN_PROGRESS, label: t("In Progress") },
+            { value: TaskStatus.COMPLETED, label: t("Completed") },
+            { value: TaskStatus.OVERDUE, label: t("Overdue") }
           ].map((status) => (
             <motion.button
               key={status.value}

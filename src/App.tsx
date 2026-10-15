@@ -1,4 +1,7 @@
-import { Routes, Route } from "react-router-dom";
+import { t } from '@/i18n/core';
+import { useLocale } from '@/i18n/react';
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useContext } from 'react';
 import Home from "@/pages/Home";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
@@ -10,8 +13,15 @@ import { TaskProvider } from "@/contexts/taskContext";
 import { PetProvider } from "@/contexts/petContext";
 import { StatisticsProvider } from "@/contexts/statisticsContext";
 import { useSafeExit } from '@/hooks/useSafeExit';
+import { AuthContext } from '@/contexts/authContext';
+
+function SettingsRedirect() {
+  const { isAuthenticated } = useContext(AuthContext);
+  return <Navigate to={isAuthenticated ? '/profile' : '/login'} replace />;
+}
 
 export default function App() {
+  useLocale();
   const { closing, cancel } = useSafeExit();
   return (
     <>
@@ -26,14 +36,15 @@ export default function App() {
               <Route path="/create-pet" element={<PetCreationPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/achievements" element={<AchievementsPage />} />
+              <Route path="/settings" element={<SettingsRedirect />} />
             </Routes>
           </StatisticsProvider>
         </PetProvider>
       </TaskProvider>
     </AuthProvider>
-    {closing && <div role="dialog" aria-modal="true" aria-label="正在退出" style={{ position: 'fixed', inset: 0, zIndex: 100000, background: 'rgba(255,255,255,.96)', display: 'grid', placeContent: 'center', textAlign: 'center', gap: 16 }}>
-      <p>正在等待保存完成，请稍候…</p>
-      <button onClick={() => { void cancel(); }}>取消退出</button>
+    {closing && <div role="dialog" aria-modal="true" aria-label={t('Preparing to close')} style={{ position: 'fixed', inset: 0, zIndex: 100000, background: 'rgba(255,255,255,.96)', display: 'grid', placeContent: 'center', textAlign: 'center', gap: 16 }}>
+      <p>{t('Waiting for your changes to save…')}</p>
+      <button onClick={() => { void cancel(); }}>{t('Cancel exit')}</button>
     </div>}
     </>
   );

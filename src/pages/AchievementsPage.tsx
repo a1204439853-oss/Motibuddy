@@ -1,3 +1,5 @@
+import { t, getLocale } from '@/i18n/core';
+import { useLocale } from '@/i18n/react';
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/contexts/authContext';
@@ -96,6 +98,7 @@ const ALL_ACHIEVEMENTS = [
 ];
 
 const AchievementsPage = () => {
+  useLocale();
   const { currentUser } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -123,7 +126,7 @@ const AchievementsPage = () => {
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
         <img
           src="/pet_selection_bg.png"
-          alt="MotiBuddy Background"
+          alt={t("MotiBuddy Background")}
           style={{ 
             objectFit: 'cover', 
             width: '100%', 
@@ -168,7 +171,7 @@ const AchievementsPage = () => {
             fontWeight: 'bold', 
             color: '#222222',
             fontFamily: fontFamily
-          }}>Achievements</h1>
+          }}>{t("Achievements")}</h1>
           <motion.button
             onClick={() => navigate('/')}
             style={{
@@ -207,9 +210,7 @@ const AchievementsPage = () => {
               fontSize: '12px', 
               fontWeight: 'bold',
               fontFamily: fontFamily
-            }}>
-              You've unlocked <span style={{ color: '#222222', fontWeight: 'bold' }}>{currentUser.achievements?.length || 0}</span> out of <span style={{ fontWeight: 'bold' }}>{ALL_ACHIEVEMENTS.length}</span> achievements
-            </p>
+            }}>{t("You've unlocked")}{' '}<span style={{ color: '#222222', fontWeight: 'bold' }}>{currentUser.achievements?.length || 0}</span>{' '}{t("out of")}{' '}<span style={{ fontWeight: 'bold' }}>{ALL_ACHIEVEMENTS.length}</span>{' '}{t("achievements")}</p>
           </div>
 
           {/* All achievements grid */}
@@ -259,14 +260,14 @@ const AchievementsPage = () => {
                         fontSize: '11px',
                         fontFamily: fontFamily
                       }}>
-                        {isHidden ? '?' : achievement.name}
+                        {isHidden ? '?' : t(achievement.name)}
                       </h3>
                       <p style={{ 
                         fontSize: '9px', 
                         color: isUnlocked ? '#222222' : '#999999',
                         fontFamily: fontFamily
                       }}>
-                        {isHidden ? '???' : achievement.description}
+                        {isHidden ? '???' : t(achievement.description)}
                       </p>
                       {isUnlocked && unlockedAchievement && (
                         <p style={{ 
@@ -275,7 +276,7 @@ const AchievementsPage = () => {
                           marginTop: '2px',
                           fontFamily: fontFamily
                         }}>
-                          {new Date(unlockedAchievement.unlockedAt).toLocaleDateString()}
+                          {new Date(unlockedAchievement.unlockedAt).toLocaleDateString(getLocale())}
                         </p>
                       )}
                     </div>
@@ -311,9 +312,7 @@ const AchievementsPage = () => {
             }}
             whileHover={{ scale: 1, x: 2, y: 2, boxShadow: '2px 2px 0 #222222' }}
             whileTap={{ scale: 1, x: 4, y: 4, boxShadow: 'none' }}
-          >
-            Back to Home
-          </motion.button>
+          >{t("Back to Home")}</motion.button>
         </div>
         </motion.div>
       </div>

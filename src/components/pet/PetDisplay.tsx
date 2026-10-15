@@ -1,3 +1,5 @@
+import { t } from '@/i18n/core';
+import { useLocale } from '@/i18n/react';
 import { useContext, useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { AuthContext } from '@/contexts/authContext';
 import { PetContext } from '@/contexts/petContext';
@@ -29,6 +31,7 @@ const PRIORITY: Record<VideoType, number> = {
 };
 
 const PetDisplay = () => {
+  useLocale();
   const { currentPet } = useContext(AuthContext);
   const { interactWithPet, feedPet, playWithPet, getPetDialogue } = useContext(PetContext);
 
@@ -212,7 +215,7 @@ const PetDisplay = () => {
       setShowDialogue(true);
       setTimeout(() => setShowDialogue(false), 4000);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Pet changes were not saved. Please retry.');
+      toast.error(error instanceof Error ? t(error.message) : t("Pet changes were not saved. Please retry."));
     } finally {
       // Clear processing flag after a short delay to allow state updates to settle
       setTimeout(() => {
@@ -251,7 +254,7 @@ const PetDisplay = () => {
       setShowDialogue(true);
       setTimeout(() => setShowDialogue(false), 4000);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Pet changes were not saved. Please retry.');
+      toast.error(error instanceof Error ? t(error.message) : t("Pet changes were not saved. Please retry."));
     } finally {
       // Clear processing flag after a short delay to allow state updates to settle
       setTimeout(() => {
@@ -270,7 +273,7 @@ const PetDisplay = () => {
     }
 
     try { await interactWithPet(); }
-    catch { toast.error('Pet changes were not saved. Please retry.'); return; }
+    catch { toast.error(t("Pet changes were not saved. Please retry.")); return; }
     setPetDialogue(getPetDialogue());
     switchVideo(VIDEOS.RANDOM);
     setShowDialogue(true);
@@ -351,7 +354,7 @@ const PetDisplay = () => {
   if (!currentPet) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
-        <p style={{ fontFamily }}>Loading your pet...</p>
+        <p style={{ fontFamily }}>{t("Loading your pet...")}</p>
       </div>
     );
   }
@@ -359,12 +362,12 @@ const PetDisplay = () => {
   const petMood = getPetMood();
 
   const statusConfig: Record<string, { icon: string; text: string; bg: string }> = {
-    happy: { icon: 'fa-smile', text: 'is feeling happy!', bg: '#00CECB' },
-    hungry: { icon: 'fa-utensils', text: 'is hungry! Feed them.', bg: '#FFD700' },
-    tired: { icon: 'fa-bed', text: 'is tired. Let them rest.', bg: '#FF5E5B' },
-    sad: { icon: 'fa-frown', text: 'is feeling down. Interact with them.', bg: '#FF5E5B' },
-    sick: { icon: 'fa-heartbeat', text: 'is not feeling well! Take care of them.', bg: '#FF5E5B' },
-    neutral: { icon: 'fa-face-meh', text: 'is doing fine.', bg: '#00CECB' }
+    happy: { icon: 'fa-smile', text: t("is feeling happy!"), bg: '#00CECB' },
+    hungry: { icon: 'fa-utensils', text: t("is hungry! Feed them."), bg: '#FFD700' },
+    tired: { icon: 'fa-bed', text: t("is tired. Let them rest."), bg: '#FF5E5B' },
+    sad: { icon: 'fa-frown', text: t("is feeling down. Interact with them."), bg: '#FF5E5B' },
+    sick: { icon: 'fa-heartbeat', text: t("is not feeling well! Take care of them."), bg: '#FF5E5B' },
+    neutral: { icon: 'fa-face-meh', text: t("is doing fine."), bg: '#00CECB' }
   };
   const status = statusConfig[petMood] || statusConfig.neutral;
 
@@ -375,9 +378,7 @@ const PetDisplay = () => {
         <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#222222', marginBottom: '8px', fontFamily }}>
           {currentPet.name}
         </h2>
-        <p style={{ fontSize: '11px', color: '#222222', fontWeight: 'bold', marginTop: '4px', fontFamily }}>
-          Level {currentPet.level} • {currentPet.experience}/{currentPet.level * 50} EXP
-        </p>
+        <p style={{ fontSize: '11px', color: '#222222', fontWeight: 'bold', marginTop: '4px', fontFamily }}>{t("Level")}{' '}{currentPet.level} • {currentPet.experience}/{currentPet.level * 50}{' '}{t("EXP")}</p>
       </div>
 
       {/* Experience bar */}
@@ -445,7 +446,7 @@ const PetDisplay = () => {
             }}
           >
             <p style={{ color: '#222222', fontSize: '10px', fontWeight: 'bold', fontFamily, margin: 0 }}>
-              {petDialogue}
+              {t(petDialogue)}
             </p>
           </motion.div>
         )}
@@ -453,13 +454,13 @@ const PetDisplay = () => {
 
       {/* Stats bars - 原始样式 */}
       <div className="w-full space-y-2 mb-4">
-        {['Health', 'Happiness', 'Hunger', 'Energy'].map((stat) => {
-          const value = currentPet[stat.toLowerCase() as keyof typeof currentPet] as number;
+        {([{ key: 'health', title: 'Health' }, { key: 'happiness', title: 'Happiness' }, { key: 'hunger', title: 'Hunger' }, { key: 'energy', title: 'Energy' }] as const).map((stat) => {
+          const value = currentPet[stat.key];
           const color = value > 70 ? '#00CECB' : value > 30 ? '#FFD700' : '#FF5E5B';
           return (
-            <div key={stat} className="space-y-1">
+            <div key={stat.key} className="space-y-1">
               <div className="flex justify-between text-xs">
-                <span style={{ fontWeight: 'bold', color: '#222222', fontFamily }}>{stat}</span>
+                <span style={{ fontWeight: 'bold', color: '#222222', fontFamily }}>{t(stat.title)}</span>
                 <span style={{ color: '#222222', fontWeight: 'bold', fontFamily }}>{value}/100</span>
               </div>
               <div style={{ width: '100%', height: '8px', backgroundColor: '#f0f0f0', borderRadius: '4px', border: '2px solid #222222' }}>
@@ -482,7 +483,7 @@ const PetDisplay = () => {
       }}>
         <p style={{ fontSize: '13px', color: '#222222', fontWeight: 'bold', fontFamily, textAlign: 'center', margin: 0 }}>
           <i className={`fas ${status.icon}`} style={{ marginRight: '8px', color: status.bg }}></i>
-          {currentPet.name} {status.text}
+          {currentPet.name} {t(status.text)}
         </p>
       </div>
 
@@ -507,9 +508,7 @@ const PetDisplay = () => {
             opacity: isInteractionPlayingRef.current ? 0.6 : 1
           }}
         >
-          <i className="fas fa-utensils" style={{ marginRight: '8px' }}></i>
-          Feed
-        </button>
+          <i className="fas fa-utensils" style={{ marginRight: '8px' }}></i>{t("Feed")}</button>
         <button
           onClick={handlePlay}
           disabled={isInteractionPlayingRef.current}
@@ -529,9 +528,7 @@ const PetDisplay = () => {
             opacity: isInteractionPlayingRef.current ? 0.6 : 1
           }}
         >
-          <i className="fas fa-gamepad" style={{ marginRight: '8px' }}></i>
-          Play
-        </button>
+          <i className="fas fa-gamepad" style={{ marginRight: '8px' }}></i>{t("Play")}</button>
       </div>
     </div>
   );

@@ -86,3 +86,37 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Chinese copy uses a native CJK stack and natural spacing instead of Latin display fonts. */
+html[lang="zh-CN"] {
+  --cjk-font: 'Segoe UI', 'Microsoft YaHei UI', 'Microsoft YaHei', 'PingFang SC', 'Noto Sans CJK SC', sans-serif;
+  font-family: var(--cjk-font);
+}
+html[lang="zh-CN"] :where(body, button, input, textarea, select, option, h1, h2, h3, h4, p, span, div, a, label, legend, strong, text) {
+  font-family: var(--cjk-font) !important;
+}
+html[lang="zh-CN"] [style*="letter-spacing"] { letter-spacing: normal !important; }
+html[lang="zh-CN"] [style*="font-size: 10px"],
+html[lang="zh-CN"] [style*="font-size: 11px"] { font-size: 12px !important; }
+html[lang="zh-CN"] :where(button, label, p) { line-height: 1.55; }
+button, a, input, select, textarea { touch-action: manipulation; }
+button:focus-visible, a:focus-visible { outline: 3px solid #089a96; outline-offset: 4px; }
+
+.public-topbar {
+  position: absolute; inset: 0 0 auto; z-index: 100;
+  height: clamp(48px, 7vh, 64px); padding: 0 clamp(20px, 2.5vw, 40px);
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  background: rgba(255, 255, 255, .4);
+}
+.public-topbar-logo { height: clamp(32px, 5.6vh, 50px); max-width: min(48vw, 200px); object-fit: contain; object-position: left; }
+.public-topbar-actions { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
+.public-login { min-height: 36px; color: #222; font-size: 16px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.language-switch { display: inline-flex; align-items: center; flex-shrink: 0; gap: 2px; padding: 3px; border: 1px solid rgba(34,34,34,.25); border-radius: 999px; background: rgba(255,255,255,.85); }
+.language-switch > button { min-width: 30px; height: 28px; padding: 0 6px; border-radius: 999px; font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif; font-size: 13px; font-weight: 650; color: #626762; cursor: pointer; }
+.language-switch > button[aria-pressed="true"] { background: #d9f2e8; color: #076f67; }
+.language-switch > button:hover { background: #e8f5ef; color: #076f67; }
+.language-switch > span { font-size: 12px; color: #a0a49e; }
+.profile-language-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 12px; border: 1px solid #dddcd5; border-radius: 8px; background: #fffaf3; }
+.profile-language-row > span { font-size: 12px; font-weight: 650; color: #323a35; }
+.profile-logout { width: 50%; padding: 8px 12px; border: 2px solid #222; background: #fff; color: #222; font-size: 12px; font-weight: 700; box-shadow: 3px 3px 0 #222; cursor: pointer; }
+.profile-logout:hover { background: #f0faf5; }

@@ -1,3 +1,4 @@
+import { t } from '@/i18n/core';
 import { createContext, useEffect, ReactNode, useRef, useMemo, useContext } from 'react';
 import { Pet } from '@/types';
 import { AuthContext } from './authContext';
@@ -164,7 +165,7 @@ export const PetProvider = ({ children }: { children: ReactNode }) => {
       if (cancelled) dispose();
       else unlisten = dispose;
     }).catch(() => {
-      if (!cancelled) toast.error('Widget interactions are unavailable. Please reopen the application.');
+      if (!cancelled) toast.error(t("Widget interactions are unavailable. Please reopen the application."));
     });
     return () => { cancelled = true; unlisten?.(); };
   }, [scope, updatePet]);
@@ -190,7 +191,7 @@ export const PetProvider = ({ children }: { children: ReactNode }) => {
           return next;
         });
       }).catch(() => {
-        if (scopeRef.current === scope) toast.error('Pet progress could not be saved. Existing saved data has been kept.');
+        if (scopeRef.current === scope) toast.error(t("Pet progress could not be saved. Existing saved data has been kept."));
       });
     };
     updateStats();

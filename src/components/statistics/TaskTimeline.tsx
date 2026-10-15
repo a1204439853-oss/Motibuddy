@@ -1,3 +1,5 @@
+import { t, label, getLocale } from '@/i18n/core';
+import { useLocale } from '@/i18n/react';
 import { useContext, useMemo } from 'react';
 import { TaskContext } from '@/contexts/taskContext';
 import { Task, TaskPriority, TaskStatus } from '@/types';
@@ -36,6 +38,7 @@ const priorityOrder: Record<TaskPriority, number> = {
 };
 
 const TaskTimeline = () => {
+  const { locale } = useLocale();
   const { tasks } = useContext(TaskContext);
 
   const { data, yAxisLabels } = useMemo(() => {
@@ -48,7 +51,7 @@ const TaskTimeline = () => {
       const date = new Date(now);
       date.setDate(date.getDate() + i);
       // 使用更短的格式: "Mon 2/27" (星期几 + 月/日)
-      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+      const dayName = date.toLocaleDateString(getLocale(), { weekday: 'short' });
       const month = date.getMonth() + 1;
       const day = date.getDate();
       labels.push(`${dayName} ${month}/${day}`);
@@ -105,9 +108,10 @@ const TaskTimeline = () => {
     });
 
     return { data: scatterData, yAxisLabels: labels };
-  }, [tasks]);
+  }, [tasks, locale]);
 
   const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: any[] }) => {
+  useLocale();
     if (active && payload && payload.length > 0) {
       const dataPoint: TimelineDataPoint = payload[0].payload;
       const taskList = dataPoint.tasks;
@@ -126,12 +130,12 @@ const TaskTimeline = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {taskList.map((task, index) => {
               const dueDate = new Date(task.dueDate);
-              const timeStr = dueDate.toLocaleTimeString('en-US', {
+              const timeStr = dueDate.toLocaleTimeString(getLocale(), {
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: false,
               });
-              const dateStr = dueDate.toLocaleDateString('en-US', {
+              const dateStr = dueDate.toLocaleDateString(getLocale(), {
                 month: 'short',
                 day: 'numeric',
               });
@@ -152,10 +156,10 @@ const TaskTimeline = () => {
                     <span style={{ fontWeight: 'bold', color: '#222222', fontSize: '12px' }}>{task.title}</span>
                   </div>
                   <div style={{ paddingLeft: '14px', color: '#666666', lineHeight: '1.4', fontSize: '10px' }}>
-                    <div>Priority: <span style={{ color: priorityColors[task.priority], fontWeight: 'bold' }}>
-                      {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                    <div>{t("Priority:")}{' '}<span style={{ color: priorityColors[task.priority], fontWeight: 'bold' }}>
+                      {label(task.priority)}
                     </span></div>
-                    <div>Due: {dateStr} {timeStr}</div>
+                    <div>{t("Due:")}{' '}{dateStr} {timeStr}</div>
                   </div>
                   {index < taskList.length - 1 && (
                     <div style={{ borderBottom: '1px dashed #e0e0e0', marginTop: '6px' }} />
@@ -199,23 +203,23 @@ const TaskTimeline = () => {
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-        <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#222222', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>Weekly Task Timeline</h3>
-        <div style={{ display: 'flex', gap: '8px', fontSize: '9px' }}>
+        <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#222222', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{t("Weekly Task Timeline")}</h3>
+        <div style={{ display: 'flex', gap: '8px', fontSize: locale === 'zh-CN' ? '11px' : '9px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: priorityColors[TaskPriority.LOW], border: '1px solid #222222' }} />
-            <span>Low</span>
+            <span>{t("Low")}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: priorityColors[TaskPriority.MEDIUM], border: '1px solid #222222' }} />
-            <span>Med</span>
+            <span>{t("Med")}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: priorityColors[TaskPriority.HIGH], border: '1px solid #222222' }} />
-            <span>High</span>
+            <span>{t("High")}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: priorityColors[TaskPriority.URGENT], border: '1px solid #222222' }} />
-            <span>Urg</span>
+            <span>{t("Urg")}</span>
           </div>
         </div>
       </div>
@@ -232,7 +236,7 @@ const TaskTimeline = () => {
                 tickFormatter={formatXAxisLabel}
                 stroke="#222222"
                 fontSize={9}
-                label={{ value: 'Time', position: 'insideBottom', offset: -2, fill: '#222222', fontSize: 9, fontWeight: 'bold' }}
+                label={{ value: t('Time'), position: 'insideBottom', offset: -2, fill: '#222222', fontSize: locale === 'zh-CN' ? 11 : 9, fontWeight: 'bold' }}
               />
               <YAxis
                 type="number"
@@ -241,9 +245,9 @@ const TaskTimeline = () => {
                 ticks={[0, 1, 2, 3, 4, 5, 6]}
                 tickFormatter={formatYAxisLabel}
                 stroke="#222222"
-                width={70}
+                width={locale === 'zh-CN' ? 88 : 70}
                 fontSize={10}
-                tick={{ fill: '#222222', fontSize: 10, fontWeight: 'bold' }}
+                tick={{ fill: '#222222', fontSize: locale === 'zh-CN' ? 11 : 10, fontWeight: 'bold' }}
               />
               <ZAxis type="number" dataKey="z" range={[60, 200]} />
               <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
@@ -277,9 +281,7 @@ const TaskTimeline = () => {
                 color: '#222222',
                 fontWeight: 'bold',
               }}
-            >
-              No upcoming tasks in the next 7 days. Enjoy your free time!
-            </p>
+            >{t("No upcoming tasks in the next 7 days. Enjoy your free time!")}</p>
           </div>
         )}
       </div>

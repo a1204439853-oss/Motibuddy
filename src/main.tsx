@@ -4,6 +4,9 @@ import { BrowserRouter } from "react-router-dom";
 import { Toaster } from 'sonner';
 import App from "./App.tsx";
 import "./index.css";
+import { connectLocaleWindows } from './i18n/react';
+
+connectLocaleWindows();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

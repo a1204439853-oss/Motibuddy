@@ -1,3 +1,5 @@
+import { t, label } from '@/i18n/core';
+import { useLocale } from '@/i18n/react';
 import { useState, useContext, useEffect } from 'react';
 import { TaskContext } from '@/contexts/taskContext';
 import { Task, TaskPriority } from '@/types';
@@ -10,6 +12,7 @@ interface TaskFormProps {
 }
 
 const TaskForm = ({ onClose, task }: TaskFormProps) => {
+  useLocale();
   const { addTask, updateTask } = useContext(TaskContext);
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
@@ -57,12 +60,12 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
     
     // Validate form
     if (!title.trim()) {
-      alert('Please enter a task title');
+      alert(t("Please enter a task title"));
       return;
     }
     
     if (!dueDate) {
-      alert('Please select a due date');
+      alert(t("Please select a due date"));
       return;
     }
     
@@ -108,9 +111,9 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
     } catch (error) {
       // Show error message if due date is in the past
       if (error instanceof Error && error.message === 'Due date cannot be in the past') {
-        alert('Due date cannot be in the past. Please select a future date.');
+        alert(t("Due date cannot be in the past. Please select a future date."));
       } else {
-        alert('An error occurred while saving the task. Please try again.');
+        alert(t("An error occurred while saving the task. Please try again."));
       }
       setIsSubmitting(false);
     }
@@ -155,7 +158,7 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
     >
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold text-gray-800" style={{ fontSize: '16px' }}>
-          {task ? 'Edit Task' : 'Add New Task'}
+          {task ? t("Edit Task") : t("Add New Task")}
         </h2>
         <motion.button
           whileHover={{ scale: 1.1 }}
@@ -172,8 +175,7 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
       <div className="space-y-2">
         {/* Task title */}
         <div className="space-y-1">
-          <label htmlFor="title" className="block font-medium text-gray-700" style={{ fontSize: '12px' }}>
-            Task Title <span className="text-red-500">*</span>
+          <label htmlFor="title" className="block font-medium text-gray-700" style={{ fontSize: '12px' }}>{t("Task Title")}{' '}<span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -181,7 +183,7 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
-            placeholder="What do you need to do?"
+            placeholder={t("What do you need to do?")}
             maxLength={100}
             style={{ fontSize: '12px' }}
           />
@@ -190,15 +192,13 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
         
         {/* Task description */}
         <div className="space-y-1">
-          <label htmlFor="description" className="block font-medium text-gray-700" style={{ fontSize: '12px' }}>
-            Description (Optional)
-          </label>
+          <label htmlFor="description" className="block font-medium text-gray-700" style={{ fontSize: '12px' }}>{t("Description (Optional)")}</label>
           <textarea
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all min-h-[50px]"
-            placeholder="Add more details..."
+            placeholder={t("Add more details...")}
             maxLength={500}
             style={{ fontSize: '11px' }}
           />
@@ -208,8 +208,7 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
         {/* Due date and priority */}
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1">
-            <label htmlFor="dueDate" className="block font-medium text-gray-700" style={{ fontSize: '12px' }}>
-              Due Date <span className="text-red-500">*</span>
+            <label htmlFor="dueDate" className="block font-medium text-gray-700" style={{ fontSize: '12px' }}>{t("Due Date")}{' '}<span className="text-red-500">*</span>
             </label>
             <input
               type="datetime-local"
@@ -222,9 +221,7 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
           </div>
           
           <div className="space-y-1">
-            <label htmlFor="priority" className="block font-medium text-gray-700" style={{ fontSize: '12px' }}>
-              Priority
-            </label>
+            <label htmlFor="priority" className="block font-medium text-gray-700" style={{ fontSize: '12px' }}>{t("Priority")}</label>
             <select
               id="priority"
               value={priority}
@@ -232,10 +229,10 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
               className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
               style={{ fontSize: '11px' }}
             >
-              <option value={TaskPriority.LOW}>Low</option>
-              <option value={TaskPriority.MEDIUM}>Medium</option>
-              <option value={TaskPriority.HIGH}>High</option>
-              <option value={TaskPriority.URGENT}>Urgent</option>
+              <option value={TaskPriority.LOW}>{t("Low")}</option>
+              <option value={TaskPriority.MEDIUM}>{t("Medium")}</option>
+              <option value={TaskPriority.HIGH}>{t("High")}</option>
+              <option value={TaskPriority.URGENT}>{t("Urgent")}</option>
             </select>
           </div>
         </div>
@@ -243,9 +240,7 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
         {/* Estimated duration and reminders */}
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1">
-            <label className="block font-medium text-gray-700" style={{ fontSize: '12px' }}>
-              Duration
-            </label>
+            <label className="block font-medium text-gray-700" style={{ fontSize: '12px' }}>{t("Duration")}</label>
             <div className="flex gap-2">
               <div className="flex-1">
                 <input
@@ -255,7 +250,7 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
                   value={estimatedHours}
                   onChange={(e) => setEstimatedHours(e.target.value === '' ? '' : parseInt(e.target.value))}
                   className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
-                  placeholder="Hours"
+                  placeholder={t("Hours")}
                   style={{ fontSize: '11px' }}
                 />
               </div>
@@ -267,7 +262,7 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
                   value={estimatedMinutes}
                   onChange={(e) => setEstimatedMinutes(e.target.value === '' ? '' : parseInt(e.target.value))}
                   className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
-                  placeholder="Minutes"
+                  placeholder={t("Minutes")}
                   style={{ fontSize: '11px' }}
                 />
               </div>
@@ -275,9 +270,7 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
           </div>
           
           <div className="space-y-1">
-            <label htmlFor="reminders" className="block font-medium text-gray-700" style={{ fontSize: '12px' }}>
-              Reminders
-            </label>
+            <label htmlFor="reminders" className="block font-medium text-gray-700" style={{ fontSize: '12px' }}>{t("Reminders")}</label>
             <select
               id="reminders"
               value={reminderCount}
@@ -285,10 +278,10 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
               className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
               style={{ fontSize: '11px' }}
             >
-              <option value={0}>None</option>
-              <option value={1}>1 hour before</option>
-              <option value={2}>24h & 1h before</option>
-              <option value={3}>48h, 24h & 1h before</option>
+              <option value={0}>{t("None")}</option>
+              <option value={1}>{t("1 hour before")}</option>
+              <option value={2}>{t("24h & 1h before")}</option>
+              <option value={3}>{t("48h, 24h & 1h before")}</option>
             </select>
           </div>
         </div>
@@ -333,7 +326,7 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
             e.currentTarget.style.boxShadow = '1px 1px 0 #222222';
           }}
         >
-          {isSubmitting ? 'Saving...' : (task ? 'Update Task' : 'Add Task')}
+          {isSubmitting ? t("Saving...") : (task ? t("Update Task") : t("Add Task"))}
         </motion.button>
         
         <motion.button
@@ -373,9 +366,7 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
             e.currentTarget.style.transform = 'translate(1px, 1px)';
             e.currentTarget.style.boxShadow = '1px 1px 0 #222222';
           }}
-        >
-          Cancel
-        </motion.button>
+        >{t("Cancel")}</motion.button>
       </div>
     </motion.form>
   );

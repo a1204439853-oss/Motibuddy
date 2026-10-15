@@ -1,3 +1,5 @@
+import { t } from '@/i18n/core';
+import { useLocale } from '@/i18n/react';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -15,6 +17,7 @@ interface VoiceInputProps {
 }
 
 const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
+  useLocale();
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [recognizedText, setRecognizedText] = useState<string>('');
   const [interimText, setInterimText] = useState<string>('');
@@ -42,18 +45,18 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
         // In Tauri, this might be a WebView2 limitation
         if (isTauri()) {
           toast.error(
-            'Microphone access is blocked by WebView2.\n\n' +
-            'Please try these solutions:\n' +
-            '1. Close MotiBuddy completely\n' +
-            '2. Open Windows Settings > Privacy > Microphone\n' +
-            '3. Turn OFF "Allow apps to access microphone"\n' +
-            '4. Turn it back ON\n' +
-            '5. Restart MotiBuddy\n\n' +
-            'If still not working, you may need to use the browser version.',
+            t("Microphone access is blocked by WebView2.") + "\n" +
+            t("Please try these solutions:") + "\n" +
+            t("1. Close MotiBuddy completely") + "\n" +
+            t("2. Open Windows Settings > Privacy > Microphone") + "\n" +
+            t("3. Turn OFF \"Allow apps to access microphone\"") + "\n" +
+            t("4. Turn it back ON") + "\n" +
+            t("5. Restart MotiBuddy") + "\n" +
+            t("If still not working, you may need to use the browser version."),
             { duration: 15000 }
           );
         } else {
-          toast.error('Your browser does not support microphone access. Please use a modern browser.');
+          toast.error(t("Your browser does not support microphone access. Please use a modern browser."));
         }
         return false;
       }
@@ -69,22 +72,22 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
       if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
         if (isTauri()) {
           toast.error(
-            'Microphone access denied by WebView2.\n\n' +
-            'Solutions:\n' +
-            '1. Windows Settings > Privacy > Microphone > Allow apps to access microphone: ON\n' +
-            '2. Restart MotiBuddy\n' +
-            '3. If still not working, use browser version at localhost:3000',
+            t("Microphone access denied by WebView2.") + "\n" +
+            t("Solutions:") + "\n" +
+            t("1. Windows Settings > Privacy > Microphone > Allow apps to access microphone: ON") + "\n" +
+            t("2. Restart MotiBuddy") + "\n" +
+            t("3. If still not working, use browser version at localhost:3000"),
             { duration: 12000 }
           );
         } else {
-          toast.error('Microphone access denied. Please allow microphone access in your browser settings.');
+          toast.error(t("Microphone access denied. Please allow microphone access in your browser settings."));
         }
       } else if (error.name === 'NotFoundError') {
-        toast.error('No microphone found. Please connect a microphone and try again.');
+        toast.error(t("No microphone found. Please connect a microphone and try again."));
       } else if (error.name === 'NotReadableError') {
-        toast.error('Microphone is already in use by another application.');
+        toast.error(t("Microphone is already in use by another application."));
       } else {
-        toast.error(`Microphone error: ${error.message || 'Unknown error'}`);
+        toast.error(t("Microphone error: {message}", { message: error.message || t("Unknown error") }));
       }
       
       return false;
@@ -94,7 +97,7 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
   // Start voice recognition
   const startVoiceRecognition = useCallback(async () => {
     if (!isSupported) {
-      toast.error('Your browser does not support voice recognition');
+      toast.error(t("Your browser does not support voice recognition"));
       return;
     }
 
@@ -110,7 +113,7 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
     setParsedTask(null);
     setShowConfirmation(false);
 
-    toast.info('Listening... Please speak your task');
+    toast.info(t("Listening... Please speak your task"));
 
     const success = recognitionService.current.start(
       // Recognition result callback
@@ -131,23 +134,23 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
       // Error callback
       (error: string) => {
         console.error('Voice recognition error:', error);
-        let errorMessage = 'Voice recognition error';
+        let errorMessage = t("Voice recognition error");
         
         switch (error) {
           case 'no-speech':
-            errorMessage = 'No speech detected, please try again';
+            errorMessage = t("No speech detected, please try again");
             break;
           case 'audio-capture':
-            errorMessage = 'Cannot access microphone';
+            errorMessage = t("Cannot access microphone");
             break;
           case 'not-allowed':
-            errorMessage = 'Microphone permission denied';
+            errorMessage = t("Microphone permission denied");
             break;
           case 'network':
-            errorMessage = 'Network error, please check your connection';
+            errorMessage = t("Network error, please check your connection");
             break;
           case 'aborted':
-            errorMessage = 'Recognition cancelled';
+            errorMessage = t("Recognition cancelled");
             break;
           default:
             errorMessage = `Error: ${error}`;
@@ -178,7 +181,7 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
     );
 
     if (!success) {
-      toast.error('Cannot start voice recognition');
+      toast.error(t("Cannot start voice recognition"));
       setIsRecording(false);
     }
   }, [isSupported, recognizedText, interimText]);
@@ -196,7 +199,7 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
 
     const validation = validateParsedTask(parsedTask);
     if (!validation.isValid) {
-      toast.error(validation.errors.join('\n'));
+      toast.error(validation.errors.map(message => t(message)).join('\n'));
       return;
     }
 
@@ -222,14 +225,14 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
         dueDate: parsedTask.dueDate,
         priority
       });
-      toast.success('Task created successfully!');
+      toast.success(t("Task created successfully!"));
 
       // Reset only after the task has been saved.
       setRecognizedText('');
       setParsedTask(null);
       setShowConfirmation(false);
     } catch {
-      toast.error('Task was not saved. Your recognized text has been kept. Please retry.');
+      toast.error(t("Task was not saved. Your recognized text has been kept. Please retry."));
     } finally { setIsCreating(false); }
   }, [parsedTask, onTaskCreated, isCreating]);
 
@@ -238,7 +241,7 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
     setRecognizedText('');
     setParsedTask(null);
     setShowConfirmation(false);
-    toast.info('Task creation cancelled');
+    toast.info(t("Task creation cancelled"));
   }, []);
 
   // Retry recognition
@@ -280,7 +283,7 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
           cursor: isSupported ? 'pointer' : 'not-allowed',
           transition: 'all 0.2s ease'
         }}
-        title={isSupported ? "Add task using voice" : "Your browser does not support voice recognition"}
+        title={isSupported ? t("Add task using voice") : t("Your browser does not support voice recognition")}
       >
         <i 
           className={`fa-solid ${isRecording ? 'fa-microphone-lines' : 'fa-microphone'}`}
@@ -350,16 +353,14 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
                 }}>
                   {recognizedText}
                   <span style={{ color: '#888888' }}>{interimText}</span>
-                  {!recognizedText && !interimText && 'Listening...'}
+                  {!recognizedText && !interimText && t('Listening...')}
                 </p>
                 <p style={{
                   fontSize: '10px',
                   color: '#666666',
                   marginTop: '8px',
                   fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif'
-                }}>
-                  Click microphone button to stop recording
-                </p>
+                }}>{t("Click microphone button to stop recording")}</p>
               </div>
             </div>
           </motion.div>
@@ -397,9 +398,7 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
                 fontSize: '14px',
                 fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif'
               }}>
-                <i className="fa-solid fa-check-circle" style={{ color: '#00CECB', marginRight: '8px' }}></i>
-                Confirm Create Task
-              </h4>
+                <i className="fa-solid fa-check-circle" style={{ color: '#00CECB', marginRight: '8px' }}></i>{t("Confirm Create Task")}</h4>
               
               {/* Parse result display */}
               <div style={{
@@ -427,9 +426,7 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
                   color: '#222222',
                   fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif'
                 }}>
-                  <i className="fa-solid fa-exclamation-triangle" style={{ marginRight: '4px', color: '#FFD700' }}></i>
-                  Low confidence parsing, please check if the information is correct
-                </div>
+                  <i className="fa-solid fa-exclamation-triangle" style={{ marginRight: '4px', color: '#FFD700' }}></i>{t("Low confidence parsing, please check if the information is correct")}</div>
               )}
 
               {/* Action buttons - 统一风格 */}
@@ -460,9 +457,7 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
                     e.currentTarget.style.boxShadow = '2px 2px 0 #222222';
                   }}
                 >
-                  <i className="fa-solid fa-check" style={{ marginRight: '4px' }}></i>
-                  Confirm
-                </button>
+                  <i className="fa-solid fa-check" style={{ marginRight: '4px' }}></i>{t("Confirm")}</button>
                 <button
                   onClick={retryRecognition}
                   style={{
@@ -488,9 +483,7 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
                     e.currentTarget.style.boxShadow = '2px 2px 0 #222222';
                   }}
                 >
-                  <i className="fa-solid fa-rotate-right" style={{ marginRight: '4px' }}></i>
-                  Retry
-                </button>
+                  <i className="fa-solid fa-rotate-right" style={{ marginRight: '4px' }}></i>{t("Retry")}</button>
                 <button
                   onClick={cancelCreateTask}
                   style={{
@@ -515,9 +508,7 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
                     e.currentTarget.style.transform = 'translate(0, 0)';
                     e.currentTarget.style.boxShadow = '2px 2px 0 #222222';
                   }}
-                >
-                  Cancel
-                </button>
+                >{t("Cancel")}</button>
               </div>
             </div>
           </motion.div>

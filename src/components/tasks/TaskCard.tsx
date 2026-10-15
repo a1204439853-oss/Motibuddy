@@ -1,3 +1,5 @@
+import { t, label } from '@/i18n/core';
+import { useLocale } from '@/i18n/react';
 import { useContext, useState } from 'react';
 import { TaskContext } from '@/contexts/taskContext';
 import { Task } from '@/types';
@@ -13,6 +15,7 @@ interface TaskCardProps {
 }
 
 const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationStart }: TaskCardProps) => {
+  useLocale();
   const { completeTask, uncompleteTask, updateTask, deleteTask } = useContext(TaskContext);
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
@@ -61,7 +64,7 @@ const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationS
         onCompleteAnimationStart?.();
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Task changes were not saved. Please retry.');
+      toast.error(error instanceof Error ? t(error.message) : t("Task changes were not saved. Please retry."));
     } finally { setIsPending(false); }
   };
   
@@ -70,16 +73,16 @@ const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationS
     if (isPending) return;
     const isCompleted = task.status === 'completed';
     const message = isCompleted 
-      ? 'This task has been completed. Are you sure you want to delete it?'
-      : 'Are you sure you want to delete this task?';
+      ? t("This task has been completed. Are you sure you want to delete it?")
+      : t("Are you sure you want to delete this task?");
     
     if (window.confirm(message)) {
       setIsPending(true);
       try {
         await deleteTask(task.id);
-        toast.success('Task deleted successfully');
+        toast.success(t("Task deleted successfully"));
       } catch {
-        toast.error('Task was not deleted. Please retry.');
+        toast.error(t("Task was not deleted. Please retry."));
       } finally { setIsPending(false); }
     }
   };
@@ -163,12 +166,12 @@ const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationS
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {/* Priority badge */}
                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
-                  {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                  {label(task.priority)}
                 </span>
                 
                 {/* Status badge */}
                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(task.status)}`}>
-                  {task.status.charAt(0).toUpperCase() + task.status.slice(1).replace('-', ' ')}
+                  {label(task.status)}
                 </span>
                 
                 {/* Due date badge */}
@@ -241,7 +244,7 @@ const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationS
                 className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-orange-50 transition-colors flex items-center gap-2"
               >
                 <i className="fa-solid fa-pen-to-square text-sm"></i>
-                <span>Edit</span>
+                <span>{t("Edit")}</span>
               </button>
               
               <button
@@ -253,7 +256,7 @@ const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationS
                 className="w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
               >
                 <i className="fa-solid fa-trash-can text-sm"></i>
-                <span>Delete</span>
+                <span>{t("Delete")}</span>
               </button>
             </motion.div>
           )}

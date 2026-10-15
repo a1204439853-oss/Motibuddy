@@ -1,3 +1,4 @@
+import { t } from '@/i18n/core';
 import { createContext, useEffect, ReactNode, useCallback, useMemo, useRef, useSyncExternalStore } from 'react';
 import { Task, TaskStatus, TaskPriority } from '@/types';
 import { generateId } from '@/lib/utils';
@@ -169,7 +170,7 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
         await commitBusiness(data => markBusinessOverdue(data, now));
         if (session.isCurrent()) localStorage.setItem('task_overdue', 'true');
       } catch {
-        if (session.isCurrent()) import('sonner').then(({ toast }) => toast.error('Overdue processing could not finish. Check the task and pet progress before continuing.'));
+        if (session.isCurrent()) import('sonner').then(({ toast }) => toast.error(t("Overdue processing could not finish. Check the task and pet progress before continuing.")));
       }
     };
     void checkOverdue();

@@ -26,6 +26,19 @@ fn main_window_only(window: &tauri::Window) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn set_ui_language(locale: String, app: tauri::AppHandle) -> Result<(), String> {
+    let titles = match locale.as_str() {
+        "zh-CN" => ["显示／隐藏主窗口", "开发者工具", "退出"],
+        "en-US" => ["Show/Hide Main Window", "Open DevTools", "Quit"],
+        _ => return Err("Unsupported display language".into()),
+    };
+    for (id, title) in ["toggle_main", "open_devtools", "quit"].iter().zip(titles) {
+        app.tray_handle().get_item(id).set_title(title).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
 fn read_business_state(user_id: String, store: tauri::State<business_store::BusinessStore>) -> Result<Option<business_store::Snapshot>, String> {
     store.read(&user_id)
 }
@@ -248,6 +261,7 @@ fn main() {
             commit_business_state,
             complete_shutdown,
             cancel_shutdown,
+            set_ui_language,
         ])
         .build(context)
         .expect("error while running tauri application")

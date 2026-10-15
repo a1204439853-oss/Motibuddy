@@ -1,17 +1,21 @@
+import { t, getLocale } from '@/i18n/core';
+import { useLocale } from '@/i18n/react';
 import React from 'react';
+import PublicHeader from '@/components/ui/PublicHeader';
 
 interface WelcomePageProps {
   onStart: () => void;
 }
 
 export const WelcomePage: React.FC<WelcomePageProps> = ({ onStart }) => {
+  useLocale();
   return (
     <div className="fixed inset-0 w-full h-full overflow-hidden">
       {/* Video Background */}
       <div className="absolute inset-0 z-0">
         <video
           src="../../../welcome_bg.mp4"
-          title="MotiBuddy Background" 
+          title={t("MotiBuddy Background")}
           className="w-full h-full object-cover"
           autoPlay
           loop
@@ -25,7 +29,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onStart }) => {
             position: 'absolute',
             top: '0',
             left: '0',
-            zIndex: -1,
+            zIndex: 0,
             pointerEvents: 'none'
           }}
         />
@@ -34,52 +38,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onStart }) => {
       
       {/* Content */}
       <div className="absolute inset-0 z-10">
-        {/* Navigation Bar */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '7vh',
-          backgroundColor: 'rgba(255, 255, 255, 0.4)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 40px',
-          zIndex: 100
-        }}>
-          {/* Logo */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center'
-          }}>
-            <img
-              src="../../../logo.png"
-              alt="MotiBuddy Logo"
-              style={{
-                height: '80%',
-                maxHeight: '5.6vh',
-                width: 'auto'
-              }}
-            />
-          </div>
-          
-          {/* Login Button */}
-          <button
-            onClick={onStart}
-            style={{
-              color: 'black',
-              backgroundColor: 'transparent',
-              border: 'none',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              fontFamily: 'Arial Rounded MT Bold, Helvetica, sans-serif',
-              textDecoration: 'underline'
-            }}>
-            LOGIN
-          </button>
-        </div>
+        <PublicHeader onLogin={onStart} />
         
         {/* Centered Text */}
         <div style={{
@@ -96,7 +55,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onStart }) => {
             fontWeight: 'bold',
             textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
             fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif'
-          }}>Let <span style={{ color: '#FF5E5B' }}>Moti</span>vation Be Your <span style={{ color: '#00CECB' }}>Buddy</span></h1>
+          }}>{getLocale() === 'zh-CN' ? <>让每一天，都有<span style={{ color: '#FF5E5B' }}>陪伴</span>与<span style={{ color: '#00CECB' }}>动力</span>。</> : <>Let <span style={{ color: '#FF5E5B' }}>Moti</span>vation Be Your <span style={{ color: '#00CECB' }}>Buddy</span></>}</h1>
         </div>
         
         {/* Button */}
@@ -136,9 +95,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onStart }) => {
               e.currentTarget.style.transform = 'translate(calc(-50% + 2px), 2px)';
               e.currentTarget.style.boxShadow = '2px 2px 0 #222222';
             }}
-        >
-          ADOPT A PET NOW
-        </button>
+        >{t("ADOPT A PET NOW")}</button>
       </div>
     </div>
   );

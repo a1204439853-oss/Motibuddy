@@ -1,13 +1,17 @@
+import { t, label } from '@/i18n/core';
+import { useLocale } from '@/i18n/react';
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/contexts/authContext';
 import { toast } from 'sonner';
+import PublicHeader from '@/components/ui/PublicHeader';
 
 interface RegisterProps {
   onSwitchToLogin?: () => void;
 }
 
 const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
+  useLocale();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -32,19 +36,19 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
     
     // Check if all fields are filled
     if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
-      toast.error('Please fill in all fields');
+      toast.error(t("Please fill in all fields"));
       return;
     }
     
     // Check if passwords match
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error(t("Passwords do not match"));
       return;
     }
     
     // Check password length
     if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters long');
+      toast.error(t("Password must be at least 6 characters long"));
       return;
     }
     
@@ -53,7 +57,7 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
     const hasNumber = /[0-9]/.test(formData.password);
     
     if (!hasLetter || !hasNumber) {
-      toast.error('Password must contain both letters and numbers');
+      toast.error(t("Password must contain both letters and numbers"));
       return;
     }
     
@@ -63,13 +67,13 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
       const success = await register(formData.username, formData.email, formData.password);
       
       if (success) {
-        toast.success('Registration successful! Please log in.');
+        toast.success(t("Registration successful! Please log in."));
         navigate('/login');
       } else {
-        toast.error('Username or email already exists');
+        toast.error(t("Username or email already exists"));
       }
     } catch (error) {
-      toast.error('Registration failed. Please try again.');
+      toast.error(t("Registration failed. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -77,11 +81,12 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh', overflow: 'hidden' }}>
+      <PublicHeader onLogin={onSwitchToLogin} />
       {/* Background Video */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
         <video
           src="../../login_bg.mp4"
-          title="Register Background" 
+          title={t("Register Background")}
           autoPlay
           loop
           muted
@@ -117,7 +122,7 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
         flexDirection: 'column', 
         alignItems: 'center', 
         justifyContent: 'center', 
-        padding: '20px'
+        padding: '76px 20px 24px'
       }}>
         <div style={{ width: '100%', maxWidth: '320px' }}>
           <h1 style={{ 
@@ -134,7 +139,7 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
             marginBottom: '20px', 
             textAlign: 'center', 
             color: '#222222'
-          }}>Create Account</h2>
+          }}>{t("Create Account")}</h2>
           
           <form onSubmit={handleSubmit} style={{ width: '100%' }}>
             {/* Username Input */}
@@ -151,7 +156,7 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                 marginBottom: '8px', 
                 color: 'black', 
                 textAlign: 'center'
-              }}>Username</label>
+              }}>{t("Username")}</label>
               <input
                 type="text"
                 name="username"
@@ -167,7 +172,7 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                   outline: 'none',
                   textAlign: 'center'
                 }}
-                placeholder="Enter your username"
+                placeholder={t("Enter your username")}
               />
             </div>
             
@@ -185,7 +190,7 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                 marginBottom: '8px', 
                 color: 'black', 
                 textAlign: 'center'
-              }}>Email</label>
+              }}>{t("Email")}</label>
               <input
                 type="text"
                 name="email"
@@ -201,7 +206,7 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                   outline: 'none',
                   textAlign: 'center'
                 }}
-                placeholder="Enter your email"
+                placeholder={t("Enter your email")}
               />
             </div>
             
@@ -219,7 +224,7 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                 marginBottom: '8px', 
                 color: 'black', 
                 textAlign: 'center'
-              }}>Password</label>
+              }}>{t("Password")}</label>
               <input
                 type="password"
                 name="password"
@@ -235,7 +240,7 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                   outline: 'none',
                   textAlign: 'center'
                 }}
-                placeholder="Enter your password"
+                placeholder={t("Enter your password")}
               />
             </div>
             
@@ -253,7 +258,7 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                 marginBottom: '8px', 
                 color: 'black', 
                 textAlign: 'center'
-              }}>Confirm Password</label>
+              }}>{t("Confirm Password")}</label>
               <input
                 type="password"
                 name="confirmPassword"
@@ -269,7 +274,7 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                   outline: 'none',
                   textAlign: 'center'
                 }}
-                placeholder="Confirm your password"
+                placeholder={t("Confirm your password")}
               />
             </div>
             
@@ -310,14 +315,14 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                   e.currentTarget.style.boxShadow = '1px 1px 0 #222222';
                 }}
               >
-                {isLoading ? 'Creating account...' : 'REGISTER'}
+                {t(isLoading ? 'Creating account...' : 'REGISTER')}
               </button>
             </div>
           </form>
           
           {/* Login Link */}
           <div style={{ marginTop: '20px', textAlign: 'center' }}>
-            <p style={{ color: '#222222', fontWeight: 'bold', fontSize: '14px' }}>Already have an account?</p>
+            <p style={{ color: '#222222', fontWeight: 'bold', fontSize: '14px' }}>{t("Already have an account?")}</p>
             {onSwitchToLogin ? (
               <button
                 onClick={onSwitchToLogin}
@@ -331,9 +336,7 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                   fontSize: '14px',
                   cursor: 'pointer'
                 }}
-              >
-                Login
-              </button>
+              >{t("Login")}</button>
             ) : (
               <Link to="/login">
                 <button
@@ -347,9 +350,7 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                     fontSize: '14px',
                     cursor: 'pointer'
                   }}
-                >
-                  Login
-                </button>
+                >{t("Login")}</button>
               </Link>
             )}
           </div>

@@ -1,3 +1,5 @@
+import { t } from '@/i18n/core';
+import { useLocale } from '@/i18n/react';
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/contexts/authContext';
@@ -14,7 +16,8 @@ import { motion } from 'framer-motion';
 import { TaskPriority } from '@/types';
 
 const MainApp = () => {
-  const { currentUser, currentPet, logout, isAuthenticated } = useContext(AuthContext);
+  useLocale();
+  const { currentUser, currentPet, isAuthenticated } = useContext(AuthContext);
   const { addTask } = useContext(TaskContext);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [activeView, setActiveView] = useState<'tasks' | 'statistics'>('tasks');
@@ -38,7 +41,7 @@ const MainApp = () => {
         priority: task.priority || TaskPriority.MEDIUM
       });
     } catch (error) {
-      toast.error('Failed to create task: ' + (error as Error).message);
+      toast.error(t('Failed to create task: {message}', { message: t((error as Error).message) }));
       throw error;
     }
   };
@@ -102,19 +105,13 @@ const MainApp = () => {
             color: '#222222',
             fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif',
             textShadow: '1px 1px 2px rgba(0, 0, 0, 0.1)'
-          }}>Loading your MotiBuddy...</h2>
+          }}>{t("Loading your MotiBuddy...")}</h2>
         </div>
 
         {/* Animation styles are now inline */}
       </div>
     );
   }
-
-  const handleLogout = () => {
-    logout();
-    toast.success('You have been logged out');
-    navigate('/login');
-  };
 
   return (
     <div style={{
@@ -149,9 +146,7 @@ const MainApp = () => {
       }}>
         {/* Navbar */}
         <Navbar
-          currentUser={currentUser}
           currentPet={currentPet}
-          onLogout={handleLogout}
           onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
 
@@ -193,7 +188,7 @@ const MainApp = () => {
                       fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif',
                       textShadow: '1px 1px 2px rgba(0, 0, 0, 0.1)'
                     }}>
-                      {activeView === 'tasks' ? 'Your Tasks' : 'Your Statistics'}
+                      {activeView === 'tasks' ? t("Your Tasks") : t("Your Statistics")}
                     </h1>
 
                     {activeView === 'tasks' && (
@@ -237,7 +232,7 @@ const MainApp = () => {
                           }}
                         >
                           <i className="fa-solid fa-plus text-xs"></i>
-                          <span>Add Task</span>
+                          <span>{t("Add Task")}</span>
                         </button>
                       </div>
                     )}

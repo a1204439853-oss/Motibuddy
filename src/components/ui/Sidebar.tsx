@@ -1,3 +1,5 @@
+import { t, label } from '@/i18n/core';
+import { useLocale } from '@/i18n/react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Pet } from '@/types';
@@ -15,6 +17,7 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthenticated }: SidebarProps) => {
+  useLocale();
   const navigate = useNavigate();
   const [widgetVisible, setWidgetVisible] = useState(false);
   
@@ -123,7 +126,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
     console.log('Toggle widget clicked, isAuthenticated:', isAuthenticated);
     
     if (!isAuthenticated) {
-      toast.error('Please login first to use the desktop widget');
+      toast.error(t("Please login first to use the desktop widget"));
       return;
     }
     
@@ -137,16 +140,16 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
         console.log('toggle_widget_window returned:', isVisible);
         setWidgetVisible(isVisible);
         if (isVisible) {
-          toast.success('Desktop widget shown');
+          toast.success(t("Desktop widget shown"));
         } else {
-          toast.success('Desktop widget hidden');
+          toast.success(t("Desktop widget hidden"));
         }
       } catch (error) {
         console.error('Failed to toggle widget:', error);
-        toast.error('Operation failed: ' + (error as Error).message);
+        toast.error(t('Operation failed: {message}', { message: t((error as Error).message) }));
       }
     } else {
-      toast.error('Desktop widget is only available in desktop app');
+      toast.error(t("Desktop widget is only available in desktop app"));
     }
   };
 
@@ -155,25 +158,25 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
   const navItems = [
     {
       id: 'tasks',
-      label: 'Tasks',
+      label: t("Tasks"),
       icon: 'fa-solid fa-tasks',
       onClick: () => setActiveView('tasks')
     },
     {
       id: 'statistics',
-      label: 'Statistics',
+      label: t('Statistics'),
       icon: 'fa-solid fa-chart-bar',
       onClick: () => setActiveView('statistics')
     },
     {
       id: 'profile',
-      label: 'Profile',
+      label: t('Profile & Settings'),
       icon: 'fa-solid fa-user',
       onClick: () => navigate('/profile')
     },
     {
       id: 'widget',
-      label: 'Desktop Widget',
+      label: t("Desktop Widget"),
       icon: 'fa-solid fa-window-restore',
       onClick: toggleWidget,
       badge: widgetVisible ? 'Active' : 'Inactive'
@@ -283,7 +286,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
                 margin: '2px 0 0 0',
                 fontWeight: 'bold',
                 fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif'
-              }}>Level {currentPet.level}</p>
+              }}>{t("Level")}{' '}{currentPet.level}</p>
             </div>
           </div>
           <span style={{
@@ -298,7 +301,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
             fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif',
             textTransform: 'capitalize'
           }}>
-            {getPetMood()}
+            {label(getPetMood())}
           </span>
         </div>
         
@@ -306,7 +309,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
         <div className="mt-4 space-y-2">
           <div className="space-y-1">
             <div className="flex justify-between">
-              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>Health</span>
+              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{t("Health")}</span>
               <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{currentPet.health}/100</span>
             </div>
             <div style={{
@@ -335,7 +338,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
           
           <div className="space-y-1">
             <div className="flex justify-between">
-              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>Happiness</span>
+              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{t("Happiness")}</span>
               <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{currentPet.happiness}/100</span>
             </div>
             <div style={{
@@ -364,7 +367,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
           
           <div className="space-y-1">
             <div className="flex justify-between">
-              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>Hunger</span>
+              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{t("Hunger")}</span>
               <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{currentPet.hunger}/100</span>
             </div>
             <div style={{
@@ -393,7 +396,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
           
           <div className="space-y-1">
             <div className="flex justify-between">
-              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>Energy</span>
+              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{t("Energy")}</span>
               <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{currentPet.energy}/100</span>
             </div>
             <div style={{
@@ -433,7 +436,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
             margin: 0
-          }}>Main</p>
+          }}>{t("Main")}</p>
         </div>
         
         <div className="space-y-2 px-3">
@@ -493,7 +496,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
                   border: '1px solid #222222',
                   boxShadow: '1px 1px 0 rgba(0, 0, 0, 0.2)'
                 }}>
-                  {item.badge}
+                  {t(item.badge)}
                 </span>
               )}
             </button>
@@ -511,7 +514,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
             margin: 0
-          }}>Achievements</p>
+          }}>{t("Achievements")}</p>
         </div>
         
         <div className="px-3 mb-4">
@@ -547,7 +550,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
             }}
           >
             <i className="fa-solid fa-trophy text-base text-amber-500"></i>
-            <span>Achievements</span>
+            <span>{t("Achievements")}</span>
             <span style={{
               marginLeft: 'auto',
               padding: '2px 8px',
@@ -581,7 +584,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
             maxWidth: '100%'
           }}>
             {(() => {
-              const quote = quotes[currentQuoteIndex];
+              const quote = t(quotes[currentQuoteIndex]);
               const parts = quote.split(' - ');
               const quoteText = parts[0];
               const author = parts[1] || '';

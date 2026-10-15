@@ -1,3 +1,5 @@
+import { t, label } from '@/i18n/core';
+import { useLocale } from '@/i18n/react';
 import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/contexts/authContext';
@@ -7,6 +9,7 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const PetCreationPage = () => {
+  useLocale();
   const [petName, setPetName] = useState<string>('');
   const [selectedPetType, setSelectedPetType] = useState<PetType | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -26,45 +29,45 @@ const PetCreationPage = () => {
   const petTypes = [
     {
       type: PetType.CAT,
-      name: 'Cat',
+      name: t("Cat"),
       video: '/cat_jump.mp4',
-      description: 'Friendly and independent'
+      description: t("Friendly and independent")
     },
     {
       type: PetType.DOG,
-      name: 'Dog',
+      name: t("Dog"),
       video: '/dog_spin.mp4',
-      description: 'Energetic and loyal'
+      description: t("Energetic and loyal")
     },
     {
       type: PetType.PANDA,
-      name: 'Panda',
+      name: t("Panda"),
       video: '/panda_greet.mp4',
-      description: 'Calm and playful'
+      description: t("Calm and playful")
     },
     {
       type: PetType.BIRD,
-      name: 'Bird',
+      name: t("Bird"),
       video: '/bird_fly.mp4',
-      description: 'Cheerful and active'
+      description: t("Cheerful and active")
     }
   ];
   
   const handleCreatePet = async () => {
     if (isLoading) return;
     if (!currentUser) {
-      toast.error('User not authenticated');
+      toast.error(t("User not authenticated"));
       navigate('/login');
       return;
     }
     
     if (!petName.trim()) {
-      toast.error('Please enter a name for your pet');
+      toast.error(t("Please enter a name for your pet"));
       return;
     }
     
     if (!selectedPetType) {
-      toast.error('Please select a pet type');
+      toast.error(t("Please select a pet type"));
       return;
     }
     
@@ -90,11 +93,11 @@ const PetCreationPage = () => {
     try {
       await createPet(newPet);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Your pet could not be saved. Please retry.');
+      toast.error(error instanceof Error ? t(error.message) : t("Your pet could not be saved. Please retry."));
       return;
     } finally { setIsLoading(false); }
     
-    toast.success(`Welcome to MotiBuddy, ${newPet.name}!`);
+    toast.success(t("Welcome to MotiBuddy, {name}!", { name: newPet.name }));
     
     // Show security info prompt instead of redirecting immediately
     setShowSecurityPrompt(true);
@@ -118,12 +121,12 @@ const PetCreationPage = () => {
     
     // Validate selections
     if (!question1Id || !answer1.trim() || !question2Id || !answer2.trim()) {
-      toast.error('Please fill in both security questions and answers');
+      toast.error(t("Please fill in both security questions and answers"));
       return;
     }
     
     if (question1Id === question2Id) {
-      toast.error('Please select two different security questions');
+      toast.error(t("Please select two different security questions"));
       return;
     }
     
@@ -137,14 +140,14 @@ const PetCreationPage = () => {
       const success = await updateUserProfile({ securityInfo });
       
       if (success) {
-        toast.success('Security information saved successfully');
+        toast.success(t("Security information saved successfully"));
         setShowSecuritySetup(false);
         navigate('/');
       } else {
-        toast.error('Failed to save security information');
+        toast.error(t("Failed to save security information"));
       }
     } catch (error) {
-      toast.error('An error occurred. Please try again.');
+      toast.error(t("An error occurred. Please try again."));
     }
   };
   
@@ -167,7 +170,7 @@ const PetCreationPage = () => {
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
         <img
           src="/pet_selection_bg.png"
-          alt="MotiBuddy Background" 
+          alt={t("MotiBuddy Background")}
           style={{ 
             objectFit: 'cover', 
             width: '100%', 
@@ -207,18 +210,14 @@ const PetCreationPage = () => {
           }}
         >
           <div className="text-center mb-4">
-            <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#222222', marginBottom: '6px', fontFamily }}>
-              Create Your MotiBuddy
-            </h1>
-            <p style={{ color: '#222222', fontWeight: 'bold', fontSize: '13px', fontFamily }}>
-              Choose a pet and give it a name to start your journey
-            </p>
+            <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#222222', marginBottom: '6px', fontFamily }}>{t("Create Your MotiBuddy")}</h1>
+            <p style={{ color: '#222222', fontWeight: 'bold', fontSize: '13px', fontFamily }}>{t("Choose a pet and give it a name to start your journey")}</p>
           </div>
           
           <div className="space-y-5">
             {/* Pet selection */}
             <div className="space-y-3">
-              <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#222222', fontFamily }}>Choose Your Pet</h2>
+              <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#222222', fontFamily }}>{t("Choose Your Pet")}</h2>
               <div className="flex gap-4 overflow-x-auto py-3 px-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {petTypes.map((pet) => (
                   <motion.div
@@ -253,7 +252,7 @@ const PetCreationPage = () => {
                       }}>
                         <video 
                           src={pet.video} 
-                          title={pet.name} 
+                          title={t(pet.name)}
                           className="w-full h-full object-cover"
                           autoPlay
                           loop
@@ -265,8 +264,8 @@ const PetCreationPage = () => {
                           style={{ pointerEvents: 'none' }}
                         />
                       </div>
-                      <h3 style={{ fontWeight: 'bold', color: '#222222', fontSize: '15px', fontFamily }}>{pet.name}</h3>
-                      <p style={{ fontSize: '11px', color: '#222222', textAlign: 'center', marginTop: '4px', fontFamily }}>{pet.description}</p>
+                      <h3 style={{ fontWeight: 'bold', color: '#222222', fontSize: '15px', fontFamily }}>{t(pet.name)}</h3>
+                      <p style={{ fontSize: '11px', color: '#222222', textAlign: 'center', marginTop: '4px', fontFamily }}>{t(pet.description)}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -275,7 +274,7 @@ const PetCreationPage = () => {
             
             {/* Pet name */}
             <div className="space-y-2">
-              <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#222222', fontFamily }}>Name Your Pet</h2>
+              <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#222222', fontFamily }}>{t("Name Your Pet")}</h2>
               <input
                 type="text"
                 value={petName}
@@ -293,12 +292,11 @@ const PetCreationPage = () => {
                   backgroundColor: 'white',
                   fontFamily
                 }}
-                placeholder="Enter a name for your pet"
+                placeholder={t("Enter a name for your pet")}
                 maxLength={8}
               />
               <p style={{ fontSize: '11px', color: '#222222', textAlign: 'right', fontWeight: 'bold', fontFamily }}>
-                {petName.length}/8 characters
-              </p>
+                {petName.length}{t("/8 characters")}</p>
             </div>
             
             {/* Create button */}
@@ -331,19 +329,15 @@ const PetCreationPage = () => {
             >
               {isLoading ? (
                 <>
-                  <i className="fa-solid fa-circle-notch fa-spin mr-1"></i>
-                  Creating your MotiBuddy...
-                </>
+                  <i className="fa-solid fa-circle-notch fa-spin mr-1"></i>{t("Creating your MotiBuddy...")}</>
               ) : (
-                'Create My MotiBuddy'
+                t("Create My MotiBuddy")
               )}
             </motion.button>
           </div>
           
           <div className="mt-6 text-center">
-            <p style={{ color: '#222222', fontStyle: 'italic', fontWeight: 'bold', fontSize: '12px', fontFamily }}>
-              "A journey of a thousand tasks begins with a single pet..."
-            </p>
+            <p style={{ color: '#222222', fontStyle: 'italic', fontWeight: 'bold', fontSize: '12px', fontFamily }}>{t("\"A journey of a thousand tasks begins with a single pet...\"")}</p>
           </div>
         </motion.div>
         
@@ -371,12 +365,8 @@ const PetCreationPage = () => {
               >
                 <div className="text-center mb-4">
                   <i className="fa-solid fa-shield-halved text-4xl text-green-500 mb-3"></i>
-                  <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#222222', fontFamily }}>
-                    Set Up Security Info?
-                  </h2>
-                  <p style={{ fontSize: '13px', color: '#666', marginTop: '8px', fontFamily }}>
-                    Adding security questions helps you recover your password if you forget it. This step is optional but recommended.
-                  </p>
+                  <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#222222', fontFamily }}>{t("Set Up Security Info?")}</h2>
+                  <p style={{ fontSize: '13px', color: '#666', marginTop: '8px', fontFamily }}>{t("Adding security questions helps you recover your password if you forget it. This step is optional but recommended.")}</p>
                 </div>
                 <div className="flex gap-3">
                   <motion.button
@@ -388,9 +378,7 @@ const PetCreationPage = () => {
                     }}
                     whileHover={{ x: 2, y: 2, boxShadow: '2px 2px 0 #222222' }}
                     whileTap={{ x: 4, y: 4, boxShadow: 'none' }}
-                  >
-                    Later
-                  </motion.button>
+                  >{t("Later")}</motion.button>
                   <motion.button
                     onClick={handleSetupNow}
                     style={{
@@ -400,9 +388,7 @@ const PetCreationPage = () => {
                     }}
                     whileHover={{ x: 2, y: 2, boxShadow: '2px 2px 0 #222222' }}
                     whileTap={{ x: 4, y: 4, boxShadow: 'none' }}
-                  >
-                    Set Up Now
-                  </motion.button>
+                  >{t("Set Up Now")}</motion.button>
                 </div>
               </motion.div>
             </motion.div>
@@ -433,16 +419,12 @@ const PetCreationPage = () => {
               >
                 <div className="text-center mb-4">
                   <i className="fa-solid fa-shield-halved text-4xl text-green-500 mb-3"></i>
-                  <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#222222', fontFamily }}>
-                    Security Questions
-                  </h2>
-                  <p style={{ fontSize: '12px', color: '#666', marginTop: '8px', fontFamily }}>
-                    Choose two questions and provide answers. These will help you recover your account.
-                  </p>
+                  <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#222222', fontFamily }}>{t("Security Questions")}</h2>
+                  <p style={{ fontSize: '12px', color: '#666', marginTop: '8px', fontFamily }}>{t("Choose two questions and provide answers. These will help you recover your account.")}</p>
                 </div>
                 <div className="space-y-3 mb-4">
                   <div>
-                    <label style={{ fontSize: '12px', fontWeight: 'bold', fontFamily, display: 'block', marginBottom: '4px' }}>Question 1</label>
+                    <label style={{ fontSize: '12px', fontWeight: 'bold', fontFamily, display: 'block', marginBottom: '4px' }}>{t("Question 1")}</label>
                     <select
                       value={question1Id}
                       onChange={(e) => setQuestion1Id(e.target.value as SecurityQuestionId)}
@@ -451,16 +433,16 @@ const PetCreationPage = () => {
                         fontSize: '12px', color: 'black', outline: 'none', marginBottom: '4px', fontFamily
                       }}
                     >
-                      <option value="">Select a question...</option>
+                      <option value="">{t("Select a question...")}</option>
                       {SECURITY_QUESTIONS.map(q => (
-                        <option key={q.id} value={q.id}>{q.text}</option>
+                        <option key={q.id} value={q.id}>{t(q.text)}</option>
                       ))}
                     </select>
                     <input
                       type="text"
                       value={answer1}
                       onChange={(e) => setAnswer1(e.target.value)}
-                      placeholder="Your answer"
+                      placeholder={t("Your answer")}
                       style={{
                         width: '100%', padding: '8px 12px', border: '2px solid #222222', borderRadius: '6px',
                         fontSize: '12px', color: 'black', outline: 'none', fontFamily
@@ -468,7 +450,7 @@ const PetCreationPage = () => {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: '12px', fontWeight: 'bold', fontFamily, display: 'block', marginBottom: '4px' }}>Question 2</label>
+                    <label style={{ fontSize: '12px', fontWeight: 'bold', fontFamily, display: 'block', marginBottom: '4px' }}>{t("Question 2")}</label>
                     <select
                       value={question2Id}
                       onChange={(e) => setQuestion2Id(e.target.value as SecurityQuestionId)}
@@ -477,16 +459,16 @@ const PetCreationPage = () => {
                         fontSize: '12px', color: 'black', outline: 'none', marginBottom: '4px', fontFamily
                       }}
                     >
-                      <option value="">Select a question...</option>
+                      <option value="">{t("Select a question...")}</option>
                       {getAvailableQuestions2().map(q => (
-                        <option key={q.id} value={q.id}>{q.text}</option>
+                        <option key={q.id} value={q.id}>{t(q.text)}</option>
                       ))}
                     </select>
                     <input
                       type="text"
                       value={answer2}
                       onChange={(e) => setAnswer2(e.target.value)}
-                      placeholder="Your answer"
+                      placeholder={t("Your answer")}
                       style={{
                         width: '100%', padding: '8px 12px', border: '2px solid #222222', borderRadius: '6px',
                         fontSize: '12px', color: 'black', outline: 'none', fontFamily
@@ -504,9 +486,7 @@ const PetCreationPage = () => {
                     }}
                     whileHover={{ x: 2, y: 2, boxShadow: '2px 2px 0 #222222' }}
                     whileTap={{ x: 4, y: 4, boxShadow: 'none' }}
-                  >
-                    Back
-                  </motion.button>
+                  >{t("Back")}</motion.button>
                   <motion.button
                     onClick={handleSaveSecurityInfo}
                     style={{
@@ -516,9 +496,7 @@ const PetCreationPage = () => {
                     }}
                     whileHover={{ x: 2, y: 2, boxShadow: '2px 2px 0 #222222' }}
                     whileTap={{ x: 4, y: 4, boxShadow: 'none' }}
-                  >
-                    Save
-                  </motion.button>
+                  >{t("Save")}</motion.button>
                 </div>
               </motion.div>
             </motion.div>

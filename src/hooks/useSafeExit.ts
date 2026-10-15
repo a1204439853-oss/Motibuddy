@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { t } from '@/i18n/core';
 import { invoke } from '@tauri-apps/api/tauri';
 import { listen } from '@tauri-apps/api/event';
 import { toast } from 'sonner';
@@ -14,7 +15,7 @@ export function useSafeExit() {
       await invoke('cancel_shutdown');
       applicationWrites.resume();
       setClosing(false);
-    } catch { toast.error('Could not cancel exit. Please wait for pending saves.'); }
+    } catch { toast.error(t('Could not cancel exit. Please wait for pending saves.')); }
   };
   useEffect(() => {
     if (!isTauri()) return;
@@ -30,10 +31,10 @@ export function useSafeExit() {
       }).catch(async () => {
         if (disposed || version !== generation.current) return;
         await cancel();
-        toast.error('Some saves could not finish. Review the saved progress before exiting.');
+        toast.error(t('Some saves could not finish. Review the saved progress before exiting.'));
       });
     }).then(dispose => { if (disposed) dispose(); else unlisten = dispose; }).catch(() => {
-      if (!disposed) toast.error('Safe exit is unavailable. Reopen the application before making changes.');
+      if (!disposed) toast.error(t('Safe exit is unavailable. Reopen the application before making changes.'));
     });
     return () => { disposed = true; generation.current++; unlisten?.(); };
   }, []);

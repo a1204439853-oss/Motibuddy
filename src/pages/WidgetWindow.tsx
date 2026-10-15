@@ -1,3 +1,5 @@
+import { t, label, getLocale } from '@/i18n/core';
+import { useLocale } from '@/i18n/react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { readSessionStamp } from '@/services/runtimeSession';
@@ -35,6 +37,7 @@ interface WidgetData {
  * Reads committed backend snapshots; localStorage only identifies the active session.
  */
 const WidgetWindow = () => {
+  useLocale();
   const [mode, setMode] = useState<'compact' | 'full'>('compact');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [pet, setPet] = useState<Pet | null>(null);
@@ -134,7 +137,7 @@ const WidgetWindow = () => {
       } catch (error) {
         if (disposed || readSessionStamp(localStorage)?.token !== stamp?.token) return;
         console.error('Widget: Error loading data:', error);
-        setLoadError('Saved progress could not be refreshed. Please check the main window.');
+        setLoadError("Saved progress could not be refreshed. Please check the main window.");
         if (isLoading) {
           setIsLoading(false);
         }
@@ -181,7 +184,7 @@ const WidgetWindow = () => {
       if (!isActive()) return;
       await reloadData.current();
       if (!result.success) { showPetDialogue(result.message); return; }
-      showPetDialogue(action === 'feed' ? 'Yum yum! That was delicious!' : "That was fun! Let's play again soon!");
+      showPetDialogue(action === 'feed' ? "Yum yum! That was delicious!" : "That was fun! Let's play again soon!");
       const video = document.querySelector('video');
       if (video) {
         video.loop = false;
@@ -195,7 +198,7 @@ const WidgetWindow = () => {
       }
     } catch (error) {
       if (isActive()) {
-        showPetDialogue(error instanceof Error ? error.message : 'The interaction result could not be confirmed.');
+        showPetDialogue(error instanceof Error ? error.message : "The interaction result could not be confirmed.");
         await reloadData.current();
       }
     } finally {
@@ -216,7 +219,7 @@ const WidgetWindow = () => {
       month: 'short', 
       day: 'numeric' 
     };
-    return date.toLocaleDateString('en-US', options);
+    return date.toLocaleDateString(getLocale(), options);
   };
 
   // Close widget - use Tauri event
@@ -340,7 +343,7 @@ const WidgetWindow = () => {
         animate={{ opacity: 1, scale: 1 }}
         className="rounded-2xl"
         style={{
-          width: 360,
+          width: 'min(360px, 100%)',
           maxHeight: 'calc(100vh - 40px)',
           overflow: 'hidden',
           backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -353,7 +356,7 @@ const WidgetWindow = () => {
           flexDirection: 'column'
         }}
       >
-        {loadError && <p role="alert" className="p-3 text-sm text-red-700 bg-red-50">{loadError}</p>}
+        {loadError && <p role="alert" className="p-3 text-sm text-red-700 bg-red-50">{t(loadError)}</p>}
         {/* Header - Draggable */}
         <div 
           className="px-3 py-1.5 flex items-center justify-between"
@@ -383,7 +386,7 @@ const WidgetWindow = () => {
                 toggleMode();
               }}
               className="text-white/90 hover:text-white p-1 rounded transition-all hover:bg-white/20"
-              title={mode === 'compact' ? 'Expand' : 'Compact'}
+              title={t(mode === 'compact' ? 'Expand' : 'Compact')}
             >
               <i className={`fa-solid ${mode === 'compact' ? 'fa-expand' : 'fa-compress'} text-xs`}></i>
             </button>
@@ -393,7 +396,7 @@ const WidgetWindow = () => {
                 openMainApp();
               }}
               className="text-white/90 hover:text-white p-1 rounded transition-all hover:bg-white/20"
-              title="Open Main App"
+              title={t("Open Main App")}
             >
               <i className="fa-solid fa-home text-xs"></i>
             </button>
@@ -403,7 +406,7 @@ const WidgetWindow = () => {
                 closeWidget();
               }}
               className="text-white/90 hover:text-white p-1 rounded transition-all hover:bg-white/20 hover:bg-red-400/50"
-              title="Close"
+              title={t("Close")}
             >
               <i className="fa-solid fa-times text-xs"></i>
             </button>
@@ -420,7 +423,7 @@ const WidgetWindow = () => {
           {/* Tasks Section */}
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-700 font-bold text-xs uppercase tracking-wide">Tasks</span>
+              <span className="text-gray-700 font-bold text-xs uppercase tracking-wide">{t("Tasks")}</span>
               <div className="flex items-center gap-2">
                 {/* Sort Dropdown */}
                 <select
@@ -429,9 +432,9 @@ const WidgetWindow = () => {
                   className="text-xs px-2 py-1 rounded border-2 border-gray-200 bg-white/80 focus:border-[#FF5E5B] focus:outline-none cursor-pointer"
                   style={{ fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}
                 >
-                  <option value="dueDate">Due Date</option>
-                  <option value="priority">Priority</option>
-                  <option value="created">Created</option>
+                  <option value="dueDate">{t("Due Date")}</option>
+                  <option value="priority">{t("Priority")}</option>
+                  <option value="created">{t("Created")}</option>
                 </select>
                 <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
                   {totalPendingTasks}
@@ -440,7 +443,7 @@ const WidgetWindow = () => {
             </div>
             
             {isLoading ? (
-              <p className="text-gray-400 text-xs italic">Loading...</p>
+              <p className="text-gray-400 text-xs italic">{t("Loading...")}</p>
             ) : sortedTasks.length > 0 ? (
               <div 
                 className="space-y-2 overflow-y-auto"
@@ -465,13 +468,13 @@ const WidgetWindow = () => {
                   >
                     <p className="font-bold text-gray-800 truncate">{task.title}</p>
                     <p className="text-gray-500 mt-0.5">
-                      {new Date(task.due_date).toLocaleDateString('en-US')}
+                      {new Date(task.due_date).toLocaleDateString(getLocale())}
                     </p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-xs italic">No pending tasks</p>
+              <p className="text-gray-500 text-xs italic">{t("No pending tasks")}</p>
             )}
           </div>
 
@@ -485,8 +488,8 @@ const WidgetWindow = () => {
                 className="border-t border-gray-200/50 pt-4"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-700 font-bold text-xs uppercase tracking-wide">Pet Status</span>
-                  <span className="text-gray-600 text-xs font-bold">{pet.name} Lv.{pet.level}</span>
+                  <span className="text-gray-700 font-bold text-xs uppercase tracking-wide">{t("Pet Status")}</span>
+                  <span className="text-gray-600 text-xs font-bold">{pet.name}{' '}{t("Lv.")}{pet.level}</span>
                 </div>
                 
                 {/* Pet Video with click interaction and dialogue */}
@@ -599,7 +602,7 @@ const WidgetWindow = () => {
                         margin: 0,
                         textAlign: 'center'
                       }}>
-                        {petDialogue}
+                        {t(petDialogue)}
                       </p>
                     </motion.div>
                   )}
@@ -608,10 +611,10 @@ const WidgetWindow = () => {
                 {/* Pet Stats */}
                 <div className="space-y-2 mb-4">
                   {[
-                    { label: 'Health', value: pet.health, color: '#00CECB' },
-                    { label: 'Happy', value: pet.happiness, color: '#FFD700' },
-                    { label: 'Hunger', value: pet.hunger, color: '#FF5E5B' },
-                    { label: 'Energy', value: pet.energy, color: '#8A2BE2' }
+                    { label: t("Health"), value: pet.health, color: '#00CECB' },
+                    { label: t("Happiness"), value: pet.happiness, color: '#FFD700' },
+                    { label: t("Hunger"), value: pet.hunger, color: '#FF5E5B' },
+                    { label: t("Energy"), value: pet.energy, color: '#8A2BE2' }
                   ].map((stat) => (
                     <div key={stat.label} className="flex items-center gap-2">
                       <span className="text-xs text-gray-600 w-12">{stat.label}</span>
@@ -650,9 +653,7 @@ const WidgetWindow = () => {
                       e.currentTarget.style.boxShadow = '2px 2px 0 #222222';
                     }}
                   >
-                    <i className="fa-solid fa-utensils mr-1"></i>
-                    Feed
-                  </button>
+                    <i className="fa-solid fa-utensils mr-1"></i>{t("Feed")}</button>
                   <button
                     disabled={isPetActionPending || !!loadError}
                     onClick={e => { e.stopPropagation(); void requestPetAction('play'); }}
@@ -672,9 +673,7 @@ const WidgetWindow = () => {
                       e.currentTarget.style.boxShadow = '2px 2px 0 #222222';
                     }}
                   >
-                    <i className="fa-solid fa-gamepad mr-1"></i>
-                    Play
-                  </button>
+                    <i className="fa-solid fa-gamepad mr-1"></i>{t("Play")}</button>
                 </div>
               </motion.div>
             )}

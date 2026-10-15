@@ -1,3 +1,5 @@
+import { t, label } from '@/i18n/core';
+import { useLocale } from '@/i18n/react';
 import { useContext, useEffect } from 'react';
 import { StatisticsContext } from '@/contexts/statisticsContext';
 import { TaskContext } from '@/contexts/taskContext';
@@ -9,6 +11,7 @@ import {
 import TaskTimeline from './TaskTimeline';
 
 const StatisticsPanel = () => {
+  useLocale();
   const { 
     statistics, 
     updateStatistics, 
@@ -28,9 +31,9 @@ const StatisticsPanel = () => {
   }, [updateStatistics]);
   
   // Chart data
-  const weeklyData = statistics.performanceOverTime;
-  const priorityData = getTasksByPriority();
-  const statusData = getTasksByStatus();
+  const weeklyData = statistics.performanceOverTime.map(day => ({ ...day, date: t(day.date) }));
+  const priorityData = getTasksByPriority().map(item => ({ ...item, name: t(item.name) }));
+  const statusData = getTasksByStatus().map(item => ({ ...item, name: t(item.name) }));
   
   // Colors for charts
   const priorityColors = ['#06D6A0', '#FFD166', '#FF9F1C', '#EF476F', '#8B0000']; // Low (Green), Medium (Yellow), High (Orange), Urgent (Red), Overdue (Dark Red)
@@ -43,18 +46,18 @@ const StatisticsPanel = () => {
   
   // Format minutes to hours and minutes
   const formatTime = (minutes: number) => {
-    if (minutes < 0) return 'N/A';
+    if (minutes < 0) return t("N/A");
     
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = Math.round(minutes % 60);
     
     if (hours > 0) {
       if (remainingMinutes > 0) {
-        return `${hours}h${remainingMinutes}min`;
+        return t("{hours}h{minutes}min", { hours, minutes: remainingMinutes });
       }
-      return `${hours}h`;
+      return t("{hours}h", { hours });
     }
-    return `${remainingMinutes}min`;
+    return t("{minutes}min", { minutes: remainingMinutes });
   };
   
 
@@ -77,7 +80,7 @@ const StatisticsPanel = () => {
         >
           <div className="flex justify-between items-start">
             <div>
-              <p style={{ color: '#222222', fontSize: '12px', fontWeight: 'bold', fontFamily: fontFamily }}>Total Tasks</p>
+              <p style={{ color: '#222222', fontSize: '12px', fontWeight: 'bold', fontFamily: fontFamily }}>{t("Total Tasks")}</p>
               <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#222222', marginTop: '4px', fontFamily: fontFamily }}>{statistics.totalTasks}</h3>
             </div>
             <div style={{ width: '32px', height: '32px', backgroundColor: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#222222', border: '1px solid #222222' }}>
@@ -100,7 +103,7 @@ const StatisticsPanel = () => {
         >
           <div className="flex justify-between items-start">
             <div>
-              <p style={{ color: '#222222', fontSize: '12px', fontWeight: 'bold', fontFamily: fontFamily }}>Completed</p>
+              <p style={{ color: '#222222', fontSize: '12px', fontWeight: 'bold', fontFamily: fontFamily }}>{t("Completed")}</p>
               <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#222222', marginTop: '4px', fontFamily: fontFamily }}>{statistics.completedTasks}</h3>
             </div>
             <div style={{ width: '32px', height: '32px', backgroundColor: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#222222', border: '1px solid #222222' }}>
@@ -123,7 +126,7 @@ const StatisticsPanel = () => {
         >
           <div className="flex justify-between items-start">
             <div>
-              <p style={{ color: '#222222', fontSize: '12px', fontWeight: 'bold', fontFamily: fontFamily }}>Rate</p>
+              <p style={{ color: '#222222', fontSize: '12px', fontWeight: 'bold', fontFamily: fontFamily }}>{t("Rate")}</p>
               <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#222222', marginTop: '4px', fontFamily: fontFamily }}>{statistics.taskCompletionRate}%</h3>
             </div>
             <div style={{ width: '32px', height: '32px', backgroundColor: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#222222', border: '1px solid #222222' }}>
@@ -151,7 +154,7 @@ const StatisticsPanel = () => {
             border: '2px solid #222222'
           }}
         >
-          <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#222222', marginBottom: '8px', fontFamily: fontFamily }}>Weekly Performance</h3>
+          <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#222222', marginBottom: '8px', fontFamily: fontFamily }}>{t("Weekly Performance")}</h3>
           <div className="h-40">
             {weeklyData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -160,7 +163,7 @@ const StatisticsPanel = () => {
                   <XAxis dataKey="date" stroke="#222222" fontSize={10} tick={{ fill: '#222222', fontSize: 10, fontFamily: fontFamily }} />
                   <YAxis stroke="#222222" fontSize={10} tickFormatter={formatNumber} ticks={[0, 5, 10, 15]} tick={{ fill: '#222222', fontSize: 10, fontFamily: fontFamily }} />
                   <Tooltip
-                    formatter={(value) => [`${value} tasks`, 'Completed']}
+                    formatter={(value) => [t("{count} tasks", { count: String(value) }), t("Completed")]}
                     contentStyle={{ borderRadius: '6px', border: '2px solid #222222', boxShadow: '2px 2px 0 #222222', fontFamily: fontFamily, fontSize: '11px' }}
                     itemStyle={{ fontFamily: fontFamily, fontSize: '11px' }}
                     labelStyle={{ fontFamily: fontFamily, fontSize: '11px' }}
@@ -189,9 +192,7 @@ const StatisticsPanel = () => {
                   color: '#222222', 
                   fontWeight: 'bold',
                   fontFamily: fontFamily
-                }}>
-                  No tasks yet. Create one!
-                </p>
+                }}>{t("No tasks yet. Create one!")}</p>
               </div>
             )}
           </div>
@@ -209,7 +210,7 @@ const StatisticsPanel = () => {
             border: '2px solid #222222'
           }}
         >
-          <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#222222', marginBottom: '8px', fontFamily: fontFamily }}>By Priority</h3>
+          <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#222222', marginBottom: '8px', fontFamily: fontFamily }}>{t("By Priority")}</h3>
           <div className="h-40">
             {priorityData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -231,7 +232,7 @@ const StatisticsPanel = () => {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value, name) => [`${value} tasks`, name]}
+                    formatter={(value, name) => [t("{count} tasks", { count: String(value) }), name]}
                     contentStyle={{ borderRadius: '6px', border: '2px solid #222222', boxShadow: '2px 2px 0 #222222', fontFamily: fontFamily, fontSize: '11px' }}
                     itemStyle={{ fontFamily: fontFamily, fontSize: '11px' }}
                     labelStyle={{ fontFamily: fontFamily, fontSize: '11px' }}
@@ -252,9 +253,7 @@ const StatisticsPanel = () => {
                   color: '#222222', 
                   fontWeight: 'bold',
                   fontFamily: fontFamily
-                }}>
-                  No tasks yet. Create one!
-                </p>
+                }}>{t("No tasks yet. Create one!")}</p>
               </div>
             )}
           </div>
@@ -273,7 +272,7 @@ const StatisticsPanel = () => {
             border: '2px solid #222222'
           }}
         >
-          <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#222222', marginBottom: '8px', fontFamily: fontFamily }}>By Status</h3>
+          <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#222222', marginBottom: '8px', fontFamily: fontFamily }}>{t("By Status")}</h3>
           <div className="h-40">
             {statusData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -282,12 +281,12 @@ const StatisticsPanel = () => {
                   <XAxis dataKey="name" stroke="#222222" fontSize={9} tick={{ fill: '#222222', fontSize: 9, fontFamily: fontFamily }} />
                   <YAxis stroke="#222222" fontSize={10} tickFormatter={formatNumber} ticks={[0, 5, 10, 15]} tick={{ fill: '#222222', fontSize: 10, fontFamily: fontFamily }} />
                   <Tooltip
-                    formatter={(value, name) => [`${value} tasks`, name]}
+                    formatter={(value, name) => [t("{count} tasks", { count: String(value) }), name]}
                     contentStyle={{ borderRadius: '6px', border: '2px solid #222222', boxShadow: '2px 2px 0 #222222', fontFamily: fontFamily, fontSize: '11px' }}
                     itemStyle={{ fontFamily: fontFamily, fontSize: '11px' }}
                     labelStyle={{ fontFamily: fontFamily, fontSize: '11px' }}
                   />
-                  <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                  <Bar dataKey="value" name={t('Tasks')} radius={[6, 6, 0, 0]}>
                     {statusData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={statusColors[index % statusColors.length]} />
                     ))}
@@ -308,9 +307,7 @@ const StatisticsPanel = () => {
                   color: '#222222', 
                   fontWeight: 'bold',
                   fontFamily: fontFamily
-                }}>
-                  No tasks yet. Create one!
-                </p>
+                }}>{t("No tasks yet. Create one!")}</p>
               </div>
             )}
           </div>
@@ -333,15 +330,13 @@ const StatisticsPanel = () => {
         >
           <div className="flex justify-between items-start">
             <div>
-              <p style={{ color: '#222222', fontSize: '12px', fontWeight: 'bold', fontFamily: fontFamily }}>Avg Time</p>
+              <p style={{ color: '#222222', fontSize: '12px', fontWeight: 'bold', fontFamily: fontFamily }}>{t("Avg Time")}</p>
               {statistics.averageCompletionTime > 0 ? (
                 <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#222222', marginTop: '4px', fontFamily: fontFamily }}>
                   {formatTime(statistics.averageCompletionTime)}
                 </h3>
               ) : (
-                <p style={{ fontSize: '12px', fontWeight: 'normal', color: '#666666', marginTop: '4px', fontFamily: fontFamily }}>
-                  Complete a task!
-                </p>
+                <p style={{ fontSize: '12px', fontWeight: 'normal', color: '#666666', marginTop: '4px', fontFamily: fontFamily }}>{t("Complete a task!")}</p>
               )}
             </div>
             <div style={{ width: '32px', height: '32px', backgroundColor: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#222222', border: '1px solid #222222' }}>
@@ -364,9 +359,9 @@ const StatisticsPanel = () => {
         >
           <div className="flex justify-between items-start">
             <div>
-              <p style={{ color: '#222222', fontSize: '12px', fontWeight: 'bold', fontFamily: fontFamily }}>Streak</p>
+              <p style={{ color: '#222222', fontSize: '12px', fontWeight: 'bold', fontFamily: fontFamily }}>{t("Streak")}</p>
               <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#222222', marginTop: '4px', fontFamily: fontFamily }}>
-                {statistics.streakDays} day{statistics.streakDays !== 1 ? 's' : ''}
+                {statistics.streakDays}{' '}{t(statistics.streakDays === 1 ? "day" : "days")}
               </h3>
             </div>
             <div style={{ width: '32px', height: '32px', backgroundColor: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#222222', border: '1px solid #222222' }}>
@@ -405,7 +400,7 @@ const StatisticsPanel = () => {
         whileTap={{ scale: 1, x: 2, y: 2, boxShadow: 'none' }}
       >
         <i className="fa-solid fa-download text-sm"></i>
-        <span>Export</span>
+        <span>{t("Export")}</span>
       </motion.button>
     </div>
   );

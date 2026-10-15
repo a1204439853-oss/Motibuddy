@@ -4,6 +4,7 @@
  */
 
 import nlp from 'compromise';
+import { t, getLocale } from '../i18n/core';
 import { parse, addDays, addWeeks, addMonths, setHours, setMinutes, startOfDay, isValid } from 'date-fns';
 
 export interface ParsedTaskInfo {
@@ -484,10 +485,10 @@ export function validateParsedTask(info: ParsedTaskInfo): { isValid: boolean; er
 export function formatParsedTaskForDisplay(info: ParsedTaskInfo): string {
   const lines: string[] = [];
   
-  lines.push(`📋 Task: ${info.title}`);
+  lines.push(`📋 ${t('Task:')} ${info.title}`);
   
   if (info.dueDate) {
-    lines.push(`📅 Time: ${info.dueDate.toLocaleString('en-US', { 
+    lines.push(`📅 ${t('Time:')} ${info.dueDate.toLocaleString(getLocale(), {
       month: 'short', 
       day: 'numeric', 
       hour: '2-digit', 
@@ -497,16 +498,16 @@ export function formatParsedTaskForDisplay(info: ParsedTaskInfo): string {
   
   if (info.priority) {
     const priorityText: { [key: string]: string } = {
-      'urgent': '🔴 Urgent',
-      'high': '🟠 High',
-      'medium': '🟡 Medium',
-      'low': '🟢 Low'
+      'urgent': `🔴 ${t('Urgent')}`,
+      'high': `🟠 ${t('High')}`,
+      'medium': `🟡 ${t('Medium')}`,
+      'low': `🟢 ${t('Low')}`
     };
-    lines.push(`⚡ Priority: ${priorityText[info.priority]}`);
+    lines.push(`⚡ ${t('Priority:')} ${priorityText[info.priority]}`);
   }
   
   if (info.tags && info.tags.length > 0) {
-    lines.push(`🏷️ Tags: ${info.tags.map(t => `#${t}`).join(' ')}`);
+    lines.push(`🏷️ ${t('Tags:')} ${info.tags.map(tag => `#${tag}`).join(' ')}`);
   }
   
   return lines.join('\n');

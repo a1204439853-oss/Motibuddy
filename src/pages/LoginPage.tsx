@@ -1,9 +1,12 @@
+import { t, label } from '@/i18n/core';
+import { useLocale } from '@/i18n/react';
 import React, { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/contexts/authContext';
 import { SECURITY_QUESTIONS } from '@/types';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import PublicHeader from '@/components/ui/PublicHeader';
 
 // Mock bcrypt functions
 const mockHash = async (password: string): Promise<string> => {
@@ -15,6 +18,7 @@ const mockCompare = async (password: string, hash: string): Promise<boolean> => 
 };
 
 const LoginPage = () => {
+  useLocale();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -52,7 +56,7 @@ const LoginPage = () => {
     e.preventDefault();
     
     if (!formData.email || !formData.password) {
-      toast.error('Please fill in all fields');
+      toast.error(t("Please fill in all fields"));
       return;
     }
     
@@ -62,13 +66,13 @@ const LoginPage = () => {
       const success = await login(formData.email, formData.password);
       
       if (success) {
-        toast.success('Login successful!');
+        toast.success(t("Login successful!"));
         navigate('/');
       } else {
-        toast.error('Invalid email or password');
+        toast.error(t("Invalid email or password"));
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Login failed. Please try again.');
+      toast.error(error instanceof Error ? t(error.message) : t("Login failed. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +81,7 @@ const LoginPage = () => {
   // Handle forgot password - step 1: find user by email
   const handleFindUser = () => {
     if (!forgotEmail) {
-      toast.error('Please enter your email');
+      toast.error(t("Please enter your email"));
       return;
     }
     
@@ -85,12 +89,12 @@ const LoginPage = () => {
     const user = users.find((u: any) => u.email === forgotEmail);
     
     if (!user) {
-      toast.error('No account found with this email');
+      toast.error(t("No account found with this email"));
       return;
     }
     
     if (!user.securityInfo || !user.securityInfo.question1 || !user.securityInfo.question2) {
-      toast.error('This account has no security questions set up. Please contact support.');
+      toast.error(t("This account has no security questions set up. Please contact support."));
       return;
     }
     
@@ -106,7 +110,7 @@ const LoginPage = () => {
     const q2Correct = foundUser.securityInfo.question2.answer.toLowerCase() === answer2.toLowerCase();
     
     if (!q1Correct || !q2Correct) {
-      toast.error('Incorrect answers. Please try again.');
+      toast.error(t("Incorrect answers. Please try again."));
       return;
     }
     
@@ -118,12 +122,12 @@ const LoginPage = () => {
     if (!foundUser) return;
     
     if (newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
+      toast.error(t("Password must be at least 6 characters"));
       return;
     }
     
     if (newPassword !== confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error(t("Passwords do not match"));
       return;
     }
     
@@ -138,7 +142,7 @@ const LoginPage = () => {
         users[userIndex].password = hashedPassword;
         localStorage.setItem('users', JSON.stringify(users));
         
-        toast.success('Password reset successfully! Please login with your new password.');
+        toast.success(t("Password reset successfully! Please login with your new password."));
         
         // Close modal and reset
         setShowForgotPassword(false);
@@ -151,14 +155,14 @@ const LoginPage = () => {
         setConfirmPassword('');
       }
     } catch (error) {
-      toast.error('Failed to reset password. Please try again.');
+      toast.error(t("Failed to reset password. Please try again."));
     }
   };
 
   // Get question text by ID
   const getQuestionText = (questionId: string) => {
     const question = SECURITY_QUESTIONS.find(q => q.id === questionId);
-    return question?.text || '';
+    return question ? t(question.text) : '';
   };
 
   if (showRegister) {
@@ -167,11 +171,12 @@ const LoginPage = () => {
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh', overflow: 'hidden' }}>
+      <PublicHeader onLogin={() => document.querySelector<HTMLInputElement>('input[name="email"]')?.focus()} />
       {/* Background Video */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
         <video
           src="../../login_bg.mp4"
-          title="Login Background" 
+          title={t("Login Background")}
           autoPlay
           loop
           muted
@@ -206,7 +211,7 @@ const LoginPage = () => {
         flexDirection: 'column', 
         alignItems: 'center', 
         justifyContent: 'center', 
-        padding: '20px'
+        padding: '76px 20px 24px'
       }}>
         <div style={{ width: '100%', maxWidth: '320px' }}>
           <h1 style={{ 
@@ -225,7 +230,7 @@ const LoginPage = () => {
             textAlign: 'center', 
             color: '#222222',
             fontFamily
-          }}>Login</h2>
+          }}>{t("Login")}</h2>
           
           <form onSubmit={handleSubmit} style={{ width: '100%' }}>
             {/* Email Input */}
@@ -243,7 +248,7 @@ const LoginPage = () => {
                 color: 'black', 
                 textAlign: 'center',
                 fontFamily
-              }}>Email</label>
+              }}>{t("Email")}</label>
               <input
                 type="text"
                 name="email"
@@ -260,7 +265,7 @@ const LoginPage = () => {
                   textAlign: 'center',
                   fontFamily
                 }}
-                placeholder="Enter your email"
+                placeholder={t("Enter your email")}
               />
             </div>
             
@@ -279,7 +284,7 @@ const LoginPage = () => {
                 color: 'black', 
                 textAlign: 'center',
                 fontFamily
-              }}>Password</label>
+              }}>{t("Password")}</label>
               <input
                 type="password"
                 name="password"
@@ -296,7 +301,7 @@ const LoginPage = () => {
                   textAlign: 'center',
                   fontFamily
                 }}
-                placeholder="Enter your password"
+                placeholder={t("Enter your password")}
               />
               {/* Forgot Password Link - inside password box */}
               <div style={{ textAlign: 'right', marginTop: '6px' }}>
@@ -313,9 +318,7 @@ const LoginPage = () => {
                     cursor: 'pointer',
                     fontFamily
                   }}
-                >
-                  Forgot Password?
-                </button>
+                >{t("Forgot Password?")}</button>
               </div>
             </div>
             
@@ -357,14 +360,14 @@ const LoginPage = () => {
                   e.currentTarget.style.boxShadow = '1px 1px 0 #222222';
                 }}
               >
-                {isLoading ? 'Logging in...' : 'LOGIN'}
+                {isLoading ? t("Logging in...") : t("LOGIN")}
               </button>
             </div>
           </form>
           
           {/* Register Link */}
           <div style={{ marginTop: '20px', textAlign: 'center' }}>
-            <p style={{ color: '#222222', fontWeight: 'bold', fontSize: '14px', fontFamily }}>Don't have an account?</p>
+            <p style={{ color: '#222222', fontWeight: 'bold', fontSize: '14px', fontFamily }}>{t("Don't have an account?")}</p>
             <Link to="/register">
               <button
                 style={{
@@ -378,9 +381,7 @@ const LoginPage = () => {
                   cursor: 'pointer',
                   fontFamily
                 }}
-              >
-                Create Account
-              </button>
+              >{t("Create Account")}</button>
             </Link>
           </div>
         </div>
@@ -415,19 +416,15 @@ const LoginPage = () => {
                 <>
                   <div className="text-center mb-4">
                     <i className="fa-solid fa-lock-open text-4xl text-yellow-500 mb-3"></i>
-                    <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#222222', fontFamily }}>
-                      Forgot Password?
-                    </h2>
-                    <p style={{ fontSize: '13px', color: '#666', marginTop: '8px', fontFamily }}>
-                      Enter your email to verify your identity
-                    </p>
+                    <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#222222', fontFamily }}>{t("Forgot Password?")}</h2>
+                    <p style={{ fontSize: '13px', color: '#666', marginTop: '8px', fontFamily }}>{t("Enter your email to verify your identity")}</p>
                   </div>
                   <div className="space-y-3 mb-4">
                     <input
                       type="email"
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
-                      placeholder="Enter your email"
+                      placeholder={t("Enter your email")}
                       style={{
                         width: '100%', padding: '10px 14px', border: '2px solid #222222', borderRadius: '6px',
                         fontSize: '14px', color: 'black', outline: 'none', textAlign: 'center',
@@ -443,9 +440,7 @@ const LoginPage = () => {
                         padding: '10px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer',
                         boxShadow: '3px 3px 0 #222222', width: '50%', borderRadius: '6px', fontFamily
                       }}
-                    >
-                      Cancel
-                    </button>
+                    >{t("Cancel")}</button>
                     <button
                       onClick={handleFindUser}
                       style={{
@@ -453,9 +448,7 @@ const LoginPage = () => {
                         padding: '10px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer',
                         boxShadow: '3px 3px 0 #222222', width: '50%', borderRadius: '6px', fontFamily
                       }}
-                    >
-                      Continue
-                    </button>
+                    >{t("Continue")}</button>
                   </div>
                 </>
               )}
@@ -465,12 +458,8 @@ const LoginPage = () => {
                 <>
                   <div className="text-center mb-4">
                     <i className="fa-solid fa-shield-halved text-4xl text-green-500 mb-3"></i>
-                    <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#222222', fontFamily }}>
-                      Security Questions
-                    </h2>
-                    <p style={{ fontSize: '13px', color: '#666', marginTop: '8px', fontFamily }}>
-                      Answer your security questions to reset your password
-                    </p>
+                    <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#222222', fontFamily }}>{t("Security Questions")}</h2>
+                    <p style={{ fontSize: '13px', color: '#666', marginTop: '8px', fontFamily }}>{t("Answer your security questions to reset your password")}</p>
                   </div>
                   <div className="space-y-3 mb-4">
                     <div>
@@ -481,7 +470,7 @@ const LoginPage = () => {
                         type="text"
                         value={answer1}
                         onChange={(e) => setAnswer1(e.target.value)}
-                        placeholder="Your answer"
+                        placeholder={t("Your answer")}
                         style={{
                           width: '100%', padding: '8px 12px', border: '2px solid #222222', borderRadius: '6px',
                           fontSize: '12px', color: 'black', outline: 'none', fontFamily
@@ -496,7 +485,7 @@ const LoginPage = () => {
                         type="text"
                         value={answer2}
                         onChange={(e) => setAnswer2(e.target.value)}
-                        placeholder="Your answer"
+                        placeholder={t("Your answer")}
                         style={{
                           width: '100%', padding: '8px 12px', border: '2px solid #222222', borderRadius: '6px',
                           fontSize: '12px', color: 'black', outline: 'none', fontFamily
@@ -512,9 +501,7 @@ const LoginPage = () => {
                         padding: '10px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer',
                         boxShadow: '3px 3px 0 #222222', width: '50%', borderRadius: '6px', fontFamily
                       }}
-                    >
-                      Back
-                    </button>
+                    >{t("Back")}</button>
                     <button
                       onClick={handleVerifyAnswers}
                       style={{
@@ -522,9 +509,7 @@ const LoginPage = () => {
                         padding: '10px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer',
                         boxShadow: '3px 3px 0 #222222', width: '50%', borderRadius: '6px', fontFamily
                       }}
-                    >
-                      Verify
-                    </button>
+                    >{t("Verify")}</button>
                   </div>
                 </>
               )}
@@ -534,19 +519,15 @@ const LoginPage = () => {
                 <>
                   <div className="text-center mb-4">
                     <i className="fa-solid fa-key text-4xl text-blue-500 mb-3"></i>
-                    <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#222222', fontFamily }}>
-                      Reset Password
-                    </h2>
-                    <p style={{ fontSize: '13px', color: '#666', marginTop: '8px', fontFamily }}>
-                      Enter your new password
-                    </p>
+                    <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#222222', fontFamily }}>{t("Reset Password")}</h2>
+                    <p style={{ fontSize: '13px', color: '#666', marginTop: '8px', fontFamily }}>{t("Enter your new password")}</p>
                   </div>
                   <div className="space-y-3 mb-4">
                     <input
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="New password (min 6 chars)"
+                      placeholder={t("New password (min 6 chars)")}
                       style={{
                         width: '100%', padding: '10px 14px', border: '2px solid #222222', borderRadius: '6px',
                         fontSize: '14px', color: 'black', outline: 'none', textAlign: 'center',
@@ -557,7 +538,7 @@ const LoginPage = () => {
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm new password"
+                      placeholder={t("Confirm new password")}
                       style={{
                         width: '100%', padding: '10px 14px', border: '2px solid #222222', borderRadius: '6px',
                         fontSize: '14px', color: 'black', outline: 'none', textAlign: 'center',
@@ -573,9 +554,7 @@ const LoginPage = () => {
                         padding: '10px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer',
                         boxShadow: '3px 3px 0 #222222', width: '50%', borderRadius: '6px', fontFamily
                       }}
-                    >
-                      Back
-                    </button>
+                    >{t("Back")}</button>
                     <button
                       onClick={handleResetPassword}
                       style={{
@@ -583,9 +562,7 @@ const LoginPage = () => {
                         padding: '10px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer',
                         boxShadow: '3px 3px 0 #222222', width: '50%', borderRadius: '6px', fontFamily
                       }}
-                    >
-                      Reset Password
-                    </button>
+                    >{t("Reset Password")}</button>
                   </div>
                 </>
               )}
