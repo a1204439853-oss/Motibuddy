@@ -77,12 +77,21 @@ const fixture = `(() => {
   window.__TAURI_IPC__=message=>queueMicrotask(()=>{
     const reply=value=>window['_'+message.callback]?.(value);
     try {
-      if(message.cmd==='read_business_state')return reply(JSON.parse(localStorage.getItem('__i18n_state')));
+      const original=JSON.parse(localStorage.getItem('__i18n_state'));
+      const stateKey=message.userId===original.userId?'__i18n_state':'__i18n_state_'+message.userId;
+      if(message.cmd==='read_business_state')return reply(JSON.parse(localStorage.getItem(stateKey)??'null'));
+      if(message.cmd==='initialize_business_state'){
+        const existing=localStorage.getItem(stateKey);if(existing)return reply(JSON.parse(existing));
+        const state={schemaVersion:1,userId:message.userId,revision:1,operations:[],data:message.data};
+        localStorage.setItem(stateKey,JSON.stringify(state));return reply(state);
+      }
+      if(message.cmd==='data_file_exists')return reply(false);
+      if(message.cmd==='tauri'&&message.__tauriModule==='Path')return reply(message.message.cmd==='join'?message.message.paths.join('/'):'/isolated-test');
       if(message.cmd==='commit_business_state'){
-        const old=JSON.parse(localStorage.getItem('__i18n_state'));
+        const old=JSON.parse(localStorage.getItem(stateKey));
         if(old.revision!==message.expectedRevision)throw Error('REVISION_CONFLICT');
         const next={...old,revision:old.revision+1,data:message.data,operations:[...old.operations,{id:message.operationId,baseRevision:old.revision}]};
-        localStorage.setItem('__i18n_state',JSON.stringify(next));return reply(next);
+        localStorage.setItem(stateKey,JSON.stringify(next));return reply(next);
       }
       if(message.cmd==='load_widget_data'){
         const state=JSON.parse(localStorage.getItem('__i18n_state')),pet=state.data.pet;
@@ -254,6 +263,25 @@ try {
   await route(main, '/achievements'); await shot(main, 'achievements-zh');
   await route(main, '/create-pet'); await shot(main, 'pet-selection-zh');
   passed('Chinese profile, achievement and adoption screens render');
+  await route(main, '/profile'); await click(main, '退出登录');
+  await click(main, '创建账号');
+  await until(() => main.evaluate('!!document.querySelector("input[name=username]")'), 'registration form');
+  await main.evaluate(`(()=>{for(const [name,value] of [['username','NewBuddy'],['email','new-buddy@example.test'],['password','NewBuddy2026'],['confirmPassword','NewBuddy2026']]){const input=document.querySelector('input[name='+name+']');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));}document.querySelector('form').requestSubmit()})()`);
+  await until(() => main.evaluate('!!document.querySelector("input[name=email]") && !document.querySelector("input[name=username]")'), 'successful inline registration returns to login');
+  await main.evaluate(`(()=>{for(const [name,value] of [['email','new-buddy@example.test'],['password','NewBuddy2026']]){const input=document.querySelector('input[name='+name+']');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));}document.querySelector('form').requestSubmit()})()`);
+  await until(() => main.evaluate('location.pathname==="/create-pet"'), 'new account reaches adoption');
+  const newUserId = await main.evaluate('localStorage.getItem("currentUserId")');
+  assert.ok(newUserId && newUserId !== 'i18n-user');
+  const newState = await main.evaluate(`JSON.parse(localStorage.getItem('__i18n_state_'+${JSON.stringify(newUserId)}))`);
+  assert.equal(newState.data.tasks.length, 3); assert.equal(newState.data.settings.starterTasksVersion, 1);
+  assert.ok(newState.data.tasks.every(task => task.title.startsWith('[示例]')));
+  await main.evaluate(`(()=>{const input=document.querySelector('input[type=text]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'新伙伴');input.dispatchEvent(new Event('input',{bubbles:true}));[...document.querySelectorAll('h3')].find(node=>node.textContent==='小猫').closest('div[style*="cursor"]').click()})()`);
+  await click(main, '迎接我的伙伴');
+  await until(() => main.evaluate('document.body.innerText.includes("稍后设置")'), 'new pet saved');
+  await click(main, '稍后设置');
+  await until(() => main.evaluate('document.body.innerText.includes("我的任务") && document.body.innerText.includes("[示例] 完成你的第一个任务")'), 'new user sees starter tasks');
+  await shot(main, 'new-user-starter-tasks-zh');
+  passed('New registration returns to login; first sign-in and adoption show three persisted starter examples');
   assert.equal(report.errors.length, 0, JSON.stringify(report.errors));
   await writeFile(path.join(output, 'report.json'), JSON.stringify(report, null, 2));
   console.log(`Screenshots: ${output}`);

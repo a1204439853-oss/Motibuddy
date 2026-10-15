@@ -68,7 +68,8 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
       
       if (success) {
         toast.success(t("Registration successful! Please log in."));
-        navigate('/login');
+        if (onSwitchToLogin) onSwitchToLogin();
+        else navigate('/login');
       } else {
         toast.error(t("Username or email already exists"));
       }

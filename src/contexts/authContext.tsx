@@ -7,6 +7,9 @@ import { SessionEpoch } from '@/services/sessionEpoch';
 import { clearRuntimeSession } from '@/services/runtimeSession';
 import { PetRecoveryDialog } from '@/components/pet/PetRecoveryDialog';
 import type { PetLoad, PetSource } from '@/services/petRepository';
+import { ensureStarterTasks } from '@/services/starterTasks';
+import type { BusinessSnapshot } from '@/services/businessRepository';
+import { getLocale } from '@/i18n/core';
 
 type Conflict = Extract<PetLoad, { status: 'conflict' }>;
 interface PendingRecovery { user: User; version: number; conflict: Conflict }
@@ -69,7 +72,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const migrateAndSignIn = async (user: User, pet: Pet | null, version: number) => {
     const snapshot = await initializeBusiness(user, pet, () => epoch.current.isCurrent(version));
-    finishSignIn({ ...user, achievements: snapshot.data.achievements }, snapshot.data.pet, version);
+    await prepareAndSignIn(user, snapshot, version);
+  };
+
+  const prepareAndSignIn = async (user: User, snapshot: BusinessSnapshot, version: number) => {
+    const prepared = await ensureStarterTasks(businessRepository, user, snapshot, getLocale(), () => epoch.current.isCurrent(version));
+    finishSignIn({ ...user, achievements: prepared.data.achievements }, prepared.data.pet, version);
   };
 
   const login = async (identifier: string, password: string): Promise<boolean> => {
@@ -82,7 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const existing = await businessRepository.read(user.id);
     epoch.current.assertCurrent(version);
     if (existing) {
-      finishSignIn({ ...user, achievements: existing.data.achievements }, existing.data.pet, version);
+      await prepareAndSignIn(user, existing, version);
       return true;
     }
     let loaded: PetLoad;
@@ -124,7 +132,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     epoch.current.assertCurrent(version);
     const user: User = {
       id: crypto.randomUUID(), username, email, password: hash, avatar: '',
-      createdAt: new Date().toISOString(), achievements: [],
+      createdAt: new Date().toISOString(), achievements: [], starterTasksVersion: 1,
     };
     localStorage.setItem('users', JSON.stringify([...users, user]));
     // Registration UI explicitly asks the user to sign in; no hidden active session.
@@ -163,7 +171,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateUserProfile = async (updates: Partial<User>): Promise<boolean> => {
     const user = userRef.current;
     const version = sessionVersion;
-    if (!user || !epoch.current.isCurrent(version) || (updates.id && updates.id !== user.id) || updates.achievements !== undefined) return false;
+    if (!user || !epoch.current.isCurrent(version) || (updates.id && updates.id !== user.id) || updates.achievements !== undefined || updates.starterTasksVersion !== undefined) return false;
     const users: User[] = JSON.parse(localStorage.getItem('users') ?? '[]');
     if (!Array.isArray(users)) return false;
     const index = users.findIndex(entry => entry.id === user.id);

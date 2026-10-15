@@ -27,6 +27,8 @@ The pet-copy selection dialog is a migration choice, not a general damaged-file 
 
 The current suite has 96 passing Node tests and 22 passing Rust library tests. The earlier 77-test count above is historical.
 
+Later additions: `localization.test.mjs` adds 9 language tests. `starter-tasks.test.mjs` adds 8 onboarding tests covering new-account eligibility, atomic examples + marker, concurrency, deletion/restart, future-version protection, failed writes, lost acknowledgements and existing tasks/session isolation. The suite now has 113 Node tests; older counts in historical records are retained. The browser smoke script also exercises registration, first sign-in, adoption and visible starter examples against a simulated Tauri bridge.
+
 The new business-transactions.test.mjs covers one-commit task/pet/achievement changes, feeding and quota, compensation after restart, lost acknowledgements, request deduplication, stale revisions, legacy-cache conflicts and exit drainage. It also checks every task command queued at the account authority is included in exit waiting and that late initial loads cannot overwrite newer committed progress. These TypeScript tests use an injected persistence adapter.
 
 The Rust tests directly exercise the production BusinessStore in isolated temporary directories: whole-snapshot replacement, previous backups, staged-write failures, blocked backup paths, interruption before replacement, concurrent optimistic writers, exact legacy-source archives, equivalent date offsets, duplicate operation receipts, bounded history and widget projections. The Windows lock test verifies a second file handle is rejected and a later handle succeeds after release; it does not launch two application processes.

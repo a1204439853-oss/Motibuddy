@@ -111,12 +111,13 @@ button:focus-visible, a:focus-visible { outline: 3px solid #089a96; outline-offs
 .public-topbar-logo { height: clamp(32px, 5.6vh, 50px); max-width: min(48vw, 200px); object-fit: contain; object-position: left; }
 .public-topbar-actions { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
 .public-login { min-height: 36px; color: #222; font-size: 16px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-.language-switch { display: inline-flex; align-items: center; flex-shrink: 0; gap: 2px; padding: 3px; border: 1px solid rgba(34,34,34,.25); border-radius: 999px; background: rgba(255,255,255,.85); }
-.language-switch > button { min-width: 30px; height: 28px; padding: 0 6px; border-radius: 999px; font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif; font-size: 13px; font-weight: 650; color: #626762; cursor: pointer; }
-.language-switch > button[aria-pressed="true"] { background: #d9f2e8; color: #076f67; }
-.language-switch > button:hover { background: #e8f5ef; color: #076f67; }
-.language-switch > span { font-size: 12px; color: #a0a49e; }
-.profile-language-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 12px; border: 1px solid #dddcd5; border-radius: 8px; background: #fffaf3; }
-.profile-language-row > span { font-size: 12px; font-weight: 650; color: #323a35; }
+.language-switch { display: inline-flex; align-items: center; flex-shrink: 0; gap: 0; padding: 2px; border: 2px solid #222; border-radius: 6px; background: #fff; box-shadow: 2px 2px 0 #222; }
+.language-switch > button { min-width: 30px; height: 28px; padding: 0 6px; border-radius: 3px; font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif; font-size: 13px; font-weight: 700; color: #222; cursor: pointer; }
+.language-switch > button[aria-pressed="true"] { background: #00CECB; color: #222; }
+.language-switch > button:hover { background: #e0f8f7; }
+.language-switch > button[aria-pressed="true"]:hover { background: #00b9b6; }
+.language-switch > span { padding: 0 2px; font-size: 12px; font-weight: 700; color: #222; }
+.profile-language-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 12px; border: 2px solid #222; border-radius: 6px; background: #fff; }
+.profile-language-row > span { font-size: 12px; font-weight: 700; color: #222; font-family: 'Comic Sans MS', 'Microsoft YaHei UI', sans-serif; }
 .profile-logout { width: 50%; padding: 8px 12px; border: 2px solid #222; background: #fff; color: #222; font-size: 12px; font-weight: 700; box-shadow: 3px 3px 0 #222; cursor: pointer; }
 .profile-logout:hover { background: #f0faf5; }

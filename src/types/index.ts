@@ -24,6 +24,8 @@ export interface User {
   createdAt: string;
   achievements?: Achievement[];
   securityInfo?: SecurityInfo;
+  /** Assigned only on new registration; older accounts never infer onboarding from empty tasks. */
+  starterTasksVersion?: 1;
 }
 
 // Task types
