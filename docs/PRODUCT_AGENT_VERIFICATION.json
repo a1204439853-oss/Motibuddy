@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-10-16T10:34:12.696Z",
+  "model": "deepseek-flash",
+  "syntheticOnly": true,
+  "checks": [
+    {
+      "name": "automatic-daily-plan",
+      "passed": true,
+      "elapsedMs": 1404
+    },
+    {
+      "name": "weekly-comparison",
+      "passed": true,
+      "elapsedMs": 2165
+    },
+    {
+      "name": "image-single-timestamp",
+      "passed": true,
+      "elapsedMs": 1028
+    },
+    {
+      "name": "scheduled-news-with-publisher-evidence",
+      "passed": true,
+      "elapsedMs": 2204
+    }
+  ]
+}

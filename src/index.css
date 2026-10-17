@@ -117,7 +117,15 @@ button:focus-visible, a:focus-visible { outline: 3px solid #089a96; outline-offs
 .language-switch > button:hover { background: #e0f8f7; }
 .language-switch > button[aria-pressed="true"]:hover { background: #00b9b6; }
 .language-switch > span { padding: 0 2px; font-size: 12px; font-weight: 700; color: #222; }
+.public-topbar .language-switch { padding: 0; gap: 2px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.public-topbar .language-switch > button { min-width: 26px; height: 36px; padding: 0 3px; font-size: 16px; font-weight: 400; border: 0; border-radius: 0; background: transparent; }
+.public-topbar .language-switch > button[aria-pressed="true"] { font-weight: 700; background: transparent; }
+.public-topbar .language-switch > button:hover { background: transparent; text-decoration: underline; text-underline-offset: 3px; }
+.public-topbar .language-switch > span { font-size: 16px; font-weight: 400; }
+.public-topbar .language-switch > button:focus-visible { outline: 2px solid #008b89; outline-offset: 2px; }
 .profile-language-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 12px; border: 2px solid #222; border-radius: 6px; background: #fff; }
 .profile-language-row > span { font-size: 12px; font-weight: 700; color: #222; font-family: 'Comic Sans MS', 'Microsoft YaHei UI', sans-serif; }
 .profile-logout { width: 50%; padding: 8px 12px; border: 2px solid #222; background: #fff; color: #222; font-size: 12px; font-weight: 700; box-shadow: 3px 3px 0 #222; cursor: pointer; }
 .profile-logout:hover { background: #f0faf5; }
+
+@media(max-height:760px){.sidebar-inspiration{display:none}}

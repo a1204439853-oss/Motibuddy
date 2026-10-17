@@ -27,6 +27,7 @@ export const PetProvider = ({ children }: { children: ReactNode }) => {
   const { currentUser, currentPet, updatePet, sessionVersion } = useContext(AuthContext);
   const scope = useMemo(() => ({ owner: currentUser?.id, stamp: readSessionStamp(localStorage), tail: Promise.resolve() as Promise<unknown> }), [currentUser?.id, sessionVersion]);
   const scopeRef = useRef(scope);
+  const lastDialogue = useRef('');
   scopeRef.current = scope;
   const assertActive = () => {
     if (!isActive()) throw new Error('The account session has changed.');
@@ -81,6 +82,21 @@ export const PetProvider = ({ children }: { children: ReactNode }) => {
       "What's next?"
     ],
     interaction: [
+      "Boop! Your little buddy is online.",
+      "One tiny step, and I'll cheer you on!",
+      "Petting break accepted. Carry on when you're ready!",
+      "I saved a little pocket of sunshine for you.",
+      "Your hand has excellent head-pat technique!",
+      "Today's mission: take good care of ourselves.",
+      "A little stretch? I'll stretch with you!",
+      "I'm your official tiny cheerleader.",
+      "You showed up today. That counts!",
+      "Sending a fluffy high-five!",
+      "No rush. Let's find our own pace.",
+      "I've got your back, one paw at a time.",
+      "A sip of water for you, a happy wiggle for me!",
+      "Your next small win is waiting around the corner.",
+      "Tap received. Tail-wagging response sent!",
       "Ooh, that feels nice!",
       "I love your attention!",
       "Thanks for petting me!",
@@ -123,7 +139,10 @@ export const PetProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const dialogues = dialogueOptions[currentMood as keyof typeof dialogueOptions] || dialogueOptions.neutral;
-    return dialogues[Math.floor(Math.random() * dialogues.length)];
+    const candidates = dialogues.filter(line => line !== lastDialogue.current);
+    const selected = candidates[Math.floor(Math.random() * candidates.length)] ?? dialogues[0];
+    lastDialogue.current = selected;
+    return selected;
   };
 
   const interactWithPet = () => serial(async () => {

@@ -14,15 +14,19 @@ import VoiceInput from '@/components/voice/VoiceInput';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { TaskPriority } from '@/types';
+import AgentPanel from '@/components/agent/AgentPanel';
+import FocusSpace from '@/components/focus/FocusSpace';
+import NotebookModule from '@/components/notebook/NotebookModule';
 
 const MainApp = () => {
   useLocale();
-  const { currentUser, currentPet, isAuthenticated } = useContext(AuthContext);
+  const { currentUser, currentPet, isAuthenticated, sessionVersion } = useContext(AuthContext);
   const { addTask } = useContext(TaskContext);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
-  const [activeView, setActiveView] = useState<'tasks' | 'statistics'>('tasks');
+  const [activeView, setActiveView] = useState<'tasks' | 'statistics' | 'agent' | 'focus' | 'anniversaries'>('tasks');
   const [isTaskFormOpen, setIsTaskFormOpen] = useState<boolean>(false);
   const [editingTask, setEditingTask] = useState<any>(null);
+  const [agentMessageId, setAgentMessageId] = useState(0);
 
   const navigate = useNavigate();
 
@@ -114,7 +118,7 @@ const MainApp = () => {
   }
 
   return (
-    <div style={{
+    <div data-main-shell style={{
       position: 'relative',
       minHeight: '100vh',
       overflow: 'hidden',
@@ -180,7 +184,7 @@ const MainApp = () => {
               <div className="flex flex-col lg:flex-row gap-2 lg:gap-3 flex-1" style={{ minHeight: 0 }}>
                 {/* Task management section */}
                 <div className="flex-1 min-w-0" style={{ minHeight: 0 }}>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-1" style={{ display: activeView === 'agent' || activeView === 'focus' || activeView === 'anniversaries' ? 'none' : undefined }}>
                     <h1 style={{
                       fontSize: 'clamp(16px, 2.2vw, 22px)',
                       fontWeight: 'bold',
@@ -239,7 +243,7 @@ const MainApp = () => {
                   </div>
 
                   {/* Task form */}
-                  {isTaskFormOpen && (
+                  {isTaskFormOpen && activeView === 'tasks' && (
                     <motion.div
                       initial={{ opacity: 0, y: -20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -264,10 +268,14 @@ const MainApp = () => {
                     boxShadow: 'none',
                     borderRadius: '6px',
                     overflow: 'visible',
-                    height: isTaskFormOpen ? 'calc(100% - 70px)' : 'calc(100% - 28px)',
+                    height: activeView === 'agent' || activeView === 'focus' || activeView === 'anniversaries' ? '100%' : isTaskFormOpen ? 'calc(100% - 70px)' : 'calc(100% - 28px)',
                     minHeight: '160px',
                     padding: '1px'
                   }}>
+                    <div style={{ display: activeView === 'agent' ? 'block' : 'none', height: '100%' }}>
+                      <AgentPanel key={`${currentUser.id}:${sessionVersion}`} active={activeView === 'agent'} onMessageSent={() => setAgentMessageId(value => value + 1)} />
+                    </div>
+                    <div style={{display:activeView==='anniversaries'?'block':'none',height:'100%'}}><NotebookModule key={`${currentUser.id}:${sessionVersion}`}/></div>
                     {activeView === 'tasks' ? (
                       <TaskList
                         onEditTask={(task) => {
@@ -275,9 +283,9 @@ const MainApp = () => {
                           setIsTaskFormOpen(true);
                         }}
                       />
-                    ) : (
+                    ) : activeView === 'statistics' ? (
                       <StatisticsPanel />
-                    )}
+                    ) : activeView === 'focus' ? <FocusSpace /> : null}
                   </div>
                 </div>
 
@@ -295,7 +303,7 @@ const MainApp = () => {
                       overflow: 'auto'
                     }}
                   >
-                    <PetDisplay />
+                    <PetDisplay key={`${currentUser.id}:${sessionVersion}`} agentMessageId={agentMessageId} />
                   </motion.div>
                 </div>
               </div>

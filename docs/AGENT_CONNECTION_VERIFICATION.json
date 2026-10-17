@@ -1,0 +1,42 @@
+{
+  "checkedAt": "2026-10-16T04:51:13.928Z",
+  "endpoint": "http://127.0.0.1:8787/api/agent",
+  "checks": [
+    {
+      "origin": "http://tauri.localhost",
+      "preflightStatus": 204,
+      "sessionStatus": 200,
+      "passed": true
+    },
+    {
+      "origin": "https://tauri.localhost",
+      "preflightStatus": 204,
+      "sessionStatus": 200,
+      "passed": true
+    },
+    {
+      "origin": "tauri://localhost",
+      "preflightStatus": 204,
+      "sessionStatus": 200,
+      "passed": true
+    },
+    {
+      "name": "real-chat-through-running-default-port",
+      "origin": "https://tauri.localhost",
+      "status": 200,
+      "passed": true
+    }
+  ],
+  "diagnosis": "No listener on 127.0.0.1:8787; connection refused before starting independent local gateway.",
+  "launcher": "Start-MotiBuddy-AI.cmd",
+  "serviceState": "running-in-background",
+  "validation": {
+    "typescript": "passed",
+    "nodeTests": 140,
+    "failures": 0,
+    "secretScan": "passed",
+    "existingServiceReuse": "passed",
+    "nativeWebViewAcceptance": "pending-user",
+    "executableRebuilt": false
+  }
+}

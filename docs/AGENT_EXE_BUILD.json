@@ -1,0 +1,39 @@
+{
+  "builtAtUtc": "2026-10-15T16:51:32.6151836Z",
+  "artifact": "MotiBuddy-Verify-agent-chat.exe",
+  "bytes": 235930112,
+  "sha256": "9246A22AC1357E19EF6235F4C28043048CF5B084AB2F9431576CABE23874F9CA",
+  "productName": "MotiBuddy Verify",
+  "applicationId": "com.motibuddy.verify",
+  "buildCommand": "npm run tauri:build -- --config F:\\MotiBuddy1\\src-tauri\\tauri.verify.conf.json --bundles none --ci",
+  "validation": {
+    "typescript": "passed",
+    "nodeTests": 135,
+    "rustTests": 22,
+    "cargoCheck": "passed",
+    "frontendBuild": "passed",
+    "releaseBuild": "passed",
+    "copiedHashMatches": true,
+    "secretScan": "passed",
+    "browserChecks": 12,
+    "browserScreenshots": 28,
+    "browserRuntimeErrors": 0,
+    "realApiModes": [
+      "chat",
+      "create-text",
+      "plan",
+      "create-image"
+    ],
+    "automaticConnection": "passed",
+    "nativeGuiAcceptance": "pending-user"
+  },
+  "changes": [
+    "Plain public language switch",
+    "Normal saved-task status removed",
+    "Inline three-column conversation",
+    "Action cards and follow-up prompts",
+    "Automatic short-lived local connection",
+    "Pet animation and five random thinking lines"
+  ],
+  "gateway": "Restart the updated private loopback service before testing. No manual gateway credential is required. Provider credentials are not included in the EXE."
+}

@@ -5,6 +5,9 @@ import { AuthContext } from '@/contexts/authContext';
 import { PetContext } from '@/contexts/petContext';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import {useBusinessSettings} from '@/hooks/useBusinessSettings';
+import {personalityBubble} from '@/services/petPersonality';
+import { thinkingLine } from '@/services/agentConversation';
 
 // Video type definitions
 const VIDEOS = {
@@ -30,17 +33,21 @@ const PRIORITY: Record<VideoType, number> = {
   [VIDEOS.OVERDUE]: 5
 };
 
-const PetDisplay = () => {
-  useLocale();
+const PetDisplay = ({ agentMessageId = 0 }: { agentMessageId?: number }) => {
+  const {locale}=useLocale();
+  const personalityStore=useBusinessSettings();
   const { currentPet } = useContext(AuthContext);
   const { interactWithPet, feedPet, playWithPet, getPetDialogue } = useContext(PetContext);
 
   // UI states
-  const [petDialogue, setPetDialogue] = useState('');
+  const [petDialogue, setRawDialogue] = useState('');
+  const speechStyle=useRef({personality:personalityStore.settings.petPersonality,locale});speechStyle.current={personality:personalityStore.settings.petPersonality,locale};
+  const setPetDialogue=(text:string,mood?:string)=>setRawDialogue(personalityBubble(speechStyle.current.personality,mood??(/think|脑|思考|小精灵|答案|问题/.test(text)?'thinking':/full|饱/.test(text)?'fed':/tired|累/.test(text)?'tired':getPetMood()),speechStyle.current.locale));
   const [showDialogue, setShowDialogue] = useState(false);
 
   // Video state
   const [activeVideo, setActiveVideo] = useState<VideoType>(VIDEOS.IDLE);
+  const [randomVideoVariant, setRandomVideoVariant] = useState(1);
 
   // Refs for video elements - use a single ref object
   const videoRefs = useRef<Record<VideoType, HTMLVideoElement | null>>({
@@ -56,6 +63,14 @@ const PetDisplay = () => {
   // Flag to track if interaction video is playing
   const isInteractionPlayingRef = useRef(false);
   const isProcessingActionRef = useRef(false);
+  const agentMessageRef = useRef(agentMessageId);
+  const agentThinkingUntil = useRef(0);
+  const dialogueTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hideDialogueAfter = useCallback((milliseconds: number) => {
+    if (dialogueTimer.current) clearTimeout(dialogueTimer.current);
+    dialogueTimer.current = setTimeout(() => setShowDialogue(false), milliseconds);
+  }, []);
+  useEffect(() => () => { if (dialogueTimer.current) clearTimeout(dialogueTimer.current); }, []);
 
   // Get font family from CSS variable - use handwritten font
   const fontFamily = 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif';
@@ -81,7 +96,7 @@ const PetDisplay = () => {
   const getVideoSrc = useCallback((type: VideoType) => {
     if (!currentPet) return '';
     const petType = currentPet.type;
-    
+
     let videoFileName = '';
     switch (type) {
       case VIDEOS.IDLE: videoFileName = `${petType}_idle.mp4`; break;
@@ -91,16 +106,15 @@ const PetDisplay = () => {
       case VIDEOS.COMPLETED: videoFileName = `task_complete_${petType}.mp4`; break;
       case VIDEOS.OVERDUE: videoFileName = `task_overdue_${petType}.mp4`; break;
       case VIDEOS.RANDOM:
-        const num = Math.random() < 0.5 ? 1 : 2;
-        videoFileName = `${petType}_random${num}.mp4`;
+        videoFileName = `${petType}_random${randomVideoVariant}.mp4`;
         break;
       default: return '';
     }
-    
+
     // 使用相对路径，在Tauri和浏览器中都适用
     const videoPath = `./${videoFileName}`;
     return videoPath;
-  }, [currentPet]);
+  }, [currentPet, randomVideoVariant]);
 
   // Check if can switch to new video
   const canSwitchTo = useCallback((newVideo: VideoType) => {
@@ -108,10 +122,10 @@ const PetDisplay = () => {
     if (isInteractionPlayingRef.current) {
       return false;
     }
-    
+
     const currentPriority = PRIORITY[activeVideo];
     const newPriority = PRIORITY[newVideo];
-    
+
     return newPriority > currentPriority;
   }, [activeVideo]);
 
@@ -143,6 +157,7 @@ const PetDisplay = () => {
 
   // Switch video immediately without transition
   const switchVideo = useCallback((newVideo: VideoType) => {
+    if (newVideo === VIDEOS.RANDOM) setRandomVideoVariant(Math.random() < 0.5 ? 1 : 2);
     // 先停止当前正在播放的视频
     Object.values(videoRefs.current).forEach((video) => {
       if (video) {
@@ -158,7 +173,7 @@ const PetDisplay = () => {
 
     // 切换视频
     setActiveVideo(newVideo);
-    
+
     // 延迟一点时间确保状态更新后再播放视频
     setTimeout(() => {
       const video = videoRefs.current[newVideo];
@@ -189,9 +204,9 @@ const PetDisplay = () => {
   const handleFeed = useCallback(async () => {
     // First check video priority
     if (!canSwitchTo(VIDEOS.FEEDING)) {
-      setPetDialogue(getBusyMessage());
+      setPetDialogue(getBusyMessage(),'busy');
       setShowDialogue(true);
-      setTimeout(() => setShowDialogue(false), 3000);
+      hideDialogueAfter(3000);
       return;
     }
 
@@ -201,19 +216,19 @@ const PetDisplay = () => {
     try {
       // Try to feed
       const result = await feedPet();
-      
+
       if (!result.success) {
         setPetDialogue(result.message);
         setShowDialogue(true);
-        setTimeout(() => setShowDialogue(false), 4000);
+        hideDialogueAfter(4000);
         return;
       }
 
       // Success - play video and show dialogue
       switchVideo(VIDEOS.FEEDING);
-      setPetDialogue(getPetDialogue('fed'));
+      setPetDialogue(getPetDialogue('fed'),'fed');
       setShowDialogue(true);
-      setTimeout(() => setShowDialogue(false), 4000);
+      hideDialogueAfter(4000);
     } catch (error) {
       toast.error(error instanceof Error ? t(error.message) : t("Pet changes were not saved. Please retry."));
     } finally {
@@ -228,9 +243,9 @@ const PetDisplay = () => {
   const handlePlay = useCallback(async () => {
     // First check video priority
     if (!canSwitchTo(VIDEOS.PLAYING)) {
-      setPetDialogue(getBusyMessage());
+      setPetDialogue(getBusyMessage(),'busy');
       setShowDialogue(true);
-      setTimeout(() => setShowDialogue(false), 3000);
+      hideDialogueAfter(3000);
       return;
     }
 
@@ -240,19 +255,19 @@ const PetDisplay = () => {
     try {
       // Try to play
       const result = await playWithPet();
-      
+
       if (!result.success) {
         setPetDialogue(result.message);
         setShowDialogue(true);
-        setTimeout(() => setShowDialogue(false), 4000);
+        hideDialogueAfter(4000);
         return;
       }
 
       // Success - play video and show dialogue
       switchVideo(VIDEOS.PLAYING);
-      setPetDialogue(getPetDialogue('play'));
+      setPetDialogue(getPetDialogue('play'),'play');
       setShowDialogue(true);
-      setTimeout(() => setShowDialogue(false), 4000);
+      hideDialogueAfter(4000);
     } catch (error) {
       toast.error(error instanceof Error ? t(error.message) : t("Pet changes were not saved. Please retry."));
     } finally {
@@ -266,19 +281,31 @@ const PetDisplay = () => {
   // Handle pet click
   const handlePetClick = useCallback(async () => {
     if (!canSwitchTo(VIDEOS.RANDOM)) {
-      setPetDialogue(getBusyMessage());
+      setPetDialogue(getBusyMessage(),'busy');
       setShowDialogue(true);
-      setTimeout(() => setShowDialogue(false), 3000);
+      hideDialogueAfter(3000);
       return;
     }
 
     try { await interactWithPet(); }
     catch { toast.error(t("Pet changes were not saved. Please retry.")); return; }
-    setPetDialogue(getPetDialogue());
+    setPetDialogue(getPetDialogue('interaction'),'interaction');
     switchVideo(VIDEOS.RANDOM);
     setShowDialogue(true);
-    setTimeout(() => setShowDialogue(false), 4000);
+    hideDialogueAfter(4000);
   }, [canSwitchTo, getBusyMessage, interactWithPet, getPetDialogue, switchVideo]);
+
+  useEffect(() => {
+    if (!currentPet || agentMessageId === agentMessageRef.current) return;
+    agentMessageRef.current = agentMessageId;
+    agentThinkingUntil.current = Date.now() + 6000;
+    setPetDialogue(thinkingLine(),'thinking');
+    setShowDialogue(true);
+    hideDialogueAfter(6000);
+    if (canSwitchTo(VIDEOS.RANDOM)) switchVideo(VIDEOS.RANDOM);
+    // Same daily interaction rule as clicking the pet; no task-completion rewards are granted.
+    void interactWithPet().catch(() => toast.error(t('Pet changes were not saved. Please retry.')));
+  }, [agentMessageId, currentPet, canSwitchTo, switchVideo, hideDialogueAfter, interactWithPet]);
 
   // Check for completed/overdue tasks and show appropriate videos
   useEffect(() => {
@@ -291,9 +318,9 @@ const PetDisplay = () => {
         localStorage.removeItem('pet_show_completed');
         if (canSwitchTo(VIDEOS.COMPLETED)) {
           switchVideo(VIDEOS.COMPLETED);
-          setPetDialogue(getPetDialogue('happy'));
+          setPetDialogue(getPetDialogue('happy'),'happy');
           setShowDialogue(true);
-          setTimeout(() => setShowDialogue(false), 4000);
+          hideDialogueAfter(4000);
         }
         return;
       }
@@ -304,9 +331,9 @@ const PetDisplay = () => {
         localStorage.removeItem('pet_show_overdue');
         if (canSwitchTo(VIDEOS.OVERDUE)) {
           switchVideo(VIDEOS.OVERDUE);
-          setPetDialogue(getPetDialogue('sad'));
+          setPetDialogue(getPetDialogue('sad'),'sad');
           setShowDialogue(true);
-          setTimeout(() => setShowDialogue(false), 4000);
+          hideDialogueAfter(4000);
         }
         return;
       }
@@ -321,7 +348,7 @@ const PetDisplay = () => {
   useLayoutEffect(() => {
     const tryPlayVideo = (attempts = 0) => {
       const video = videoRefs.current[activeVideo];
-      
+
       if (video) {
         video.currentTime = 0;
         video.play().catch(() => {});
@@ -329,21 +356,22 @@ const PetDisplay = () => {
         setTimeout(() => tryPlayVideo(attempts + 1), 100);
       }
     };
-    
+
     // 只有当视频类型不是IDLE或SICK时才强制播放
     if (activeVideo !== VIDEOS.IDLE && activeVideo !== VIDEOS.SICK) {
       tryPlayVideo();
     }
   }, [activeVideo]);
 
+  useEffect(()=>{if(showDialogue)setPetDialogue('', 'interaction');},[personalityStore.settings.petPersonality,locale]);
   // Random dialogue
   useEffect(() => {
     if (!currentPet) return;
     const interval = setInterval(() => {
-      if (Math.random() < 0.3) {
+      if (Date.now() >= agentThinkingUntil.current && Math.random() < 0.3) {
         setPetDialogue(getPetDialogue());
         setShowDialogue(true);
-        setTimeout(() => setShowDialogue(false), 4000);
+        hideDialogueAfter(4000);
       }
     }, 30000);
     return () => clearInterval(interval);
@@ -390,6 +418,8 @@ const PetDisplay = () => {
       <div className="relative mb-4 w-full flex justify-center">
         <div
           onClick={handlePetClick}
+          data-testid="pet-interaction"
+          data-active-video={activeVideo}
           style={{
             width: '260px',
             height: '260px',
@@ -427,25 +457,26 @@ const PetDisplay = () => {
         {/* Dialogue bubble */}
         {showDialogue && (
           <motion.div
+            data-testid="pet-dialogue"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             style={{
               position: 'absolute',
-              bottom: '-15px',
-              left: '40%',
-              transform: 'translateX(-50%) translateY(100%)',
-              backgroundColor: 'rgba(255, 255, 255, 0.45)',
+              bottom: '-12px',
+              left: '50%',
+              x: '-50%',
+              backgroundColor: 'transparent',
               borderRadius: '10px',
               padding: '8px 14px',
               boxShadow: '2px 2px 0 #222222',
               border: '2px solid #222222',
-              maxWidth: '200px',
-              width: '180px',
-              backdropFilter: 'blur(8px)',
+              maxWidth: 'calc(100% - 16px)',
+              width: '220px',
+
               zIndex: 10
             }}
           >
-            <p style={{ color: '#222222', fontSize: '10px', fontWeight: 'bold', fontFamily, margin: 0 }}>
+            <p style={{ color: '#222222', fontSize: '12px', lineHeight: 1.6, fontWeight: 'bold', fontFamily, margin: 0 }}>
               {t(petDialogue)}
             </p>
           </motion.div>
@@ -454,8 +485,8 @@ const PetDisplay = () => {
 
       {/* Stats bars - 原始样式 */}
       <div className="w-full space-y-2 mb-4">
-        {([{ key: 'health', title: 'Health' }, { key: 'happiness', title: 'Happiness' }, { key: 'hunger', title: 'Hunger' }, { key: 'energy', title: 'Energy' }] as const).map((stat) => {
-          const value = currentPet[stat.key];
+        {([{ key: 'health', title: 'Health' }, { key: 'happiness', title: 'Happiness' }, { key: 'hunger', title: 'Fullness' }, { key: 'energy', title: 'Energy' }] as const).map((stat) => {
+          const value = stat.key === 'hunger' ? 100 - currentPet.hunger : currentPet[stat.key];
           const color = value > 70 ? '#00CECB' : value > 30 ? '#FFD700' : '#FF5E5B';
           return (
             <div key={stat.key} className="space-y-1">

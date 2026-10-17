@@ -1,0 +1,52 @@
+{
+  "checkedAt": "2026-10-17T09:02:44.830Z",
+  "syntheticOnly": true,
+  "checks": [
+    {
+      "name": "persona-gentle",
+      "passed": true
+    },
+    {
+      "name": "persona-tsundere",
+      "passed": true
+    },
+    {
+      "name": "persona-witty",
+      "passed": true
+    },
+    {
+      "name": "persona-humorous",
+      "passed": true
+    },
+    {
+      "name": "persona-cool",
+      "passed": true
+    },
+    {
+      "name": "persona-soft",
+      "passed": true
+    },
+    {
+      "name": "profile-recommendations-without-questions",
+      "passed": true
+    },
+    {
+      "name": "single-point-start-plus-30",
+      "passed": true
+    },
+    {
+      "name": "scheduled-news-content-only",
+      "passed": true
+    },
+    {
+      "name": "tencent-girl",
+      "passed": true,
+      "bytes": 23328
+    },
+    {
+      "name": "tencent-boy",
+      "passed": true,
+      "bytes": 16192
+    }
+  ]
+}

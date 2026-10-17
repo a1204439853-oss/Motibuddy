@@ -14,6 +14,8 @@ import { PetProvider } from "@/contexts/petContext";
 import { StatisticsProvider } from "@/contexts/statisticsContext";
 import { useSafeExit } from '@/hooks/useSafeExit';
 import { AuthContext } from '@/contexts/authContext';
+import DesktopServices from '@/components/DesktopServices';
+import { FocusProvider } from '@/contexts/focusContext';
 
 function SettingsRedirect() {
   const { isAuthenticated } = useContext(AuthContext);
@@ -26,9 +28,11 @@ export default function App() {
   return (
     <>
     <AuthProvider>
+      <FocusProvider>
       <TaskProvider>
         <PetProvider>
           <StatisticsProvider>
+            <DesktopServices />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<LoginPage />} />
@@ -41,6 +45,7 @@ export default function App() {
           </StatisticsProvider>
         </PetProvider>
       </TaskProvider>
+      </FocusProvider>
     </AuthProvider>
     {closing && <div role="dialog" aria-modal="true" aria-label={t('Preparing to close')} style={{ position: 'fixed', inset: 0, zIndex: 100000, background: 'rgba(255,255,255,.96)', display: 'grid', placeContent: 'center', textAlign: 'center', gap: 16 }}>
       <p>{t('Waiting for your changes to save…')}</p>

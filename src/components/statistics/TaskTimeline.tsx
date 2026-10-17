@@ -1,292 +1,58 @@
-import { t, label, getLocale } from '@/i18n/core';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocale } from '@/i18n/react';
-import { useContext, useMemo } from 'react';
+import { label } from '@/i18n/core';
 import { TaskContext } from '@/contexts/taskContext';
-import { Task, TaskPriority, TaskStatus } from '@/types';
-import { motion } from 'framer-motion';
-import {
-  ScatterChart,
-  Scatter,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  ZAxis
-} from 'recharts';
+import { calendarDay, localDay, shiftDay, weekStart } from '@/services/calendarSchedule';
+import type { Task } from '@/types';
+import TaskForm from '@/components/tasks/TaskForm';
+import './calendar.css';
+import { taskConflicts, conflictKey, conflictApproval } from '@/services/productData';
+import { useBusinessSettings } from '@/hooks/useBusinessSettings';
 
-interface TimelineDataPoint {
-  x: number;
-  y: number;
-  tasks: Task[];
-  color: string;
-}
-
-const priorityColors: Record<TaskPriority, string> = {
-  [TaskPriority.LOW]: '#06D6A0',
-  [TaskPriority.MEDIUM]: '#FFD166',
-  [TaskPriority.HIGH]: '#FF9F1C',
-  [TaskPriority.URGENT]: '#EF476F',
-};
-
-const priorityOrder: Record<TaskPriority, number> = {
-  [TaskPriority.LOW]: 1,
-  [TaskPriority.MEDIUM]: 2,
-  [TaskPriority.HIGH]: 3,
-  [TaskPriority.URGENT]: 4,
-};
-
-const TaskTimeline = () => {
+const colors = { low: '#00836a', medium: '#9b7200', high: '#c36914', urgent: '#cc4246' };
+export default function TaskTimeline() {
   const { locale } = useLocale();
+  const s = (zh: string, en: string) => locale === 'zh-CN' ? zh : en;
   const { tasks } = useContext(TaskContext);
-
-  const { data, yAxisLabels } = useMemo(() => {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-
-    // Generate next 7 days labels - 使用更短的格式确保一行显示
-    const labels: string[] = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(now);
-      date.setDate(date.getDate() + i);
-      // 使用更短的格式: "Mon 2/27" (星期几 + 月/日)
-      const dayName = date.toLocaleDateString(getLocale(), { weekday: 'short' });
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-      labels.push(`${dayName} ${month}/${day}`);
-    }
-
-    // Filter tasks due in next 7 days and not completed
-    const endDate = new Date(now);
-    endDate.setDate(endDate.getDate() + 7);
-    endDate.setHours(23, 59, 59, 999);
-
-    const upcomingTasks = tasks.filter(task => {
-      const dueDate = new Date(task.dueDate);
-      return dueDate >= now && dueDate <= endDate && task.status !== TaskStatus.COMPLETED;
-    });
-
-    // Group tasks by day and time (within 30 minutes)
-    const groupedTasks: Map<string, Task[]> = new Map();
-
-    upcomingTasks.forEach(task => {
-      const dueDate = new Date(task.dueDate);
-      const dayIndex = Math.floor((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      const hour = dueDate.getHours();
-      const minute = dueDate.getMinutes();
-      const timeValue = hour + minute / 60;
-
-      // Round to nearest 30 minutes for grouping
-      const roundedTime = Math.round(timeValue * 2) / 2;
-      const key = `${dayIndex}-${roundedTime}`;
-
-      if (!groupedTasks.has(key)) {
-        groupedTasks.set(key, []);
-      }
-      groupedTasks.get(key)!.push(task);
-    });
-
-    // Convert to scatter data
-    const scatterData: TimelineDataPoint[] = [];
-    groupedTasks.forEach((taskGroup, key) => {
-      const [dayIndexStr, timeStr] = key.split('-');
-      const dayIndex = parseInt(dayIndexStr);
-      const time = parseFloat(timeStr);
-
-      // Find highest priority in group
-      const highestPriorityTask = taskGroup.reduce((highest, task) => {
-        return priorityOrder[task.priority] > priorityOrder[highest.priority] ? task : highest;
-      }, taskGroup[0]);
-
-      scatterData.push({
-        x: time,
-        y: dayIndex,
-        tasks: taskGroup,
-        color: priorityColors[highestPriorityTask.priority],
-      });
-    });
-
-    return { data: scatterData, yAxisLabels: labels };
-  }, [tasks, locale]);
-
-  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: any[] }) => {
-  useLocale();
-    if (active && payload && payload.length > 0) {
-      const dataPoint: TimelineDataPoint = payload[0].payload;
-      const taskList = dataPoint.tasks;
-
-      return (
-        <div
-          style={{
-            backgroundColor: 'white',
-            border: '2px solid #222222',
-            borderRadius: '6px',
-            padding: '10px',
-            boxShadow: '3px 3px 0 #222222',
-            maxWidth: '240px',
-          }}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {taskList.map((task, index) => {
-              const dueDate = new Date(task.dueDate);
-              const timeStr = dueDate.toLocaleTimeString(getLocale(), {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false,
-              });
-              const dateStr = dueDate.toLocaleDateString(getLocale(), {
-                month: 'short',
-                day: 'numeric',
-              });
-
-              return (
-                <div key={task.id} style={{ fontSize: '11px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        width: '8px',
-                        height: '8px',
-                        borderRadius: '50%',
-                        backgroundColor: priorityColors[task.priority],
-                        border: '1px solid #222222',
-                      }}
-                    />
-                    <span style={{ fontWeight: 'bold', color: '#222222', fontSize: '12px' }}>{task.title}</span>
-                  </div>
-                  <div style={{ paddingLeft: '14px', color: '#666666', lineHeight: '1.4', fontSize: '10px' }}>
-                    <div>{t("Priority:")}{' '}<span style={{ color: priorityColors[task.priority], fontWeight: 'bold' }}>
-                      {label(task.priority)}
-                    </span></div>
-                    <div>{t("Due:")}{' '}{dateStr} {timeStr}</div>
-                  </div>
-                  {index < taskList.length - 1 && (
-                    <div style={{ borderBottom: '1px dashed #e0e0e0', marginTop: '6px' }} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const formatXAxisLabel = (value: number) => {
-    const hour = Math.floor(value);
-    return `${hour.toString().padStart(2, '0')}:00`;
-  };
-
-  const formatYAxisLabel = (value: number) => {
-    const index = Math.round(value);
-    if (index >= 0 && index < yAxisLabels.length) {
-      return yAxisLabels[index];
-    }
-    return '';
-  };
-
-  const hasData = data.length > 0;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.35 }}
-      style={{
-        backgroundColor: 'white',
-        padding: '12px',
-        borderRadius: '8px',
-        boxShadow: '3px 3px 0 #222222',
-        border: '2px solid #222222',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-        <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#222222', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{t("Weekly Task Timeline")}</h3>
-        <div style={{ display: 'flex', gap: '8px', fontSize: locale === 'zh-CN' ? '11px' : '9px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: priorityColors[TaskPriority.LOW], border: '1px solid #222222' }} />
-            <span>{t("Low")}</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: priorityColors[TaskPriority.MEDIUM], border: '1px solid #222222' }} />
-            <span>{t("Med")}</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: priorityColors[TaskPriority.HIGH], border: '1px solid #222222' }} />
-            <span>{t("High")}</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: priorityColors[TaskPriority.URGENT], border: '1px solid #222222' }} />
-            <span>{t("Urg")}</span>
-          </div>
-        </div>
+  const store=useBusinessSettings();
+  const [conflictError,setConflictError]=useState(false);
+  const confirmed=(store.settings.confirmedConflicts??[]) as string[];
+  const overlaps=tasks.filter(task=>task.status!=='completed').flatMap(task=>taskConflicts(task,tasks).filter(other=>task.id<other.id&&!confirmed.includes(conflictKey(task,other))&&!task.conflictApprovals?.includes(conflictApproval(task,other))&&!other.conflictApprovals?.includes(conflictApproval(other,task))).map(other=>({task,other,key:conflictKey(task,other)})));
+  const [anchor, setAnchor] = useState(() => localDay(new Date()));
+  const [view, setView] = useState<'week' | 'day'>('week');
+  const [showCompleted, setShowCompleted] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const scroll = useRef<HTMLDivElement>(null);
+  const [clock, setClock] = useState(() => new Date());
+  useEffect(() => { const timer = setInterval(() => setClock(new Date()), 60000); return () => clearInterval(timer); }, []);
+  useEffect(() => { if (scroll.current) scroll.current.scrollTop = 8 * 48; }, [view]);
+  const days = useMemo(() => Array.from({ length: view === 'week' ? 7 : 1 }, (_, index) => shiftDay(view === 'week' ? weekStart(anchor) : anchor, index)), [anchor, view]);
+  const data = useMemo(() => days.map(day => calendarDay(tasks.filter(task => showCompleted || task.status !== 'completed'), day)), [days, tasks, showCompleted]);
+  const time = (date: Date) => date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false });
+  const full = (date: Date) => date.toLocaleString(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+  const editing = tasks.find(task => task.id === editingId);
+  const detail = (task: Task) => `${task.title}\n${task.startAt ? `${full(task.startAt)} → ` : ''}${full(task.dueDate)}\n${label(task.priority)} · ${label(task.status)}${task.description ? `\n${task.description}` : ''}`;
+  return <section className="mb-calendar" aria-label={s('日历行程时间线', 'Calendar schedule')}>
+    <header className="mb-calendar-toolbar"><div><h3>{s('日历行程', 'Calendar schedule')}</h3><p>{days[0].toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' })}{view === 'week' ? ` – ${days[6].toLocaleDateString(locale, { month: 'short', day: 'numeric' })}` : ''}</p></div>
+      <div className="mb-calendar-controls"><button onClick={() => setAnchor(shiftDay(anchor, view === 'week' ? -7 : -1))} aria-label={s('上一段时间', 'Previous period')}>‹</button><button onClick={() => setAnchor(localDay(new Date()))}>{s('今天', 'Today')}</button><button onClick={() => setAnchor(shiftDay(anchor, view === 'week' ? 7 : 1))} aria-label={s('下一段时间', 'Next period')}>›</button><select aria-label={s('日历视图', 'Calendar view')} value={view} onChange={event => setView(event.target.value as 'week' | 'day')}><option value="week">{s('周', 'Week')}</option><option value="day">{s('日', 'Day')}</option></select></div>
+    </header>
+    <div className="mb-calendar-options"><span><i className="fa-regular fa-calendar" /> {s('时间段显示为日程块，截止任务列于顶部。点击可查看和修改。', 'Time ranges appear as events; deadlines are listed above. Click to view or edit.')}</span><label><input type="checkbox" checked={showCompleted} onChange={event => setShowCompleted(event.target.checked)} />{s('显示已完成', 'Show completed')}</label></div>
+    {overlaps.filter(pair=>pair.task.startAt!<new Date(+days[days.length-1]+86400000)&&pair.task.dueDate>days[0]).map(pair=><div className="mb-calendar-conflict" role="alert" key={pair.key}><span>{s('⚠ 时间可能冲突：','⚠ Overlapping events: ')}{pair.task.title} ↔ {pair.other.title}</span><button disabled={store.loading||store.error} onClick={async()=>{try{await store.save(settings=>({...settings,confirmedConflicts:[...new Set([...(settings.confirmedConflicts??[]) as string[],pair.key])].slice(-2000)}));setConflictError(false);}catch{setConflictError(true);}}}>{s('已核对，保留安排','Reviewed, keep both')}</button></div>)}
+    {conflictError&&<p role="alert">{s('确认未保存，请重试。','Confirmation was not saved. Retry.')}</p>}
+    <div className="mb-calendar-scroll" ref={scroll} tabIndex={0} aria-label={s('滚动查看全天日程', 'Scroll through the daily schedule')}>
+      <div className={`mb-calendar-sheet mb-calendar-${view}`} style={{ gridTemplateColumns: `46px repeat(${days.length},minmax(0,1fr))` }}>
+        <div className="mb-calendar-day-heading mb-calendar-time-heading">GMT{(-new Date().getTimezoneOffset() / 60) >= 0 ? '+' : ''}{-new Date().getTimezoneOffset() / 60}</div>
+        {days.map(day => <div key={+day} className={`mb-calendar-day-heading${+localDay(clock) === +day ? ' is-today' : ''}`}><span>{day.toLocaleDateString(locale, { weekday: 'short' })}</span><strong>{day.getDate()}</strong></div>)}
+        <div className="mb-calendar-deadline-label">{s('截止', 'Due')}</div>
+        {data.map((column, index) => <div className="mb-calendar-deadlines" key={index}>{column.deadlines.map(task => <button key={task.id} title={detail(task)} onClick={() => setEditingId(task.id)} className={task.status === 'completed' ? 'is-completed' : ''} style={{ borderLeftColor: colors[task.priority] }}><time>{time(task.dueDate)}</time> {task.title}</button>)}{!column.deadlines.length && <span className="mb-calendar-empty-mark">—</span>}</div>)}
+        <div className="mb-calendar-hours">{Array.from({ length: 24 }, (_, hour) => <span key={hour} style={{ top: hour * 48 }}>{String(hour).padStart(2, '0')}:00</span>)}</div>
+        {data.map((column, index) => <div className={`mb-calendar-day-column${+localDay(clock) === +days[index] ? ' is-today' : ''}`} key={index}>
+          {column.events.map(event => <button key={event.task.id} className={`mb-calendar-event${event.task.status === 'completed' ? ' is-completed' : ''}`} title={detail(event.task)} aria-label={detail(event.task)} onClick={() => setEditingId(event.task.id)} style={{ top: `${event.start / 1440 * 100}%`, height: `${(event.end - event.start) / 1440 * 100}%`, left: `calc(${event.lane / event.lanes * 100}% + 2px)`, width: `calc(${100 / event.lanes}% - 4px)`, borderLeftColor: colors[event.task.priority], color: colors[event.task.priority] }}><strong>{event.task.title}</strong><span>{event.continuesBefore ? s('接上日', 'Continued') : time(event.task.startAt!)} – {event.continuesAfter ? s('延续次日', 'Continues') : time(event.task.dueDate)}</span></button>)}
+          {+localDay(clock) === +days[index] && <div className="mb-calendar-now" style={{ top: `${(clock.getHours() * 60 + clock.getMinutes()) / 1440 * 100}%` }} />}
+        </div>)}
       </div>
-      <div className="h-56">
-        {hasData ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <ScatterChart margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis
-                type="number"
-                dataKey="x"
-                domain={[0, 24]}
-                ticks={[0, 4, 8, 12, 16, 20, 24]}
-                tickFormatter={formatXAxisLabel}
-                stroke="#222222"
-                fontSize={9}
-                label={{ value: t('Time'), position: 'insideBottom', offset: -2, fill: '#222222', fontSize: locale === 'zh-CN' ? 11 : 9, fontWeight: 'bold' }}
-              />
-              <YAxis
-                type="number"
-                dataKey="y"
-                domain={[-0.5, 6.5]}
-                ticks={[0, 1, 2, 3, 4, 5, 6]}
-                tickFormatter={formatYAxisLabel}
-                stroke="#222222"
-                width={locale === 'zh-CN' ? 88 : 70}
-                fontSize={10}
-                tick={{ fill: '#222222', fontSize: locale === 'zh-CN' ? 11 : 10, fontWeight: 'bold' }}
-              />
-              <ZAxis type="number" dataKey="z" range={[60, 200]} />
-              <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
-              <Scatter data={data} shape="circle">
-                {data.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={entry.color}
-                    stroke="#222222"
-                    strokeWidth={1}
-                    r={entry.tasks.length > 1 ? 7 : 5}
-                  />
-                ))}
-              </Scatter>
-            </ScatterChart>
-          </ResponsiveContainer>
-        ) : (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100%',
-              textAlign: 'center',
-              padding: '10px',
-            }}
-          >
-            <p
-              style={{
-                fontSize: '11px',
-                color: '#222222',
-                fontWeight: 'bold',
-              }}
-            >{t("No upcoming tasks in the next 7 days. Enjoy your free time!")}</p>
-          </div>
-        )}
-      </div>
-    </motion.div>
-  );
-};
-
-export default TaskTimeline;
+    </div>
+    {!data.some(column => column.events.length || column.deadlines.length) && <p className="mb-calendar-empty">{s('这段时间还没有任务或日程。', 'There are no tasks or events in this period.')}</p>}
+    {editing && <div className="mb-calendar-edit"><TaskForm task={editing} onClose={() => setEditingId(null)} /></div>}
+  </section>;
+}

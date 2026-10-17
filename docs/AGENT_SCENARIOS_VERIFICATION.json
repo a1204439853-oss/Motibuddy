@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-10-16T06:23:48.525Z",
+  "model": "deepseek-flash",
+  "checks": [
+    {
+      "name": "weekly-review-with-real-aggregates",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "recommendations-are-reviewable-drafts",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "emotional-support-stays-conversational",
+      "status": 200,
+      "passed": true
+    }
+  ]
+}

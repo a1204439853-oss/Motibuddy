@@ -2,3 +2,5 @@
 pub mod storage_paths;
 pub mod business_store;
 pub mod instance_lock;
+pub mod speech;
+pub mod desktop_notifications;

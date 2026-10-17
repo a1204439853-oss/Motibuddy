@@ -6,6 +6,7 @@ import { Task } from '@/types';
 import { formatDate, getTimeRemaining } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { taskMinutes } from '@/services/taskSchedule';
 
 interface TaskCardProps {
   task: Task;
@@ -176,7 +177,8 @@ const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationS
                 
                 {/* Due date badge */}
                 <span className="px-2 py-0.5 bg-gray-100 text-gray-800 border border-gray-300 rounded-full text-xs font-medium">
-                  {formatDate(task.dueDate)}
+                  {task.timingMode === 'range' && task.startAt ? `${formatDate(task.startAt)} → ${formatDate(task.dueDate)}` : formatDate(task.dueDate)}
+                  {taskMinutes(task) !== null && <span className="ml-2 text-gray-500">· {Math.round(taskMinutes(task)!)} {t('min')}</span>}
                 </span>
                 
                 {/* Time remaining badge */}

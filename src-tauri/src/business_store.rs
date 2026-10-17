@@ -109,6 +109,17 @@ pub fn validate_data(data: &BusinessData, owner: &str) -> Result<(), String> {
         if let Some(value) = task.get("estimatedDuration") {
             require(number(value, 0.0, f64::MAX))?;
         }
+        if let Some(mode) = task.get("timingMode") {
+            require(["deadline", "range"].contains(&mode.as_str().unwrap_or("")))?;
+        }
+        if task["timingMode"] == "range" {
+            require(date(&task["startAt"]))?;
+            let start = chrono::DateTime::parse_from_rfc3339(task["startAt"].as_str().unwrap()).unwrap();
+            let end = chrono::DateTime::parse_from_rfc3339(task["dueDate"].as_str().unwrap()).unwrap();
+            require(start < end)?;
+        } else {
+            require(task.get("startAt").is_none())?;
+        }
         if let Some(reminders) = task.get("reminders") {
             for reminder in reminders.as_array().ok_or("INVALID_REMINDERS")? {
                 require(date(&reminder["time"]) && reminder["sent"].is_boolean())?;
@@ -162,6 +173,94 @@ pub fn validate_data(data: &BusinessData, owner: &str) -> Result<(), String> {
         require(date(&achievement["unlockedAt"]))?;
     }
     require(data.settings.is_object())?;
+    if let Some(music)=data.settings.get("focusMusic"){require(music["enabled"].is_boolean()&&number(&music["volume"],0.0,100.0))?;}
+    if let Some(voice)=data.settings.get("ttsVoice"){require(["girl","boy"].contains(&voice.as_str().unwrap_or("")))?;}
+    if let Some(profile)=data.settings.get("profileSurvey"){
+        require(["complete","deferred"].contains(&profile["status"].as_str().unwrap_or(""))&&profile["minutes"].as_u64().map_or(false,|n|n>=5&&n<=480))?;
+        require(["morning","afternoon","evening","flexible"].contains(&profile["rhythm"].as_str().unwrap_or("")))?;
+        for key in ["goals","interests"]{require(profile[key].as_str().map_or(false,|s|s.chars().count()<=500))?;}
+    }
+    for (key,limit) in [("dailyPlans",90),("weeklyReports",52),("journalEntries",200)]{
+        let empty=Value::Array(vec![]);
+        if let Some(value)=data.settings.get(key).or_else(||if key=="journalEntries"&&data.settings.get("journalDraft").is_some(){Some(&empty)}else{None}){let entries=value.as_array().ok_or("INVALID_COMPANION_RECORDS")?;require(entries.len()<=limit)?;let mut ids=HashSet::new();let mut image_bytes=0;
+            let draft=data.settings.get("journalDraft").filter(|v|!v.is_null());
+            for entry in entries.iter().chain(if key=="journalEntries"{draft}else{None}){
+                require(entry["id"].as_str().map_or(false,|id|valid_id(id)&&(ids.insert(id)||draft.map_or(false,|d|std::ptr::eq(d,entry))))&&date(&entry["createdAt"]))?;
+                if key=="journalEntries"{
+                    require(date(&entry["updatedAt"]))?;
+                    for (field,max) in [("title",100),("body",12000),("reflection",2500)]{require(entry[field].as_str().map_or(false,|s|s.chars().count()<=max))?;}
+                    let images=entry["images"].as_array().ok_or("INVALID_JOURNAL_IMAGES")?;require(images.len()<=6)?;
+                    for image in images{let text=image.as_str().ok_or("INVALID_JOURNAL_IMAGE")?;require(text.len()<=600000&&["data:image/jpeg;base64,","data:image/png;base64,","data:image/webp;base64,"].iter().any(|prefix|text.starts_with(prefix)))?;image_bytes+=text.len();}
+                    let strokes=entry["strokes"].as_array().ok_or("INVALID_JOURNAL_DRAWING")?;require(strokes.len()<=100)?;for stroke in strokes{let points=stroke.as_array().ok_or("INVALID_STROKE")?;require(points.len()<=800)?;for point in points{require(number(&point["x"],0.0,1000.0)&&number(&point["y"],0.0,1000.0))?;}}
+                    let stickers=entry["stickers"].as_array().ok_or("INVALID_STICKERS")?;require(stickers.len()<=30)?;for sticker in stickers{require(number(&sticker["x"],0.0,100.0)&&number(&sticker["y"],0.0,100.0)&&["♡","★","✿","☀","🐾"].contains(&sticker["symbol"].as_str().unwrap_or("")))?;}
+                }else{
+                    require(entry["summary"].as_str().map_or(false,|s|s.chars().count()<=2500))?;
+                    if key=="dailyPlans"{let slots=entry["slots"].as_array().ok_or("INVALID_PLAN_SLOTS")?;require(slots.len()<=30)?;for slot in slots{require(date(&slot["start"])&&date(&slot["end"])&&nonempty(&slot["taskId"])&&slot["title"].is_string()&&slot["reason"].is_string()&&slot["firstStep"].is_string()&&slot["fixed"].is_boolean())?;}}
+                    else{let evidence=&entry["evidence"];for field in ["completed","open","missingCompletionDate","weekToDate"]{require(number(&evidence[field],0.0,MAX_REVISION as f64))?;}require(evidence["weeks"].as_array().map_or(false,|a|a.len()==4)&&evidence["days"].as_array().map_or(false,|a|a.len()==7))?;}
+                }
+            }require(image_bytes<=20000000)?;
+        }
+    }
+    if let Some(value) = data.settings.get("petPersonality") {
+        require(["gentle","tsundere","witty","humorous","cool","soft"].contains(&value.as_str().unwrap_or("")))?;
+    }
+    if let Some(value) = data.settings.get("petInteractionCount") { require(value.as_u64().map_or(false, |n| n <= MAX_REVISION))?; }
+    for (key, limit, width) in [("achievementRewards",100,80),("confirmedConflicts",2000,500)] {
+        if let Some(value) = data.settings.get(key) {
+            let values=value.as_array().ok_or("INVALID_PRODUCT_SETTING")?;
+            require(values.len() <= limit)?;
+            for entry in values { require(entry.as_str().map_or(false, |s| s.len() <= width))?; }
+        }
+    }
+    if let Some(value) = data.settings.get("anniversaries") {
+        let notes=value.as_array().ok_or("INVALID_ANNIVERSARIES")?;require(notes.len() <= 50)?;
+        let mut ids=HashSet::new();
+        for note in notes {
+            require(note["id"].as_str().map_or(false, |id| valid_id(id) && ids.insert(id)) && nonempty(&note["title"]) && note["title"].as_str().unwrap().chars().count() <= 80)?;
+            require(note["date"].as_str().map_or(false, |s| chrono::NaiveDate::parse_from_str(s,"%Y-%m-%d").is_ok()) && note["yearly"].is_boolean())?;
+            require(["sunshine","mint","rose","sky"].contains(&note["style"].as_str().unwrap_or("")))?;
+            if let Some(image)=note.get("image") { require(image.as_str().map_or(false, |s| s.len()<=600000 && ["data:image/png;base64,","data:image/jpeg;base64,","data:image/webp;base64,"].iter().any(|prefix|s.starts_with(prefix))))?; }
+        }
+    }
+    if let Some(value) = data.settings.get("scheduledJobs") {
+        let jobs=value.as_array().ok_or("INVALID_SCHEDULED_JOBS")?;require(jobs.len()<=30)?;
+        let mut ids=HashSet::new();
+        for job in jobs {
+            require(job["id"].as_str().map_or(false, |id| valid_id(id) && ids.insert(id)) && nonempty(&job["title"]) && nonempty(&job["prompt"]))?;
+            require(job["title"].as_str().unwrap().chars().count()<=80 && job["prompt"].as_str().unwrap().chars().count()<=1000)?;
+            require(["reminder","assistant","news"].contains(&job["kind"].as_str().unwrap_or("")) && ["once","daily","weekdays"].contains(&job["repeat"].as_str().unwrap_or("")))?;
+            require(job["time"].as_str().map_or(false, |s| s.len()==5 && chrono::NaiveTime::parse_from_str(s,"%H:%M").is_ok()) && date(&job["nextRun"]) && job["enabled"].is_boolean())?;
+            if let Some(last)=job.get("lastRun") {require(date(last))?;}
+            if let Some(result)=job.get("result") {require(result.as_str().map_or(false, |s| s.chars().count()<=2400))?;}
+            if let Some(state)=job.get("runState") {require(["running","succeeded","failed","interrupted"].contains(&state.as_str().unwrap_or("")))?;}
+            for key in ["error","notificationPending"] {if let Some(flag)=job.get(key) {require(flag.is_boolean())?;}}
+        }
+    }
+    if let Some(journal) = data.settings.get("focusSpace") {
+        require(journal["version"] == 1 && journal.get("active").is_some())?;
+        let history = journal["history"].as_array().ok_or("INVALID_FOCUS_HISTORY")?;
+        require(history.len() <= 50000)?;
+        let mut focus_ids = HashSet::new();
+        for (entry, finished) in history.iter().map(|entry| (entry, true)).chain(if journal["active"].is_null() { None } else { Some((&journal["active"], false)) }) {
+            let id = entry["id"].as_str().ok_or("INVALID_FOCUS_ID")?;
+            require(valid_id(id) && id.len() <= 80 && focus_ids.insert(id))?;
+            for key in ["startedAt", "updatedAt", "phaseStartedAt", "phaseEndAt"] { require(date(&entry[key]))?; }
+            let parse = |key: &str| chrono::DateTime::parse_from_rfc3339(entry[key].as_str().unwrap()).unwrap();
+            require(parse("updatedAt") >= parse("startedAt") && parse("phaseEndAt") >= parse("phaseStartedAt"))?;
+            let config = &entry["config"];
+            let focus = config["focusMinutes"].as_u64().filter(|n| *n >= 1 && *n <= 180).ok_or("INVALID_FOCUS_CONFIG")?;
+            let cycles = config["cycles"].as_u64().filter(|n| *n >= 1 && *n <= 12).ok_or("INVALID_FOCUS_CONFIG")?;
+            require(config["breakMinutes"].as_u64().map_or(false, |n| n >= 1 && n <= 60))?;
+            require(entry["focusMs"].as_u64().map_or(false, |n| n <= focus * cycles * 60000)
+                && entry["completedCycles"].as_u64().map_or(false, |n| n <= cycles)
+                && entry["quoteOffset"].as_u64().map_or(false, |n| n <= 4)
+                && ["focus", "break", "complete"].contains(&entry["phase"].as_str().unwrap_or("")))?;
+            if finished {
+                require(date(&entry["endedAt"]) && entry["phase"] == "complete"
+                    && ["completed", "exited", "interrupted"].contains(&entry["reason"].as_str().unwrap_or("")))?;
+            } else { require(entry.get("endedAt").is_none() && entry.get("reason").is_none() && entry["phase"] != "complete")?; }
+        }
+    }
     if let Some(interactions) = data.settings.get("petInteractions") {
         require(interactions.is_object())?;
         for (count, start) in [
@@ -511,6 +610,58 @@ mod tests {
             achievements: json!([]),
             settings: json!({ "theme":"light" }),
         }
+    }
+    #[test]
+    fn focus_records_are_validated_and_preserved_with_the_account() {
+        let directory = Directory::new();
+        let store = directory.store();
+        let initial = store.initialize("A", empty()).unwrap();
+        let mut data = initial.data.clone();
+        let entry = json!({"id":"focus-one", "startedAt":"2026-10-16T08:00:00Z", "updatedAt":"2026-10-16T08:00:30Z", "phaseStartedAt":"2026-10-16T08:00:00Z", "phaseEndAt":"2026-10-16T08:01:00Z", "config":{"focusMinutes":1,"breakMinutes":1,"cycles":2},"phase":"complete","focusMs":30000,"completedCycles":0,"quoteOffset":0,"endedAt":"2026-10-16T08:00:30Z","reason":"exited"});
+        data.settings["focusSpace"] = json!({"version":1,"history":[entry],"active":null});
+        let saved = store.commit("A", initial.revision, "focus-save", data.clone()).unwrap();
+        assert_eq!(store.read("A").unwrap().unwrap(), saved);
+        data.settings["focusSpace"]["history"][0]["focusMs"] = json!(999999999);
+        assert!(store.commit("A", saved.revision, "invalid-focus", data).is_err());
+        assert_eq!(store.read("A").unwrap().unwrap(), saved);
+    }
+    #[test]
+    fn journal_edit_draft_and_voice_preferences_persist_without_damaging_prior_record() {
+        let directory=Directory::new();let store=directory.store();let initial=store.initialize("A",empty()).unwrap();let mut data=initial.data;
+        let entry=json!({"id":"page-one","createdAt":"2026-10-17T01:00:00Z","updatedAt":"2026-10-17T01:00:00Z","title":"Today","body":"My own words","reflection":"AI note","images":[],"stickers":[{"symbol":"♡","x":25,"y":30}],"strokes":[[{"x":0,"y":10},{"x":100,"y":200}]]});
+        data.settings["journalEntries"]=json!([entry.clone()]);data.settings["journalDraft"]=entry;data.settings["journalDraft"]["body"]=json!("Unsaved edits");data.settings["ttsVoice"]=json!("girl");data.settings["focusMusic"]=json!({"enabled":true,"volume":40});
+        let saved=store.commit("A",initial.revision,"journal-edit",data.clone()).unwrap();assert_eq!(store.read("A").unwrap().unwrap(),saved);
+        data.settings["journalDraft"]["strokes"][0][0]["x"]=json!(1001);assert!(store.commit("A",saved.revision,"bad-stroke",data).is_err());assert_eq!(store.read("A").unwrap().unwrap(),saved);
+    }
+    #[test]
+    fn anniversary_and_schedule_validation_preserves_durable_state_on_invalid_input() {
+        let directory = Directory::new(); let store=directory.store();
+        let initial=store.initialize("A",empty()).unwrap(); let mut data=initial.data.clone();
+        data.settings["anniversaries"]=json!([{"id":"note-one","title":"Birthday","date":"2000-02-29","yearly":true,"style":"mint"}]);
+        data.settings["scheduledJobs"]=json!([{"id":"job-one","title":"Morning","prompt":"News","kind":"news","repeat":"daily","time":"08:00","enabled":true,"nextRun":"2026-10-17T00:00:00Z"}]);
+        data.settings["petPersonality"]=json!("soft");
+        let saved=store.commit("A",initial.revision,"product-save",data.clone()).unwrap();
+        assert_eq!(store.read("A").unwrap().unwrap(),saved);
+        data.settings["anniversaries"][0]["date"]=json!("2026-02-30");
+        assert!(store.commit("A",saved.revision,"bad-note",data).is_err());
+        let mut data=saved.data.clone();data.settings["scheduledJobs"][0]["time"]=json!("25:00");
+        assert!(store.commit("A",saved.revision,"bad-job",data).is_err());
+        assert_eq!(store.read("A").unwrap().unwrap(),saved);
+    }
+    #[test]
+    fn scheduled_ranges_persist_and_invalid_times_preserve_the_existing_revision() {
+        let directory = Directory::new();
+        let store = directory.store();
+        directory.legacy(&populated());
+        let original = store.initialize("A", populated()).unwrap();
+        let mut scheduled = original.data.clone();
+        scheduled.tasks[0]["timingMode"] = json!("range");
+        scheduled.tasks[0]["startAt"] = json!("2026-10-15T22:00:00.000Z");
+        let saved = store.commit("A", original.revision, "range-save", scheduled.clone()).unwrap();
+        assert_eq!(store.read("A").unwrap().unwrap().data.tasks[0]["startAt"], scheduled.tasks[0]["startAt"]);
+        scheduled.tasks[0]["startAt"] = scheduled.tasks[0]["dueDate"].clone();
+        assert!(store.commit("A", saved.revision, "invalid-range", scheduled).is_err());
+        assert_eq!(store.read("A").unwrap().unwrap(), saved);
     }
     #[test]
     fn initialization_preserves_exact_legacy_sources_before_creating_authority() {

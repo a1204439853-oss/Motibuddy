@@ -9,15 +9,15 @@ import { isTauri } from '@/services/tauriCommands';
 import { toast } from 'sonner';
 
 interface SidebarProps {
-  activeView: 'tasks' | 'statistics';
-  setActiveView: (view: 'tasks' | 'statistics') => void;
+  activeView: 'tasks' | 'statistics' | 'agent' | 'focus' | 'anniversaries';
+  setActiveView: (view: 'tasks' | 'statistics' | 'agent' | 'focus' | 'anniversaries') => void;
   currentUser: User;
   currentPet: Pet;
   isAuthenticated: boolean;
 }
 
 const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthenticated }: SidebarProps) => {
-  useLocale();
+  const { locale } = useLocale();
   const navigate = useNavigate();
   const [widgetVisible, setWidgetVisible] = useState(false);
   
@@ -157,6 +157,12 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
 
   const navItems = [
     {
+      id: 'agent',
+      label: t('Pet assistant'),
+      icon: 'fa-solid fa-wand-magic-sparkles',
+      onClick: () => setActiveView('agent')
+    },
+    {
       id: 'tasks',
       label: t("Tasks"),
       icon: 'fa-solid fa-tasks',
@@ -169,10 +175,16 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
       onClick: () => setActiveView('statistics')
     },
     {
-      id: 'profile',
-      label: t('Profile & Settings'),
-      icon: 'fa-solid fa-user',
-      onClick: () => navigate('/profile')
+      id: 'focus', label: t('Focus space'), icon: 'fa-regular fa-clock', onClick: () => setActiveView('focus')
+    },
+    {
+      id: 'achievements',
+      label: t('Achievements'),
+      icon: 'fa-solid fa-trophy',
+      onClick: () => navigate('/achievements')
+    },
+    {
+      id: 'anniversaries', label: locale === 'zh-CN' ? '手账本&纪念日' : 'Journal & Anniversaries', icon: 'fa-solid fa-book-open', onClick: () => setActiveView('anniversaries')
     },
     {
       id: 'widget',
@@ -367,8 +379,8 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
           
           <div className="space-y-1">
             <div className="flex justify-between">
-              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{t("Hunger")}</span>
-              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{currentPet.hunger}/100</span>
+              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{t("Fullness")}</span>
+              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{100 - currentPet.hunger}/100</span>
             </div>
             <div style={{
               width: '100%',
@@ -385,7 +397,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
                   height: '100%',
                   borderRadius: '9999px',
                   backgroundColor: currentPet.hunger < 30 ? '#00CECB' : currentPet.hunger < 70 ? '#FFD700' : '#FF5E5B',
-                  width: `${currentPet.hunger}%`,
+                  width: `${100 - currentPet.hunger}%`,
                   boxShadow: 'inset -1px 0 0 rgba(0, 0, 0, 0.2)',
                   margin: 0,
                   padding: 0
@@ -436,27 +448,28 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
             margin: 0
-          }}>{t("Main")}</p>
+          }}>{locale === 'zh-CN' ? '功能' : 'Features'}</p>
         </div>
         
-        <div className="space-y-2 px-3">
+        <div className="space-y-1.5 px-3">
           {navItems.map((item) => (
             <button
               key={item.id}
+              aria-current={activeView === item.id ? 'page' : undefined}
               onClick={item.onClick}
               style={{
                 width: '100%',
                 textAlign: 'left' as const,
-                padding: '10px 14px',
+                padding: '6px 14px',
                 borderRadius: '10px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
                 transition: 'all 0.2s ease',
-                backgroundColor: (item.id === 'tasks' || item.id === 'statistics') && activeView === item.id ? '#FF5E5B' : 'transparent',
-                color: (item.id === 'tasks' || item.id === 'statistics') && activeView === item.id ? 'white' : '#222222',
+                backgroundColor: activeView === item.id ? '#FF5E5B' : 'transparent',
+                color: activeView === item.id ? 'white' : '#222222',
                 border: '2px solid #222222',
-                boxShadow: (item.id === 'tasks' || item.id === 'statistics') && activeView === item.id ? '4px 4px 0 #222222' : 'none',
+                boxShadow: activeView === item.id ? '4px 4px 0 #222222' : 'none',
                 fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif',
                 fontWeight: 'bold',
                 fontSize: '11px',
@@ -464,14 +477,14 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
                 letterSpacing: '0.5px'
               }}
               onMouseEnter={(e) => {
-                if (!((item.id === 'tasks' || item.id === 'statistics') && activeView === item.id)) {
+                if (!(activeView === item.id)) {
                   e.currentTarget.style.backgroundColor = '#FF5E5B';
                   e.currentTarget.style.color = 'white';
                   e.currentTarget.style.boxShadow = '2px 2px 0 #222222';
                 }
               }}
               onMouseLeave={(e) => {
-                if (!((item.id === 'tasks' || item.id === 'statistics') && activeView === item.id)) {
+                if (!(activeView === item.id)) {
                   e.currentTarget.style.backgroundColor = 'transparent';
                   e.currentTarget.style.color = '#222222';
                   e.currentTarget.style.boxShadow = 'none';
@@ -505,7 +518,9 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
 
         </div>
         
-        <div className="mt-6 px-4 mb-3">
+      </div>
+      <div className="sidebar-system-settings" style={{borderTop:'1px solid #ddd',flexShrink:0}}>
+        <div className="px-4 mb-2 pt-2">
           <p style={{
             fontSize: '10px',
             fontWeight: 'bold',
@@ -514,16 +529,16 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
             margin: 0
-          }}>{t("Achievements")}</p>
+          }}>{locale === 'zh-CN' ? '系统设置' : 'System settings'}</p>
         </div>
         
-        <div className="px-3 mb-4">
+        <div className="px-3 pb-3">
           <button
-            onClick={() => navigate('/achievements')}
+            onClick={() => navigate('/profile')}
             style={{
               width: '100%',
               textAlign: 'left' as const,
-              padding: '10px 14px',
+              padding: '6px 14px',
               borderRadius: '10px',
               display: 'flex',
               alignItems: 'center',
@@ -549,27 +564,15 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
               e.currentTarget.style.boxShadow = 'none';
             }}
           >
-            <i className="fa-solid fa-trophy text-base text-amber-500"></i>
-            <span>{t("Achievements")}</span>
-            <span style={{
-              marginLeft: 'auto',
-              padding: '2px 8px',
-              borderRadius: '9999px',
-              fontSize: '10px',
-              fontWeight: 'bold',
-              backgroundColor: '#00CECB',
-              color: 'white',
-              border: '1px solid #222222',
-              boxShadow: '1px 1px 0 rgba(0, 0, 0, 0.2)'
-            }}>
-              {currentUser.achievements?.length || 0}
-            </span>
+            <i className="fa-solid fa-user-gear text-base"></i>
+            <span>{t('Profile & Settings')}</span>
+
           </button>
         </div>
       </div>
-      
+
       {/* Inspirational Quote */}
-      <motion.div 
+      <motion.div className="sidebar-inspiration"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         style={{

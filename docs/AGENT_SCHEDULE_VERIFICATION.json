@@ -1,0 +1,36 @@
+{
+  "checkedAt": "2026-10-16T05:24:24.174Z",
+  "model": "deepseek-flash",
+  "checks": [
+    {
+      "name": "small-talk-stays-chat",
+      "passed": true,
+      "status": 200,
+      "elapsedMs": 1421
+    },
+    {
+      "name": "unmatched-goal-becomes-proposal",
+      "passed": true,
+      "status": 200,
+      "elapsedMs": 1356
+    },
+    {
+      "name": "matching-task-is-not-duplicated",
+      "passed": true,
+      "status": 200,
+      "elapsedMs": 1454
+    },
+    {
+      "name": "missing-details-get-reviewable-defaults",
+      "passed": true,
+      "status": 200,
+      "elapsedMs": 1170
+    },
+    {
+      "name": "explicit-time-range",
+      "passed": true,
+      "status": 200,
+      "elapsedMs": 987
+    }
+  ]
+}

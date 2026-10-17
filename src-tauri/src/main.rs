@@ -9,6 +9,28 @@ use std::sync::atomic::{AtomicBool, Ordering};
 mod storage_paths;
 mod business_store;
 mod instance_lock;
+mod speech;
+mod desktop_notifications;
+#[tauri::command]
+fn desktop_notification_status(window:tauri::Window,app:tauri::AppHandle)->Result<bool,String>{main_window_only(&window)?;desktop_notifications::register(&app.config().tauri.bundle.identifier)?;Ok(true)}
+#[tauri::command]
+fn desktop_notify(window:tauri::Window,app:tauri::AppHandle,title:String,body:String)->Result<(),String>{main_window_only(&window)?;desktop_notifications::show(&app.config().tauri.bundle.identifier,&title,&body)}
+#[tauri::command]
+fn set_notification_account(window:tauri::Window,owner:Option<String>,locale:String,state:tauri::State<desktop_notifications::NotificationAccount>)->Result<(),String>{
+ main_window_only(&window)?;if !["zh-CN","en-US"].contains(&locale.as_str())||owner.as_ref().map_or(false,|s|s.len()>128||!s.chars().all(|c|c.is_ascii_alphanumeric()||c=='_'||c=='-')){return Err("INVALID_ACCOUNT".into());}
+ *state.0.lock().map_err(|_|"NOTIFICATION_STATE")?=owner.map(|s|(s,locale));state.1.fetch_add(1,Ordering::SeqCst);Ok(())
+}
+
+#[tauri::command]
+async fn recognize_voice(window: tauri::Window, locale: String, request_id: String, state: tauri::State<'_, speech::VoiceState>) -> Result<String, String> {
+    main_window_only(&window)?;
+    let (cancel, guard) = state.begin(&request_id)?;
+    tauri::async_runtime::spawn_blocking(move || { let _guard = guard; speech::recognize(&locale, cancel) }).await.map_err(|_| "SPEECH_UNAVAILABLE".to_string())?
+}
+#[tauri::command]
+fn cancel_voice(window: tauri::Window, request_id: String, state: tauri::State<speech::VoiceState>) -> Result<(), String> {
+    main_window_only(&window)?; state.cancel(&request_id); Ok(())
+}
 
 #[derive(Default)]
 struct ShutdownState { pending: Mutex<Option<String>>, approved: AtomicBool }
@@ -50,10 +72,10 @@ fn initialize_business_state(window: tauri::Window, user_id: String, data: busin
 }
 
 #[tauri::command]
-fn commit_business_state(window: tauri::Window, user_id: String, expected_revision: u64, operation_id: String, data: business_store::BusinessData, store: tauri::State<business_store::BusinessStore>, shutdown: tauri::State<ShutdownState>) -> Result<business_store::Snapshot, String> {
+fn commit_business_state(window: tauri::Window, user_id: String, expected_revision: u64, operation_id: String, data: business_store::BusinessData, store: tauri::State<business_store::BusinessStore>, shutdown: tauri::State<ShutdownState>,notifications:tauri::State<desktop_notifications::NotificationAccount>) -> Result<business_store::Snapshot, String> {
     main_window_only(&window)?;
     if shutdown.approved.load(Ordering::SeqCst) { return Err("Application is closing".into()); }
-    store.commit(&user_id, expected_revision, &operation_id, data)
+    let saved=store.commit(&user_id, expected_revision, &operation_id, data)?;notifications.1.fetch_add(1,Ordering::SeqCst);Ok(saved)
 }
 
 #[tauri::command]
@@ -129,6 +151,8 @@ fn main() {
 
     tauri::Builder::default()
         .manage(ShutdownState::default())
+        .manage(speech::VoiceState::default())
+        .manage(desktop_notifications::NotificationAccount::default())
         .manage(business_store::BusinessStore::new(app_directory.join("MotiBuddyData")))
         .system_tray(system_tray)
         .on_system_tray_event(|app, event| match event {
@@ -196,6 +220,16 @@ fn main() {
             _ => {}
         })
         .setup(|app| {
+            let notification_app=app.handle();
+            std::thread::spawn(move||{let mut delivered=std::collections::HashSet::new();let mut observed=u64::MAX;let mut next_check=chrono::Utc::now();loop{std::thread::sleep(std::time::Duration::from_secs(5));if notification_app.state::<ShutdownState>().approved.load(Ordering::SeqCst){break;}
+                let generation=notification_app.state::<desktop_notifications::NotificationAccount>().1.load(Ordering::SeqCst);if generation==observed&&chrono::Utc::now()<next_check{continue;}observed=generation;next_check=chrono::Utc::now()+chrono::Duration::seconds(60);
+                let account=notification_app.state::<desktop_notifications::NotificationAccount>().0.lock().ok().and_then(|s|s.clone());
+                let Some((owner,locale))=account else{continue};let store=notification_app.state::<business_store::BusinessStore>();let Ok(Some(snapshot))=store.read(&owner) else{continue};let mut data=snapshot.data;
+                for task in data.tasks.as_array().into_iter().flatten(){if task["status"]=="completed"{continue;}for reminder in task["reminders"].as_array().into_iter().flatten(){if reminder["sent"]==true{continue;}if let Some(at)=reminder["time"].as_str().and_then(|s|chrono::DateTime::parse_from_rfc3339(s).ok()){let at=at.with_timezone(&chrono::Utc);if at>chrono::Utc::now()&&at<next_check{next_check=at;}}}}
+                let changed=desktop_notifications::process(&mut data,&owner,&locale,chrono::Utc::now(),&mut delivered,|title,body|{let account=notification_app.state::<desktop_notifications::NotificationAccount>();let guard=account.0.lock().map_err(|_|"NOTIFICATION_STATE".to_string())?;if !guard.as_ref().map_or(false,|s|s.0==owner){return Err("ACCOUNT_CHANGED".into());}desktop_notifications::show(&notification_app.config().tauri.bundle.identifier,title,body)});
+                let same=notification_app.state::<desktop_notifications::NotificationAccount>().0.lock().ok().and_then(|s|s.clone()).map_or(false,|s|s.0==owner);
+                if changed&&same&&!notification_app.state::<ShutdownState>().approved.load(Ordering::SeqCst){let operation=format!("reminder-{}",chrono::Utc::now().timestamp_nanos_opt().unwrap_or_default());if let Ok(saved)=store.commit(&owner,snapshot.revision,&operation,data){let prefix=format!("{}|",owner);delivered.retain(|key|!key.starts_with(&prefix));let _=notification_app.emit_to("main","native-business-updated",serde_json::json!({"userId":owner,"revision":saved.revision}));}}
+            }});
             // 获取应用数据目录
             let app_dir = app.path_resolver().app_data_dir().expect("Failed to get app data dir");
             std::fs::create_dir_all(&app_dir).unwrap_or_default();
@@ -220,10 +254,13 @@ fn main() {
             let _main_window = app.get_window("main").unwrap();
             
             // 打开开发者工具（用于调试）- 在发布版本中也启用
+            #[cfg(debug_assertions)]
             _main_window.open_devtools();
             
             // 为 widget 窗口也添加打开开发者工具的功能
+            #[cfg(debug_assertions)]
             let app_handle = app.handle();
+            #[cfg(debug_assertions)]
             std::thread::spawn(move || {
                 std::thread::sleep(std::time::Duration::from_secs(5));
                 if let Some(widget_window) = app_handle.get_window("widget") {
@@ -262,6 +299,11 @@ fn main() {
             complete_shutdown,
             cancel_shutdown,
             set_ui_language,
+            recognize_voice,
+            cancel_voice,
+            desktop_notification_status,
+            desktop_notify,
+            set_notification_account,
         ])
         .build(context)
         .expect("error while running tauri application")
@@ -272,6 +314,7 @@ fn main() {
                 }
             }
             RunEvent::Exit => {
+                _app_handle.state::<speech::VoiceState>().cancel_all();
                 // 应用退出时关闭小组件窗口
                 if let Some(widget) = _app_handle.get_window("widget") {
                     let _ = widget.close();

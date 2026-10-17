@@ -8,10 +8,15 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
+import {SavedWeeklyReports} from '@/components/agent/SavedAssistantViews';
 import TaskTimeline from './TaskTimeline';
+import { FocusContext, focusTotals } from '@/contexts/focusContext';
+import { focusDuration } from '@/components/focus/FocusSpace';
 
 const StatisticsPanel = () => {
-  useLocale();
+  const { locale } = useLocale();
+  const focus = useContext(FocusContext), totals = focusTotals(focus.journal);
+  const focusUnavailable = focus.loading || focus.error;
   const { 
     statistics, 
     updateStatistics, 
@@ -64,6 +69,7 @@ const StatisticsPanel = () => {
   
   return (
     <div className="space-y-3 overflow-y-auto max-h-full p-1">
+      <SavedWeeklyReports/>
       {/* Stats summary cards */}
       <div className="grid grid-cols-3 gap-2">
         <motion.div
@@ -137,6 +143,7 @@ const StatisticsPanel = () => {
       </div>
 
       {/* Weekly Task Timeline - Full Width */}
+      <section className="focus-statistics" aria-label={t('Focus statistics')}><h3>{t('Focus statistics')}</h3><div><span>{t('Total focus time')}</span><strong>{focusUnavailable ? '—' : focusDuration(totals.focusMs, locale)}</strong></div><div><span>{t('Focus sessions started')}</span><strong>{focusUnavailable ? '—' : totals.entries}</strong></div><div><span>{t('Completed focus rounds')}</span><strong>{focusUnavailable ? '—' : totals.completedCycles}</strong></div><p>{focus.loading ? t('Loading focus records…') : focus.error ? t('Focus records unavailable. Retry in Focus space.') : t('Breaks are excluded. Partial focus time is retained when you leave early.')}</p></section>
       <TaskTimeline />
 
       {/* Task distribution charts */}

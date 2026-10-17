@@ -9,15 +9,19 @@ import type { BusinessData } from '@/services/businessRepository';
 import { TaskSession } from '@/services/taskSession';
 import { completeBusinessTask, reopenBusinessTask, markBusinessOverdue } from '@/services/businessActions';
 import { readSessionStamp } from '@/services/runtimeSession';
+import { applyAgentBatch, type AgentBatch } from '@/services/agentActions';
+import { compareTaskDuration } from '@/services/taskSchedule';
+import { taskConflicts, conflictApproval } from '@/services/productData';
 
 interface TaskContextType {
   tasks: Task[];
+  importAgentTasks: (batch: AgentBatch) => Promise<void>;
   addTask: (taskData: Omit<Task, 'id' | 'status' | 'createdAt' | 'completedAt'>) => Promise<void>;
   updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   completeTask: (id: string) => Promise<void>;
   uncompleteTask: (id: string) => Promise<void>;
-  sortTasks: (criteria: 'dueDate' | 'priority' | 'createdAt') => Task[];
+  sortTasks: (criteria: 'dueDate' | 'priority' | 'createdAt' | 'durationAsc' | 'durationDesc') => Task[];
   filterTasks: (status: TaskStatus | 'all') => Task[];
   searchTasks: (query: string) => Task[];
   isLoading: boolean;
@@ -29,6 +33,7 @@ interface TaskContextType {
 
 export const TaskContext = createContext<TaskContextType>({
   tasks: [],
+  importAgentTasks: async () => { throw new Error('Task creation is unavailable'); },
   addTask: async () => {},
   updateTask: async () => {},
   deleteTask: async () => {},
@@ -72,11 +77,15 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
     if (snapshot.userId === session.userId) session.acceptCommitted(snapshot.data.tasks);
   }), [session]);
 
-  const commitBusiness = (change: (data: BusinessData) => BusinessData) => session.commit(async () => {
+  const commitBusiness = (change: (data: BusinessData) => BusinessData, operationId?: string) => session.commit(async () => {
     if (!session.userId) throw new Error('Sign in before changing tasks.');
-    const snapshot = await businessRepository.transact(session.userId, change, session.isCurrent);
+    const snapshot = await businessRepository.transact(session.userId, change, session.isCurrent, operationId);
     return snapshot.data.tasks;
   }, false);
+
+  const importAgentTasks = async (batch: AgentBatch) => {
+    await commitBusiness(data => applyAgentBatch(data, batch, new Date()), `agent_${batch.id}_${batch.fingerprint.slice(0, 16)}`);
+  };
 
   const addTask = async (taskData: Omit<Task, 'id' | 'status' | 'createdAt' | 'completedAt'>) => {
     const now = new Date();
@@ -91,7 +100,10 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
       createdAt: new Date()
     };
     
-    await commitBusiness(data => ({ ...data, tasks: [newTask, ...data.tasks] }));
+    await commitBusiness(data => {
+      if(taskConflicts(newTask,data.tasks).some(other=>!newTask.conflictApprovals?.includes(conflictApproval(newTask,other))))throw new Error('Review time conflicts before saving.');
+      return { ...data, tasks: [newTask, ...data.tasks] };
+    });
   };
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
@@ -103,9 +115,12 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
       }
     }
     
-    await commitBusiness(data => ({ ...data, tasks: data.tasks.map(task =>
-        task.id === id ? { ...task, ...updates } : task
-      ) }));
+    await commitBusiness(data => {
+      const existing=data.tasks.find(task=>task.id===id);if(!existing)throw new Error('Task no longer exists.');
+      const edited={...existing,...updates};
+      if(taskConflicts(edited,data.tasks).some(other=>!edited.conflictApprovals?.includes(conflictApproval(edited,other))))throw new Error('Review time conflicts before saving.');
+      return { ...data, tasks: data.tasks.map(task =>task.id === id ? edited : task) };
+    });
   };
 
   const deleteTask = async (id: string) => {
@@ -121,8 +136,9 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
     await commitBusiness(data => reopenBusinessTask(data, id, new Date()));
   };
 
-  const sortTasks = useCallback((criteria: 'dueDate' | 'priority' | 'createdAt') => {
+  const sortTasks = useCallback((criteria: 'dueDate' | 'priority' | 'createdAt' | 'durationAsc' | 'durationDesc') => {
     return [...tasks].sort((a, b) => {
+      if (criteria === 'durationAsc' || criteria === 'durationDesc') return compareTaskDuration(a, b, criteria === 'durationAsc' ? 'asc' : 'desc');
       if (criteria === 'dueDate') {
         return a.dueDate.getTime() - b.dueDate.getTime();
       } else if (criteria === 'priority') {
@@ -181,6 +197,7 @@ export const TaskProvider = ({ children }: TaskProviderProps) => {
   return (
     <TaskContext.Provider value={{
       tasks,
+      importAgentTasks,
       addTask,
       updateTask,
       deleteTask,

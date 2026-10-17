@@ -7,6 +7,8 @@
 
 **MotiBuddy** is a gamified intelligent task management application that integrates virtual pet nurturing mechanisms to enhance emotional attachment and overcome procrastination.
 
+本机最新验收版（2026-10-17）：双击 `Start-MotiBuddy-AI.cmd` 启动 `MotiBuddy-Verify-companion.exe`。本轮包含有声 Windows 提醒、宠物个性、可选腾讯播报、计划/周报归档、画像推荐和可编辑手账。功能、限制与手动验收见 [陪伴体验改进说明](docs/COMPANION_V2.md)，构建验证见 [本轮构建记录](docs/COMPANION_BUILD.json)。
+
 ![MotiBuddy Logo](src-tauri/icons/icon.ico)
 
 ## ✨ Features
@@ -60,6 +62,8 @@ Download the latest release from [GitHub Releases](../../releases).
 4. Start creating and completing tasks!
 
 ## 🛠️ Development
+
+The inline pet assistant supports conversation, daily planning and reviewed text/image task imports, with automatic local connections and pet feedback. See [the development checklist](docs/AGENT_DEVELOPMENT_PLAN.md), [manual acceptance steps](docs/AGENT_MANUAL_VERIFICATION.md), and [private local gateway setup](server/README.md). Supplier credentials belong only in the ignored server environment. Use the latest EXE listed in [the build record](docs/AGENT_EXE_BUILD.json); older executables do not contain the current interface.
 
 Current reliability work uses Node.js 24.x. Run `npm run check:desktop` for TypeScript, Node regression tests, Rust storage tests and desktop compilation. The Tauri release build runs this gate before packaging. Normal task, pet, achievement and interaction-limit changes now commit together in `business_<userId>.json`; legacy source files are retained during migration. Credentials still use the legacy account store.
 
@@ -168,3 +172,9 @@ For questions or feedback about this thesis project, please open an issue on Git
 ---
 
 **Note**: This application was created as part of an academic thesis project. The virtual pet videos and some assets are for demonstration purposes.
+
+## 最新桌面验收版本（2026-10-16）
+
+双击根目录 `Start-MotiBuddy-AI.cmd` 启动 `MotiBuddy-Verify-product.exe`。本轮增加纪念日便利贴、系统提醒、定时助手、可核验成就与宠物经验奖励，并改进专注准备页和助手交互。使用前通过托盘退出旧版本。操作说明与限制见 [本轮功能及验收](docs/PRODUCT_EXPANSION.md)，产物和检查结果见 [构建记录](docs/PRODUCT_BUILD.json)。
+
+提醒与定时任务要求应用运行或隐藏到托盘，完全退出和关机后不执行。通知能否显示还受 Windows 通知权限和勿扰模式影响。AI 依然通过本机私有服务连接，供应商密钥不包含在 EXE 或前端中。

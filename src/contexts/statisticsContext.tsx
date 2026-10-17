@@ -3,6 +3,7 @@ import { Statistics, TaskStatus, TaskPriority, Task } from '@/types';
 import { AuthContext } from './authContext';
 import { TaskContext } from './taskContext';
 import { useContext } from 'react';
+import { FocusContext, focusTotals } from './focusContext';
 
 interface StatisticsContextType {
   statistics: Statistics;
@@ -36,6 +37,7 @@ interface StatisticsProviderProps {
 }
 
 export const StatisticsProvider = ({ children }: StatisticsProviderProps) => {
+  const focus = useContext(FocusContext);
   const { currentUser } = useContext(AuthContext);
   const { tasks } = useContext(TaskContext);
   const [statistics, setStatistics] = useState<Statistics>(() => {
@@ -159,7 +161,7 @@ export const StatisticsProvider = ({ children }: StatisticsProviderProps) => {
 
   const exportStatistics = useCallback(() => {
     // Create a JSON string of the statistics
-    const statisticsJSON = JSON.stringify(statistics, null, 2);
+    const statisticsJSON = JSON.stringify({ ...statistics, focus: focus.error || focus.loading ? null : focusTotals(focus.journal) }, null, 2);
     
     // Create a Blob object
     const blob = new Blob([statisticsJSON], { type: 'application/json' });
@@ -177,7 +179,7 @@ export const StatisticsProvider = ({ children }: StatisticsProviderProps) => {
     // Clean up
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }, [statistics]);
+  }, [statistics, focus.journal, focus.error, focus.loading]);
 
   const getTasksCompletedThisWeek = useCallback(() => {
     return statistics.performanceOverTime;

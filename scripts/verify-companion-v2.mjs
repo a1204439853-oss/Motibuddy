@@ -1,0 +1,13 @@
+import {mkdir,writeFile} from 'node:fs/promises';
+import {callDeepSeek,readConfig} from '../server/gateway.mjs';
+import {synthesize} from '../server/tts.mjs';
+const config=readConfig(),now=new Date(),base={mode:'chat',locale:'zh-CN',now:now.toISOString(),timeZone:'Asia/Shanghai',availableMinutes:60,energy:'normal',tasks:[],completeMissing:true,singleTimeAsStart:true};
+const report={checkedAt:now.toISOString(),syntheticOnly:true,checks:[]};
+for(const personality of ['gentle','tsundere','witty','humorous','cool','soft']){try{const result=await callDeepSeek({...base,personality,instruction:'我今天有点拖延，正在准备打开书。请用你的个性鼓励我，30个字左右。'},config);report.checks.push({name:`persona-${personality}`,passed:result.mode==='chat'&&result.summary.length>0});console.log(`PASS persona-${personality}`);}catch{report.checks.push({name:`persona-${personality}`,passed:false});console.log(`FAIL persona-${personality}`);process.exitCode=1;}}
+const cases=[{name:'profile-recommendations-without-questions',request:{...base,mode:'create',instruction:'用户画像：喜欢阅读、绘画；目标是坚持阅读；每天30分钟。立即推荐2-3个可执行小任务，不要提问，日期可留空。'},check:r=>r.mode==='create'&&r.drafts.length>=2&&r.drafts.length<=3&&r.questions.length===0},
+{name:'single-point-start-plus-30',request:{...base,mode:'create',instruction:`请创建会议，时间是 ${new Date(+now+86400000).toISOString()}，仅此一个时间点，不要询问结束时间。`},check:r=>r.mode==='create'&&r.drafts.length===1&&r.drafts[0].timingMode==='range'&&+new Date(r.drafts[0].dueDate)-+new Date(r.drafts[0].startAt)===1800000},
+{name:'scheduled-news-content-only',request:{...base,scheduled:true,news:true,instruction:'每天早上八点帮我推送晨间新闻。现在请直接提供摘要。'},check:r=>r.mode==='chat'&&r.summary.includes('来源：')&&!/无权|没有权限|没有权|无法.*创建|不能.*创建/.test(r.summary)}];
+for(const item of cases){try{const result=await callDeepSeek(item.request,config);const passed=item.check(result);report.checks.push({name:item.name,passed});console.log(`${passed?'PASS':'FAIL'} ${item.name}`);if(!passed)process.exitCode=1;}catch{report.checks.push({name:item.name,passed:false});console.log(`FAIL ${item.name}`);process.exitCode=1;}}
+await mkdir('node_modules/.cache/motibuddy-companion',{recursive:true});
+for(const voice of ['girl','boy']){try{const result=await synthesize('你好，我是你的伙伴。我们一起慢慢来。',voice,config);const audio=Buffer.from(result.audio,'base64');await writeFile(`node_modules/.cache/motibuddy-companion/tts-${voice}.mp3`,audio);report.checks.push({name:`tencent-${voice}`,passed:true,bytes:audio.length});console.log(`PASS tencent-${voice}`);}catch{report.checks.push({name:`tencent-${voice}`,passed:false});console.log(`FAIL tencent-${voice}`);process.exitCode=1;}}
+await writeFile('docs/COMPANION_API_VERIFICATION.json',JSON.stringify(report,null,2));

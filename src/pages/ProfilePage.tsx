@@ -7,6 +7,9 @@ import { SECURITY_QUESTIONS, SecurityQuestionId } from '@/types';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import LanguageSwitch from '@/components/ui/LanguageSwitch';
+import NotificationTest from '@/components/ui/NotificationTest';
+import ProfileSurvey from '@/components/agent/ProfileSurvey';
+import PersonalitySetting from '@/components/ui/PersonalitySetting';
 import { invoke } from '@tauri-apps/api/tauri';
 import { isTauri } from '@/services/tauriCommands';
 
@@ -20,6 +23,7 @@ const mockCompare = async (password: string, hash: string): Promise<boolean> => 
 };
 
 const ProfilePage = () => {
+  const [surveyOpen,setSurveyOpen]=useState(false);
   useLocale();
   const [username, setUsername] = useState<string>('');
   const [email, setEmail] = useState<string>('');
@@ -339,6 +343,10 @@ const ProfilePage = () => {
                 />
               </div>
               
+              <PersonalitySetting />
+              <NotificationTest/>
+              <button className="personality-setting" onClick={()=>setSurveyOpen(true)}>{t('Display language')==='显示语言'?'我的兴趣与目标 · 编辑画像':'Interests & goals · Edit preferences'}</button>
+              {surveyOpen&&<ProfileSurvey force onClose={()=>setSurveyOpen(false)}/>}
               <div className="profile-language-row">
                 <span>{t('Display language')}</span>
                 <LanguageSwitch />

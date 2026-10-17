@@ -5,102 +5,18 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/contexts/authContext';
 import { AchievementType, Achievement } from '@/types';
 import { motion } from 'framer-motion';
-
-// All achievements list including locked ones
-const ALL_ACHIEVEMENTS = [
-  {
-    id: '2',
-    type: AchievementType.PRODUCTIVITY_MASTER,
-    name: 'Productivity Master',
-    description: 'Complete 50 tasks',
-    icon: 'fa-solid fa-check-double'
-  },
-  {
-    id: '3',
-    type: AchievementType.PUNCTUALITY_PRO,
-    name: 'Punctuality Pro',
-    description: 'Complete 10 tasks on time',
-    icon: 'fa-solid fa-clock'
-  },
-  {
-    id: '4',
-    type: AchievementType.PET_FRIEND,
-    name: 'Pet Friend',
-    description: 'Interact with your pet 100 times',
-    icon: 'fa-solid fa-paw'
-  },
-  {
-    id: '5',
-    type: AchievementType.MIDNIGHT_WARRIOR,
-    name: 'Midnight Warrior',
-    description: 'Complete a task after midnight',
-    icon: 'fa-solid fa-moon'
-  },
-  {
-    id: '7',
-    type: AchievementType.PERFECTIONIST,
-    name: 'Perfectionist',
-    description: 'Complete 20 tasks with perfect accuracy',
-    icon: 'fa-solid fa-star'
-  },
-  {
-    id: '8',
-    type: AchievementType.FIRST_TASK,
-    name: 'First Step',
-    description: 'Complete your first task',
-    icon: 'fa-solid fa-flag-checkered'
-  },
-  {
-    id: '9',
-    type: AchievementType.THREE_DAY_STREAK,
-    name: 'Three Day Streak',
-    description: 'Complete tasks for 3 consecutive days',
-    icon: 'fa-solid fa-calendar-check'
-  },
-  {
-    id: '10',
-    type: AchievementType.SEVEN_DAY_STREAK,
-    name: 'Weekly Champion',
-    description: 'Complete tasks for 7 consecutive days',
-    icon: 'fa-solid fa-trophy'
-  },
-  {
-    id: '11',
-    type: AchievementType.THIRTY_DAY_STREAK,
-    name: 'Monthly Master',
-    description: 'Complete tasks for 30 consecutive days',
-    icon: 'fa-solid fa-crown'
-  },
-  {
-    id: '12',
-    type: AchievementType.TEN_TASKS_DAY,
-    name: 'Task Marathon',
-    description: 'Complete 10 tasks in a single day',
-    icon: 'fa-solid fa-flag-checkered'
-  },
-  // Hidden achievements at the bottom
-  {
-    id: '1',
-    type: AchievementType.EARLY_BIRD,
-    name: 'Early Bird',
-    description: 'Complete a task before 9 AM',
-    icon: 'fa-solid fa-sun',
-    isHidden: true
-  },
-  {
-    id: '6',
-    type: AchievementType.SPEEDSTER,
-    name: 'Speedster',
-    description: 'Complete a task in under 5 minutes',
-    icon: 'fa-solid fa-bolt',
-    isHidden: true
-  }
-];
+import { progressAchievements } from '@/services/progressAchievements';
+import { TaskContext } from '@/contexts/taskContext';
+import { useBusinessSettings } from '@/hooks/useBusinessSettings';
 
 const AchievementsPage = () => {
-  useLocale();
+  const {locale}=useLocale();
+  const {tasks}=useContext(TaskContext);
+  const store=useBusinessSettings();
   const { currentUser } = useContext(AuthContext);
   const navigate = useNavigate();
+  const data={tasks,pet:null,achievements:currentUser?.achievements??[],settings:store.settings};
+  const ALL_ACHIEVEMENTS=progressAchievements.map(item=>({...item,name:locale==='zh-CN'?item.zh:item.en,description:item.description[locale==='zh-CN'?0:1],isHidden:false,count:store.loading||store.error?null:item.count(data)}));
 
   const fontFamily = 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif';
 
@@ -210,7 +126,7 @@ const AchievementsPage = () => {
               fontSize: '12px', 
               fontWeight: 'bold',
               fontFamily: fontFamily
-            }}>{t("You've unlocked")}{' '}<span style={{ color: '#222222', fontWeight: 'bold' }}>{currentUser.achievements?.length || 0}</span>{' '}{t("out of")}{' '}<span style={{ fontWeight: 'bold' }}>{ALL_ACHIEVEMENTS.length}</span>{' '}{t("achievements")}</p>
+            }}>{t("You've unlocked")}{' '}<span style={{ color: '#222222', fontWeight: 'bold' }}>{ALL_ACHIEVEMENTS.filter(item=>isAchievementUnlocked(item.id)).length}</span>{' '}{t("out of")}{' '}<span style={{ fontWeight: 'bold' }}>{ALL_ACHIEVEMENTS.length}</span>{' '}{t("achievements")}</p><p style={{fontSize:11,marginTop:8}}>{locale==='zh-CN'?'每枚徽章奖励一次宠物经验，累计经验会提升等级。记录来自真实任务与专注数据。':'Each badge grants pet experience once. Experience raises your pet level. Goals use recorded activity.'}</p>
           </div>
 
           {/* All achievements grid */}
@@ -267,7 +183,7 @@ const AchievementsPage = () => {
                         color: isUnlocked ? '#222222' : '#999999',
                         fontFamily: fontFamily
                       }}>
-                        {isHidden ? '???' : t(achievement.description)}
+                        {isHidden ? '???' : t(achievement.description)}<br/>{`+${achievement.xp} XP · `}{isUnlocked?(locale==='zh-CN'?'已解锁':'Unlocked'):achievement.count===null?'—':`${Math.min(achievement.count,achievement.goal)} / ${achievement.goal}`}
                       </p>
                       {isUnlocked && unlockedAchievement && (
                         <p style={{ 

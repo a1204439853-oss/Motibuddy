@@ -4,6 +4,8 @@ import { decodeTasks } from './taskData.ts';
 import { decodePet, petFingerprint } from './petData.ts';
 import { decodeInteractions } from './petInteractions.ts';
 import { WriteBarrier } from './writeBarrier.ts';
+import { validateProductSettings } from './productData.ts';
+import {validateCompanionSettings} from './companionRecords.ts';
 
 export interface BusinessData {
   tasks: Task[];
@@ -23,6 +25,8 @@ const achievements = z.array(z.object({
 export function decodeBusinessData(value: unknown, owner: string): BusinessData {
   const data = z.object({ tasks: z.unknown(), pet: z.unknown(), achievements: z.unknown(), settings: z.record(z.unknown()) }).strict().parse(value);
   if (data.settings.petInteractions !== undefined) decodeInteractions(data.settings.petInteractions);
+  validateProductSettings(data.settings);
+  validateCompanionSettings(data.settings);
   return {
     tasks: decodeTasks(data.tasks), pet: data.pet === null ? null : decodePet(data.pet, owner),
     achievements: achievements.parse(data.achievements) as Achievement[], settings: data.settings,

@@ -5,6 +5,7 @@ import { listen } from '@tauri-apps/api/event';
 import { toast } from 'sonner';
 import { isTauri } from '@/services/tauriCommands';
 import { applicationWrites } from '@/services/writeBarrier';
+import { prepareApplicationExit } from '@/services/exitPreparation';
 
 export function useSafeExit() {
   const [closing, setClosing] = useState(false);
@@ -25,7 +26,7 @@ export function useSafeExit() {
       if (disposed) return;
       const version = ++generation.current;
       setClosing(true);
-      void applicationWrites.closeAndDrain().then(async () => {
+      void prepareApplicationExit().then(() => applicationWrites.closeAndDrain()).then(async () => {
         if (disposed || version !== generation.current) return;
         await invoke('complete_shutdown', { requestId: event.payload });
       }).catch(async () => {

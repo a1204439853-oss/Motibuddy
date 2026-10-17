@@ -5,6 +5,12 @@ import { mkdir, readFile, writeFile, access } from 'node:fs/promises';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
+import { runAgentSmoke } from './agent_smoke_checks.mjs';
+import { runScheduleSmoke } from './schedule_smoke_checks.mjs';
+import { runCompanionSmoke } from './companion_smoke_checks.mjs';
+import { runConflictSmoke } from './conflict_smoke_checks.mjs';
+import { runProductSmoke } from './product_smoke_checks.mjs';
+import { runFocusSmoke } from './focus_smoke_checks.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const output = path.join(root, 'node_modules/.cache/motibuddy-i18n/screenshots');
@@ -52,7 +58,7 @@ class CDP {
     });
   }
   async evaluate(expression) {
-    const response = await this.send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
+    const response = await this.send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true }).catch(error=>{throw new Error(`${error.message}: ${expression.slice(0,240)}`);});
     if (response.exceptionDetails) throw new Error(response.exceptionDetails.exception?.description ?? response.exceptionDetails.text);
     return response.result.value;
   }
@@ -68,12 +74,14 @@ const fixture = `(() => {
       tasks:[{id:'one',title:'Ship localization',description:'中英文任务内容保持原样，不随界面语言改变。',priority:'high',status:'in-progress',createdAt:now,dueDate:due},
         {id:'two',title:'准备下一次产品迭代与测试清单',description:'核对任务、伙伴、设置和小组件。',priority:'urgent',status:'pending',createdAt:now,dueDate:due}],
       pet:{id:'pet',userId:'i18n-user',name:'团团',type:'cat',level:2,experience:18,health:85,happiness:78,hunger:35,energy:65,lastInteraction:now,lastFed:now,createdAt:now},
-      achievements:[],settings:{theme:'default'} }}));
+      achievements:[],settings:{theme:'default',profileSurvey:{status:'deferred',goals:'',interests:'',minutes:30,rhythm:'flexible'}} }}));
     localStorage.setItem('__i18n_fixture','yes');
   }
   let listenerId=0, widgetVisible=false; const listeners=new Map();
   window.__TAURI_METADATA__={__currentWindow:{label:location.pathname.includes('widget')?'widget':'main'},__windows:[{label:'main'},{label:'widget'}]};
   window.__TAURI__={};
+  window.__desktopNotifications=[];
+  window.Notification=class {static permission='granted';static requestPermission(){return Promise.resolve('granted');}constructor(title,options){window.__desktopNotifications.push({title,...options});}};
   window.__TAURI_IPC__=message=>queueMicrotask(()=>{
     const reply=value=>window['_'+message.callback]?.(value);
     try {
@@ -82,12 +90,17 @@ const fixture = `(() => {
       if(message.cmd==='read_business_state')return reply(JSON.parse(localStorage.getItem(stateKey)??'null'));
       if(message.cmd==='initialize_business_state'){
         const existing=localStorage.getItem(stateKey);if(existing)return reply(JSON.parse(existing));
+        message.data.settings.profileSurvey??={status:'deferred',goals:'',interests:'',minutes:30,rhythm:'flexible'};
         const state={schemaVersion:1,userId:message.userId,revision:1,operations:[],data:message.data};
         localStorage.setItem(stateKey,JSON.stringify(state));return reply(state);
       }
+      if(message.cmd==='desktop_notification_status')return reply(true);
+      if(message.cmd==='desktop_notify'){new Notification(message.title,{body:message.body});return reply(null);}
+      if(message.cmd==='set_notification_account'){window.__nativeNotificationOwner=message.owner;return reply(null);}
       if(message.cmd==='data_file_exists')return reply(false);
       if(message.cmd==='tauri'&&message.__tauriModule==='Path')return reply(message.message.cmd==='join'?message.message.paths.join('/'):'/isolated-test');
       if(message.cmd==='commit_business_state'){
+        if(window.__agentFailWrites)throw Error('TEST_WRITE_FAILED');
         const old=JSON.parse(localStorage.getItem(stateKey));
         if(old.revision!==message.expectedRevision)throw Error('REVISION_CONFLICT');
         const next={...old,revision:old.revision+1,data:message.data,operations:[...old.operations,{id:message.operationId,baseRevision:old.revision}]};
@@ -125,7 +138,7 @@ async function page(url, width = 1600, height = 900) {
   return connection;
 }
 async function click(page, text) {
-  assert.equal(await page.evaluate(`(()=>{const button=[...document.querySelectorAll('button')].find(node=>node.textContent.replace(/\\s+/g,' ').trim()===${JSON.stringify(text)});if(!button)return false;button.click();return true})()`), true, `button: ${text}`);
+  assert.equal(await page.evaluate(`(()=>{const button=[...document.querySelectorAll('button')].find(node=>node.getClientRects().length&&(node.textContent.replace(/\\s+/g,' ').trim()===${JSON.stringify(text)}||node.getAttribute('aria-label')===${JSON.stringify(text)}));if(!button)return false;button.click();return true})()`), true, `button: ${text}`);
   await delay(250);
 }
 async function route(page, target) {
@@ -139,7 +152,8 @@ async function language(page, next) {
 async function fillLogin(page) {
   await page.evaluate(`(()=>{for(const [name,value] of [['email','i18n@example.test'],['password','LocalTest2026']]){const input=document.querySelector('input[name='+name+']');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));}})()`);
 }
-async function shot(page, name) {
+async function shot(page, name, preserveReward = false) {
+  if(!preserveReward)await page.evaluate(`document.querySelector('.reward-card button')?.click()`);
   await page.send('Page.bringToFront');
   await delay(700);
   const result = await page.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
@@ -153,6 +167,12 @@ try {
   server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--port', String(port), '--strictPort'], { cwd: root, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
   let serverLog = ''; server.stdout.on('data', data => { serverLog += data; }); server.stderr.on('data', data => { serverLog += data; });
   await until(async () => { if (server.exitCode !== null) throw new Error(serverLog); return (await fetch(base)).ok; }, 'local preview server');
+  for (const privatePath of ['/server/.env.local', `/@fs/${root.replaceAll('\\', '/')}/server/.env.local`]) {
+    const response = await until(()=>fetch(`${base}${privatePath}`),'private configuration route');
+    assert.ok([403, 404].includes(response.status), 'development server must not serve private environment files');
+    await response.body?.cancel();
+  }
+  passed('Development server blocks direct and filesystem URLs to private server configuration');
   const executable = ['C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', 'C:/Program Files/Google/Chrome/Application/chrome.exe'];
   let browserPath; for (const item of executable) { try { await access(item); browserPath = item; break; } catch {} }
   if (!browserPath) throw new Error('A local Edge or Chrome installation is required');
@@ -162,8 +182,15 @@ try {
   browserPort = Number(lines[0]); browserConnection = await CDP.open(`ws://127.0.0.1:${browserPort}${lines[1].trim()}`);
 
   const main = await page(`${base}/`);
+  if(process.env.COMPANION_ONLY){
+    await route(main,'/login');await fillLogin(main);await main.evaluate('document.querySelector("form").requestSubmit()');await until(()=>main.evaluate(`document.body.innerText.includes('我的任务')`),'quick login');
+    await main.send('Emulation.setDeviceMetricsOverride',{width:1200,height:675,deviceScaleFactor:1,mobile:false});
+    await main.evaluate(`(()=>{const original=window.fetch;window.__agentRequests=[];window.fetch=async(url,options)=>{if(String(url).endsWith('/session'))return new Response(JSON.stringify({token:'mbs_'+'b'.repeat(64),expiresAt:Date.now()+600000}),{headers:{'Content-Type':'application/json'}});if(!String(url).endsWith('/generate'))return original(url,options);const input=JSON.parse(options.body);window.__agentRequests.push(input);const result=input.mode==='plan'?{mode:'plan',summary:'先从一小步开始。',items:[{taskId:input.tasks[0].id,minutes:20,reason:'这是已有的任务。',firstStep:'打开资料。'}],questions:[],warnings:[]}:{mode:'chat',summary:'我看见你今天的小小进步了，我们一起慢慢来。',questions:[],warnings:[]};return new Response(JSON.stringify({result}),{headers:{'Content-Type':'application/json'}});};})()`);
+    await runCompanionSmoke({main,click,shot,passed,until,delay,route});
+  }else{
   await until(() => main.evaluate('!!document.querySelector(".public-topbar-actions .language-switch")'), 'welcome language in top bar');
   assert.equal(await main.evaluate('!!document.querySelector(".public-settings-link")'), false);
+  assert.ok(await main.evaluate(`(()=>{const group=document.querySelector('.language-switch'),active=group.querySelector('button[aria-pressed=true]'),inactive=group.querySelector('button[aria-pressed=false]');return getComputedStyle(group).borderTopWidth==='0px'&&getComputedStyle(group).boxShadow==='none'&&getComputedStyle(active).fontWeight==='700'&&getComputedStyle(inactive).fontWeight==='400'})()`), 'public language switch uses plain text with only the selected language bold');
   assert.ok(await main.evaluate(`(()=>{const group=document.querySelector('.language-switch').getBoundingClientRect(),login=document.querySelector('.public-login').getBoundingClientRect();return group.right<login.left&&Math.abs(group.top-login.top)<10&&group.top<64})()`), 'language switch sits next to top login');
   await until(() => main.evaluate('document.querySelector("video").readyState>=2'), 'welcome background video ready');
   report.welcomeVideo = await main.evaluate(`(()=>{const v=document.querySelector('video');return {width:v.videoWidth,height:v.videoHeight,paused:v.paused,time:v.currentTime,z:getComputedStyle(v).zIndex,parentZ:getComputedStyle(v.parentElement).zIndex}})()`);
@@ -192,9 +219,9 @@ try {
   await click(main, '添加任务'); await shot(main, 'task-form-zh-1200');
   assert.ok(await main.evaluate(`(()=>{const button=[...document.querySelectorAll('button')].find(node=>node.type==='submit');const r=button.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight})()`), 'task submit must be visible');
   await click(main, '取消'); passed('Chinese main window and task form fit 1200×675');
-  await click(main, '数据统计'); await shot(main, 'statistics-zh-1200');
+  await click(main, '日历&数据统计'); await shot(main, 'statistics-zh-1200');
   assert.ok(await main.evaluate('document.documentElement.scrollWidth <= innerWidth'), 'statistics horizontal overflow');
-  await click(main, '任务');
+  await click(main, '任务清单');
   await click(main, '桌面小组件未开启');
   assert.equal(await main.evaluate(`(()=>{const badge=[...document.querySelectorAll('span')].find(node=>node.textContent==='已开启');return badge&&getComputedStyle(badge).backgroundColor==='rgb(0, 206, 203)'})()`), true, 'translated widget badge keeps its active color');
   await click(main, '桌面小组件已开启');
@@ -281,13 +308,22 @@ try {
   await click(main, '稍后设置');
   await until(() => main.evaluate('document.body.innerText.includes("我的任务") && document.body.innerText.includes("[示例] 完成你的第一个任务")'), 'new user sees starter tasks');
   await shot(main, 'new-user-starter-tasks-zh');
+  const adopted = await main.evaluate(`JSON.parse(localStorage.getItem('__i18n_state_'+localStorage.getItem('currentUserId'))).data.pet`);
+  assert.deepEqual([adopted.health, adopted.happiness, 100-adopted.hunger, adopted.energy], [70,70,70,70]);
   passed('New registration returns to login; first sign-in and adoption show three persisted starter examples');
+  await runScheduleSmoke({ main, click, shot, passed, until, delay });
+  await runAgentSmoke({ main, click, shot, passed, until, delay, route, fillLogin });
+  await runProductSmoke({ main, click, shot, passed, until, delay, route });
+  await runConflictSmoke({ main, click, shot, passed, until, delay });
+  await runCompanionSmoke({ main, click, shot, passed, until, delay, route });
+  await runFocusSmoke({ main, click, shot, passed, until, delay, route, fillLogin });
+  }
   assert.equal(report.errors.length, 0, JSON.stringify(report.errors));
-  await writeFile(path.join(output, 'report.json'), JSON.stringify(report, null, 2));
+  await writeFile(path.join(output, process.env.COMPANION_ONLY?'report-companion.json':'report.json'), JSON.stringify(report, null, 2));
   console.log(`Screenshots: ${output}`);
 } catch (error) {
   report.failure = error.stack;
-  await mkdir(output, { recursive: true }); await writeFile(path.join(output, 'report.json'), JSON.stringify(report, null, 2));
+  await mkdir(output, { recursive: true }); await writeFile(path.join(output, process.env.COMPANION_ONLY?'report-companion.json':'report.json'), JSON.stringify(report, null, 2));
   console.error(error); process.exitCode = 1;
 } finally {
   if (browserConnection) { await browserConnection.send('Browser.close').catch(() => {}); browserConnection.close(); }

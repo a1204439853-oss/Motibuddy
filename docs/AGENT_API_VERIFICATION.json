@@ -1,0 +1,28 @@
+{
+  "checkedAt": "2026-10-16T05:23:32.393Z",
+  "provider": "DeepSeek",
+  "model": "deepseek-flash",
+  "automaticConnection": true,
+  "checks": [
+    {
+      "name": "conversation",
+      "passed": true,
+      "elapsedMs": 1558
+    },
+    {
+      "name": "text-task-draft",
+      "passed": true,
+      "elapsedMs": 1201
+    },
+    {
+      "name": "daily-plan",
+      "passed": true,
+      "elapsedMs": 1895
+    },
+    {
+      "name": "image-task-draft",
+      "passed": true,
+      "elapsedMs": 1359
+    }
+  ]
+}

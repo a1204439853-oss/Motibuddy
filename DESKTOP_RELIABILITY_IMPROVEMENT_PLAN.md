@@ -674,3 +674,5 @@ Windows 发布版 EXE 已构建并交付为 `MotiBuddy-Verify-zh-en.exe`，保�
 清理使用 `scripts/clean-generated.ps1` 的固定可再生文件清单，默认仅预览；应用前检查绝对路径在工作区内、无链接、没有 Git 跟踪文件，并要求最新 EXE 已复制且哈希一致。保留源代码、public 素材、原始视频图片、文档、Git 历史、已安装依赖和最新截图；AppData 不在清理范围。执行记录保存到 `docs/WORKSPACE_CLEANUP_REPORT.json`。
 
 最终验证：113 项 Node 测试、22 项 Rust 测试、TypeScript、桌面编译检查及生产前端构建通过。浏览器回归完成注册 → 登录 → 领养 → 3 条示例显示，输出 21 张截图。Windows 发布版交付为 `MotiBuddy-Verify-onboarding.exe`，验证标识保持不变；真实桌面新增流程仍待用户验收。
+
+本轮功能及维护材料提交 `0988c02` 后，清理 21 个生成物目标，删除逻辑大小 10.551 GiB，磁盘可用空间实际增加 9.931 GiB。工作区清理后约 1.308 GiB，未发现源码／素材删除变更，新 EXE 哈希保持一致；明细和执行边界见维护文档及 JSON 报告。清理之后未再次运行会重建 target 的 Rust 构建。

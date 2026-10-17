@@ -613,7 +613,7 @@ const WidgetWindow = () => {
                   {[
                     { label: t("Health"), value: pet.health, color: '#00CECB' },
                     { label: t("Happiness"), value: pet.happiness, color: '#FFD700' },
-                    { label: t("Hunger"), value: pet.hunger, color: '#FF5E5B' },
+                    { label: t("Fullness"), value: 100 - pet.hunger, color: '#00CECB' },
                     { label: t("Energy"), value: pet.energy, color: '#8A2BE2' }
                   ].map((stat) => (
                     <div key={stat.label} className="flex items-center gap-2">

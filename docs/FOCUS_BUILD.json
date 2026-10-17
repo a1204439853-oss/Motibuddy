@@ -1,0 +1,34 @@
+{
+  "builtAtUtc": "2026-10-16T06:36:52.9043611Z",
+  "artifact": "MotiBuddy-Verify-focus.exe",
+  "bytes": 236037632,
+  "sha256": "67E7C9CBFEA6D75666BEAA0CB4131B855EBC279A03F99FCF839FF5CF6F9AE89F",
+  "copiedHashMatches": true,
+  "applicationId": "com.motibuddy.verify",
+  "launcher": "Start-MotiBuddy-AI.cmd",
+  "validation": {
+    "typescript": "passed",
+    "nodeTests": 153,
+    "rustTests": 26,
+    "cargoCheck": "passed",
+    "frontendBuild": "passed",
+    "releaseBuild": "passed",
+    "browserChecks": 17,
+    "browserScreenshots": 43,
+    "browserRuntimeErrors": 0,
+    "acceleratedClockAndSyntheticAccounts": true,
+    "realApiNewScenarios": 3,
+    "runningLocalGateway": "ready",
+    "nativeGuiAndLongDurationAcceptance": "pending-user",
+    "secretScan": "passed",
+    "secretScannedFiles": 167
+  },
+  "changes": [
+    "Persistent assistant navigation selection",
+    "Transparent pet dialogue",
+    "Corrected draft validation and selection",
+    "Toggleable six scenario cards",
+    "Focus and break cycles with quotes and confetti",
+    "Atomic per-account focus records and statistics"
+  ]
+}

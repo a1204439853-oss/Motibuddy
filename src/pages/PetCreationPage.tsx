@@ -81,10 +81,11 @@ const PetCreationPage = () => {
       type: selectedPetType,
       level: 1,
       experience: 0,
-      health: 100,
-      happiness: 100,
-      hunger: 50,
-      energy: 100,
+      health: 70,
+      happiness: 70,
+      // Legacy storage measures hunger; display fullness = 100 - hunger.
+      hunger: 30,
+      energy: 70,
       lastInteraction: new Date(),
       lastFed: new Date(),
       createdAt: new Date()

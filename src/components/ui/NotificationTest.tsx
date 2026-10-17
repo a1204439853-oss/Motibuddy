@@ -1,0 +1,4 @@
+import {useState} from 'react';
+import {useLocale} from '@/i18n/react';
+import {desktopNotify} from '@/services/desktopNotifications';
+export default function NotificationTest(){const {locale}=useLocale(),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);return <div className="notification-test"><button disabled={busy} onClick={async()=>{setBusy(true);try{await desktopNotify('MotiBuddy',locale==='zh-CN'?'这是一条 Windows 桌面测试提醒，应伴随系统默认提示音。':'A Windows desktop test notification with the default sound.');setMessage(locale==='zh-CN'?'已提交给 Windows 通知中心。若未显示，请检查 Windows 通知和勿扰设置。':'Submitted to Windows. Check notification and Do not disturb settings if it does not appear.');}catch{setMessage(locale==='zh-CN'?'Windows 通知暂不可用，请检查系统通知设置。':'Windows notifications are unavailable. Check system settings.');}finally{setBusy(false);}}}>{locale==='zh-CN'?'发送有声桌面测试提醒':'Send a desktop notification with sound'}</button><p role="status">{message}</p></div>;}

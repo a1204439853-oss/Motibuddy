@@ -1,0 +1,39 @@
+{
+  "builtAtUtc": "2026-10-16T10:32:28.7023691Z",
+  "artifact": "MotiBuddy-Verify-product.exe",
+  "bytes": 236071936,
+  "sha256": "77093FE2B6D7D4AB668CC213747C22D275404B0BDE5F125FDE9DA6A060BC965C",
+  "copiedHashMatches": true,
+  "applicationId": "com.motibuddy.verify",
+  "launcher": "Start-MotiBuddy-AI.cmd",
+  "validation": {
+    "typescript": "passed",
+    "nodeTests": 162,
+    "rustTests": 27,
+    "cargoCheck": "passed",
+    "frontendBuild": "passed",
+    "releaseBuild": "passed",
+    "browserChecks": 21,
+    "browserScreenshots": 52,
+    "browserRuntimeErrors": 0,
+    "syntheticBrowserFixtures": true,
+    "realApiChecks": 4,
+    "realNewsFeed": "China News Service, reachable",
+    "runningLocalGateway": "updated and ready",
+    "secretScan": "passed",
+    "nativeOsNotificationPresentation": "pending-user",
+    "nativeLongRunningAndSleepAcceptance": "pending-user"
+  },
+  "changes": [
+    "Focus evidence and separated setup UI",
+    "Fixed settings navigation",
+    "Progress achievements and once-only pet experience rewards",
+    "Anniversary sticky notes with local images",
+    "OS task reminders",
+    "Explicit interval conflict review",
+    "Durable scheduled assistant and grounded news",
+    "Icon carousel and pet personas",
+    "Automatic plan timeline and comparative weekly review",
+    "Clipboard images and select-all imports"
+  ]
+}

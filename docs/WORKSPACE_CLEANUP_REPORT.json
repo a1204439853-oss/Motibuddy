@@ -1,0 +1,140 @@
+{
+  "CreatedAt": "2026-10-15T13:04:47.0625222Z",
+  "SnapshotCommit": "0988c0264ee8b816d91c8a29b8ed8ec7ed2e0169",
+  "DeletedBytes": 11328878793,
+  "DeletedGiB": 10.551,
+  "DiskFreeBytesBefore": 63438307328,
+  "DiskFreeBytesAfter": 74101829632,
+  "DiskFreeIncreaseGiB": 9.931,
+  "RetainedExe": "F:\\MotiBuddy1\\MotiBuddy-Verify-onboarding.exe",
+  "RetainedExeSha256": "6B4FA3061B029D98E5313D42A1E2A8C6B79E3504045B6FE3924BD56612EB58A1",
+  "Deleted": [
+    {
+      "RelativePath": "src-tauri\\target",
+      "Path": "F:\\MotiBuddy1\\src-tauri\\target",
+      "Bytes": 9199179529,
+      "Files": 10085
+    },
+    {
+      "RelativePath": "dist",
+      "Path": "F:\\MotiBuddy1\\dist",
+      "Bytes": 233028577,
+      "Files": 52
+    },
+    {
+      "RelativePath": "dist-main",
+      "Path": "F:\\MotiBuddy1\\dist-main",
+      "Bytes": 232897831,
+      "Files": 46
+    },
+    {
+      "RelativePath": "dist-widget",
+      "Path": "F:\\MotiBuddy1\\dist-widget",
+      "Bytes": 232222597,
+      "Files": 46
+    },
+    {
+      "RelativePath": "dist_videos",
+      "Path": "F:\\MotiBuddy1\\dist_videos",
+      "Bytes": 0,
+      "Files": 0
+    },
+    {
+      "RelativePath": "node_modules\\.vite",
+      "Path": "F:\\MotiBuddy1\\node_modules\\.vite",
+      "Bytes": 10883547,
+      "Files": 52
+    },
+    {
+      "RelativePath": "node_modules\\.vite-temp",
+      "Path": "F:\\MotiBuddy1\\node_modules\\.vite-temp",
+      "Bytes": 0,
+      "Files": 0
+    },
+    {
+      "RelativePath": "node_modules\\.cache\\motibuddy-reliability-build",
+      "Path": "F:\\MotiBuddy1\\node_modules\\.cache\\motibuddy-reliability-build",
+      "Bytes": 232988813,
+      "Files": 53
+    },
+    {
+      "RelativePath": "node_modules\\.cache\\motibuddy-storage-paths-tests.exe",
+      "Path": "F:\\MotiBuddy1\\node_modules\\.cache\\motibuddy-storage-paths-tests.exe",
+      "Bytes": 788992,
+      "Files": 1
+    },
+    {
+      "RelativePath": "node_modules\\.cache\\motibuddy-storage-paths-tests.pdb",
+      "Path": "F:\\MotiBuddy1\\node_modules\\.cache\\motibuddy-storage-paths-tests.pdb",
+      "Bytes": 3059712,
+      "Files": 1
+    },
+    {
+      "RelativePath": "wix314-binaries.zip",
+      "Path": "F:\\MotiBuddy1\\wix314-binaries.zip",
+      "Bytes": 41297555,
+      "Files": 1
+    },
+    {
+      "RelativePath": "MotiBuddy-Verify-profile-settings.exe",
+      "Path": "F:\\MotiBuddy1\\MotiBuddy-Verify-profile-settings.exe",
+      "Bytes": 235915776,
+      "Files": 1
+    },
+    {
+      "RelativePath": "node_modules\\.cache\\motibuddy-i18n\\browser-1792062142992",
+      "Path": "F:\\MotiBuddy1\\node_modules\\.cache\\motibuddy-i18n\\browser-1792062142992",
+      "Bytes": 76657961,
+      "Files": 506
+    },
+    {
+      "RelativePath": "node_modules\\.cache\\motibuddy-i18n\\browser-1792062428004",
+      "Path": "F:\\MotiBuddy1\\node_modules\\.cache\\motibuddy-i18n\\browser-1792062428004",
+      "Bytes": 80506435,
+      "Files": 509
+    },
+    {
+      "RelativePath": "node_modules\\.cache\\motibuddy-i18n\\browser-1792063187665",
+      "Path": "F:\\MotiBuddy1\\node_modules\\.cache\\motibuddy-i18n\\browser-1792063187665",
+      "Bytes": 84037365,
+      "Files": 544
+    },
+    {
+      "RelativePath": "node_modules\\.cache\\motibuddy-i18n\\browser-1792063306304",
+      "Path": "F:\\MotiBuddy1\\node_modules\\.cache\\motibuddy-i18n\\browser-1792063306304",
+      "Bytes": 101254815,
+      "Files": 560
+    },
+    {
+      "RelativePath": "node_modules\\.cache\\motibuddy-i18n\\browser-1792063495325",
+      "Path": "F:\\MotiBuddy1\\node_modules\\.cache\\motibuddy-i18n\\browser-1792063495325",
+      "Bytes": 97757540,
+      "Files": 557
+    },
+    {
+      "RelativePath": "node_modules\\.cache\\motibuddy-i18n\\browser-1792066649625",
+      "Path": "F:\\MotiBuddy1\\node_modules\\.cache\\motibuddy-i18n\\browser-1792066649625",
+      "Bytes": 103630543,
+      "Files": 528
+    },
+    {
+      "RelativePath": "node_modules\\.cache\\motibuddy-i18n\\browser-1792066800394",
+      "Path": "F:\\MotiBuddy1\\node_modules\\.cache\\motibuddy-i18n\\browser-1792066800394",
+      "Bytes": 120854842,
+      "Files": 576
+    },
+    {
+      "RelativePath": "node_modules\\.cache\\motibuddy-i18n\\browser-1792066950638",
+      "Path": "F:\\MotiBuddy1\\node_modules\\.cache\\motibuddy-i18n\\browser-1792066950638",
+      "Bytes": 120871817,
+      "Files": 576
+    },
+    {
+      "RelativePath": "node_modules\\.cache\\motibuddy-i18n\\browser-1792068553805",
+      "Path": "F:\\MotiBuddy1\\node_modules\\.cache\\motibuddy-i18n\\browser-1792068553805",
+      "Bytes": 121044546,
+      "Files": 577
+    }
+  ],
+  "Failures": []
+}

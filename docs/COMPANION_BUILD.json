@@ -1,0 +1,52 @@
+{
+  "builtAtUtc": "2026-10-17T09:31:18.200Z",
+  "artifact": "MotiBuddy-Verify-companion.exe",
+  "bytes": 236112384,
+  "sha256": "0F12AC1032CEFD7213F1EED20849F77A94547FB87D91A5BD16E9B6B728E3B055",
+  "copiedHashMatches": true,
+  "applicationId": "com.motibuddy.verify",
+  "launcher": "Start-MotiBuddy-AI.cmd",
+  "validation": {
+    "typescript": "passed",
+    "nodeTestsPassed": 169,
+    "rustTestsPassed": 30,
+    "rustManualIntegrationTestsIgnoredByDefault": 1,
+    "nativeToastManualIntegrationTestExplicitlyRun": "passed: Windows API accepted a real notification with default sound",
+    "nativePopupVisualAndSoundAuditoryAcceptance": "pending-user",
+    "nativeTrayLongRunningAndSleepAcceptance": "pending-user",
+    "cargoCheck": "passed",
+    "frontendBuild": "passed",
+    "releaseBuild": "passed",
+    "launcherTestsPassed": 4,
+    "browserRegression": "passed",
+    "syntheticBrowserFixtures": true,
+    "realApiChecksPassed": 11,
+    "realApiReport": "docs/COMPANION_API_VERIFICATION.json",
+    "realTencentVoicesSynthesized": [
+      "girl",
+      "boy"
+    ],
+    "runningLocalGateway": "updated and ready",
+    "secretScan": "passed: no private credential found in source, frontend output or EXE",
+    "gitDiffCheck": "passed",
+    "browserChecksPassed": 25,
+    "browserScreenshots": 60,
+    "browserRuntimeErrors": 0,
+    "secretScanCheckedFiles": 207,
+    "postCapacityTargetedRegression": {
+      "checksPassed": 5,
+      "screenshots": 8,
+      "runtimeErrors": 0,
+      "scope": "four companion feature groups plus private-file access check after the final capacity protection"
+    },
+    "browserRegressionOrder": "25-group full suite passed, then the final journal capacity guard was unit-tested and the companion UI suite rerun"
+  },
+  "operatingLimits": [
+    "Task reminders continue while the application runs hidden or minimized in the tray.",
+    "Actual exit, shutdown and computer sleep do not execute jobs; no wake service was installed.",
+    "Windows notification policy, quiet mode and volume affect popup presentation and sound.",
+    "Local AI and TTS require the separate private gateway; provider credentials are not bundled in the EXE.",
+    "Browser fixtures do not prove native data migration, speakers or OS popup presentation."
+  ],
+  "checkedAtUtc": "2026-10-17T09:31:45.388Z"
+}

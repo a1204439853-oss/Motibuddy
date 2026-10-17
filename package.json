@@ -7,6 +7,9 @@
     "node": ">=24.0.0 <25"
   },
   "scripts": {
+    "agent:desktop": "node scripts/start-agent-desktop.mjs",
+    "agent:server": "node --env-file=server/.env.local server/index.mjs",
+    "agent:verify-live": "node --env-file=server/.env.local scripts/verify-agent-live.mjs",
     "typecheck": "tsc --noEmit --pretty false",
     "test": "node --test tests/*.test.mjs",
     "check": "npm run typecheck && npm test",

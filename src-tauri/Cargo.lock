@@ -1986,9 +1986,11 @@ dependencies = [
  "serde_json",
  "tauri",
  "tauri-build",
+ "tauri-winrt-notification",
  "tokio",
  "url",
  "windows 0.39.0",
+ "winreg",
  "winres",
 ]
 

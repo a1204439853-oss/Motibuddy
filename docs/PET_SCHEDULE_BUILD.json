@@ -1,0 +1,29 @@
+{
+  "builtAtUtc": "2026-10-16T05:34:21.6065236Z",
+  "artifact": "MotiBuddy-Verify-calendar.exe",
+  "bytes": 236025856,
+  "sha256": "1555582A4423582D6E56F3F32F7EB6D6ACDAAF94C0AAB48FF109570B6057393D",
+  "copiedHashMatches": true,
+  "applicationId": "com.motibuddy.verify",
+  "launcher": "Start-MotiBuddy-AI.cmd",
+  "validation": {
+    "typescript": "passed",
+    "nodeTests": 144,
+    "rustTests": 25,
+    "cargoCheck": "passed",
+    "frontendBuild": "passed",
+    "releaseBuild": "passed",
+    "browserChecks": 14,
+    "browserScreenshots": 34,
+    "browserRuntimeErrors": 0,
+    "realApiBaselineModes": 4,
+    "realApiNewScenarios": 5,
+    "runningDefaultGateway": "passed",
+    "windowsSpeechZhEngineAndGrammar": "passed",
+    "windowsSpeechEnEngineAndGrammar": "passed",
+    "actualMicrophoneRecognition": "pending-user",
+    "nativeGuiAcceptance": "pending-user",
+    "secretScan": "passed",
+    "secretScannedFiles": 151
+  }
+}

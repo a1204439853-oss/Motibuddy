@@ -7,13 +7,19 @@ const task = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
   dueDate: date,
+  timingMode: z.enum(['deadline', 'range']).optional(),
+  startAt: date.optional(),
+  conflictApprovals: z.array(z.string().max(500)).max(200).optional(),
   createdAt: date,
   completedAt: date.optional(),
   priority: z.enum(['low', 'medium', 'high', 'urgent']),
   status: z.enum(['pending', 'in-progress', 'completed', 'overdue']),
   estimatedDuration: z.number().finite().nonnegative().optional(),
   reminders: z.array(z.object({ time: date, sent: z.boolean() }).passthrough()).optional(),
-}).passthrough();
+}).passthrough().superRefine((value, ctx) => {
+  if (value.timingMode === 'range' && (!value.startAt || value.startAt >= value.dueDate)) ctx.addIssue({ code: 'custom', message: 'End time must be after start time' });
+  if (value.timingMode !== 'range' && value.startAt) ctx.addIssue({ code: 'custom', message: 'Only time-range tasks can have a start time' });
+});
 
 const tasks = z.array(task).refine(
   values => new Set(values.map(value => value.id)).size === values.length,

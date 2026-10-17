@@ -2,6 +2,10 @@ import type { Pet, TaskRewardReceipt } from '../types/index.ts';
 
 const bound = (value: number) => Math.max(0, Math.min(100, value));
 const totalExperience = (pet: Pet) => 25 * pet.level * (pet.level - 1) + pet.experience;
+export function grantExperience(pet: Pet, amount: number): Pet {
+  if (!Number.isInteger(amount) || amount < 0) throw new Error('Invalid experience reward');
+  return { ...pet, ...progression(totalExperience(pet) + amount) };
+}
 function progression(total: number): { level: number; experience: number } {
   const level = Math.max(1, Math.floor((1 + Math.sqrt(1 + 8 * Math.max(0, total) / 50)) / 2));
   return { level, experience: Math.max(0, total - 25 * level * (level - 1)) };

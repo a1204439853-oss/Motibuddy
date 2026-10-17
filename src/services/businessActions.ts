@@ -24,7 +24,7 @@ export function interactBusinessPet(data: BusinessData, action: 'feed' | 'play',
   if (!data.pet) throw new Error('Pet data is unavailable.');
   const interactions = prepareInteraction(decodeInteractions(data.settings.petInteractions), action, now);
   if (!interactions) throw new Error(action === 'feed' ? "I'm full now! Let me rest for a while~" : "I'm tired from playing! Let me rest for a while~");
-  return { ...data, pet: applyPetInteraction(data.pet, action, now), settings: { ...data.settings, petInteractions: interactions } };
+  return { ...data, pet: applyPetInteraction(data.pet, action, now), settings: { ...data.settings, petInteractions: interactions, petInteractionCount: Number(data.settings.petInteractionCount ?? 0) + 1 } };
 }
 export function markBusinessOverdue(data: BusinessData, now: Date): BusinessData {
   const overdue = data.tasks.filter(task => task.status !== 'completed' && task.status !== 'overdue' && task.dueDate < now);

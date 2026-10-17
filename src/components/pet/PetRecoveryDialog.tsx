@@ -26,7 +26,7 @@ export function PetRecoveryDialog({ candidates, busy, error, onSelect, onCancel 
         {candidates.map(({ source, pet }) => <label key={source} className="my-2 flex cursor-pointer gap-3 rounded border p-3">
           <input type="radio" name="pet-copy" checked={selected === source} onChange={() => setSelected(source)} />
           <span><strong>{pet.name} · {label(pet.type)}{' '}{t("· Level")}{' '}{pet.level}</strong><br />
-            <span className="text-sm">{t(labels[source])}<br />{t("Health")}{' '}{pet.health}{' '}{t("· Happiness")}{' '}{pet.happiness}{' '}{t("· Hunger")}{' '}{pet.hunger}{' '}{t("· Energy")}{' '}{pet.energy}<br />{t("Experience")}{' '}{pet.experience}{' '}{t("· Last interaction:")}{' '}{pet.lastInteraction.toLocaleString(getLocale())}</span>
+            <span className="text-sm">{t(labels[source])}<br />{t("Health")}{' '}{pet.health}{' '}{t("· Happiness")}{' '}{pet.happiness}{' '}{t("· Fullness")}{' '}{100 - pet.hunger}{' '}{t("· Energy")}{' '}{pet.energy}<br />{t("Experience")}{' '}{pet.experience}{' '}{t("· Last interaction:")}{' '}{pet.lastInteraction.toLocaleString(getLocale())}</span>
           </span>
         </label>)}
       </fieldset>

@@ -48,6 +48,10 @@ export interface Task {
   title: string;
   description?: string;
   dueDate: Date;
+  /** Missing on legacy tasks means deadline. For a time range dueDate is its end. */
+  timingMode?: 'deadline' | 'range';
+  startAt?: Date;
+  conflictApprovals?: string[];
   priority: TaskPriority;
   status: TaskStatus;
   createdAt: Date;
