@@ -171,6 +171,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
       icon: 'fa-solid fa-tasks',
       onClick: () => setActiveView('tasks')
     },
+    {id:'calendar',label:locale==='zh-CN'?'日历':'Calendar',icon:'fa-regular fa-calendar-days',onClick:()=>setActiveView('calendar')},
     {
       id: 'statistics',
       label: t('Statistics'),

@@ -67,7 +67,7 @@ export async function runFocusSmoke({ main, click, shot, passed, until, delay, r
   assert.ok(saved.history[0].focusMs>=73000&&saved.history[0].focusMs<80000);
   assert.equal(await main.evaluate(`document.querySelector('[data-main-shell]').inert`),false);
   await shot(main,'focus-exit-summary-zh-1200');
-  await click(main,'日历&数据统计');
+  await click(main,'数据统计');
   assert.equal(await main.evaluate(`document.querySelector('.focus-statistics').innerText.includes('1')`),true);
   await shot(main,'focus-statistics-zh-1200');
   await main.evaluate(`localStorage.setItem('motibuddy.ui.locale','en-US');dispatchEvent(new StorageEvent('storage',{key:'motibuddy.ui.locale',newValue:'en-US'}))`);await delay(200);

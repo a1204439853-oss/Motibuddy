@@ -10,7 +10,7 @@ import { taskConflicts, conflictKey, conflictApproval } from '@/services/product
 import { useBusinessSettings } from '@/hooks/useBusinessSettings';
 
 const colors = { low: '#00836a', medium: '#9b7200', high: '#c36914', urgent: '#cc4246' };
-export default function TaskTimeline() {
+export default function TaskTimeline({initialDate,initialView='week',onDateChange}:{initialDate?:Date;initialView?:'week'|'day';onDateChange?:(date:Date)=>void}={}) {
   const { locale } = useLocale();
   const s = (zh: string, en: string) => locale === 'zh-CN' ? zh : en;
   const { tasks } = useContext(TaskContext);
@@ -18,11 +18,12 @@ export default function TaskTimeline() {
   const [conflictError,setConflictError]=useState(false);
   const confirmed=(store.settings.confirmedConflicts??[]) as string[];
   const overlaps=tasks.filter(task=>task.status!=='completed').flatMap(task=>taskConflicts(task,tasks).filter(other=>task.id<other.id&&!confirmed.includes(conflictKey(task,other))&&!task.conflictApprovals?.includes(conflictApproval(task,other))&&!other.conflictApprovals?.includes(conflictApproval(other,task))).map(other=>({task,other,key:conflictKey(task,other)})));
-  const [anchor, setAnchor] = useState(() => localDay(new Date()));
-  const [view, setView] = useState<'week' | 'day'>('week');
+  const [anchor, setAnchor] = useState(() => localDay(initialDate??new Date()));
+  const [view, setView] = useState<'week' | 'day'>(initialView);
   const [showCompleted, setShowCompleted] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const scroll = useRef<HTMLDivElement>(null);
+  useEffect(()=>{onDateChange?.(anchor);},[anchor,onDateChange]);
   const [clock, setClock] = useState(() => new Date());
   useEffect(() => { const timer = setInterval(() => setClock(new Date()), 60000); return () => clearInterval(timer); }, []);
   useEffect(() => { if (scroll.current) scroll.current.scrollTop = 8 * 48; }, [view]);

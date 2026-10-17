@@ -8,7 +8,7 @@ echo This script will diagnose issues and attempt to fix them.
 echo.
 pause
 
-cd /d "F:\MotiBuddy1\test_scripts"
+cd /d "%~dp0..\test_scripts"
 
 echo.
 echo [Step 1] Checking Python installation...
@@ -43,14 +43,14 @@ echo.
 
 echo [Step 4] Checking MotiBuddy executable...
 echo ----------------------------------------
-if exist "F:\MotiBuddy1\src-tauri\target\release\MotiBuddy.exe" (
+if exist "%~dp0..\src-tauri\target\release\MotiBuddy.exe" (
     echo [OK] MotiBuddy executable found
-    for %%I in ("F:\MotiBuddy1\src-tauri\target\release\MotiBuddy.exe") do (
+    for %%I in ("%~dp0..\src-tauri\target\release\MotiBuddy.exe") do (
         echo Size: %%~zI bytes
     )
 ) else (
     echo [WARNING] MotiBuddy executable not found!
-    echo Expected location: F:\MotiBuddy1\src-tauri\target\release\MotiBuddy.exe
+    echo Expected location: %~dp0..\src-tauri\target\release\MotiBuddy.exe
     echo.
     echo Please build MotiBuddy first:
     echo   cd F:\MotiBuddy1

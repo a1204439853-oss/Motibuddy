@@ -5,10 +5,9 @@ echo   Research Questions Charts (4 Separate)
 echo ========================================
 echo.
 
-F:
-cd F:\MotiBuddy1\test_scripts
+cd /d "%~dp0"
 
-set PYTHON=C:\Users\12044\AppData\Local\Programs\Python\Python312\python.exe
+set PYTHON=python
 
 echo [1/4] Generating RQ1: Integration Mechanism Effectiveness (Radar Chart)...
 "%PYTHON%" rq1_integration_chart.py

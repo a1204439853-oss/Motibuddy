@@ -5,10 +5,9 @@ echo   MotiBuddy Memory Test
 echo ========================================
 echo.
 
-F:
-cd F:\MotiBuddy1\test_scripts
+cd /d "%~dp0"
 
-set PYTHON=C:\Users\12044\AppData\Local\Programs\Python\Python312\python.exe
+set PYTHON=python
 
 echo Using Python: %PYTHON%
 echo.

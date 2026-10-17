@@ -5,8 +5,7 @@ echo   Running Remaining Tests
 echo ========================================
 echo.
 
-F:
-cd F:\MotiBuddy1\test_scripts
+cd /d "%~dp0"
 
 echo [Test 1] Voice Recognition Accuracy
 echo ----------------------------------------

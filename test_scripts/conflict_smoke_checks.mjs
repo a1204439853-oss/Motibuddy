@@ -13,7 +13,9 @@ export async function runConflictSmoke({main,click,shot,passed,until,delay}){
   await shot(main,'task-conflict-confirmation-zh-1200');
   await main.evaluate(`document.querySelector('form [role=alert] input[type=checkbox]').click();(document.querySelector('#title')?.closest('form')??document.querySelector('form')).requestSubmit()`);
   await until(async()=>(await state()).data.tasks.some(t=>t.title==='冲突验收：会议 B'),'overlap confirmed and saved');assert.equal((await state()).data.tasks.find(t=>t.title==='冲突验收：会议 B').conflictApprovals.length,1);
-  await click(main,'日历&数据统计');await until(()=>main.evaluate(`!!document.querySelector('.mb-calendar')`),'calendar loaded');
+  await click(main,'日历');await until(()=>main.evaluate(`!!document.querySelector('.mb-calendar')`),'calendar loaded');
+  // Tomorrow can be in the following week when this test runs on Sunday.
+  if(start.getDay()===1)await click(main,'下一段时间','aria-label');
   assert.equal(await main.evaluate(`document.querySelectorAll('.mb-calendar-conflict').length`),0);
   await main.evaluate(`(async()=>{const {businessRepository}=await import('/src/services/storage.ts');await businessRepository.transact(localStorage.getItem('currentUserId'),d=>({...d,tasks:d.tasks.map(t=>t.title==='冲突验收：会议 B'?{...t,startAt:new Date(+t.startAt+60000)}:t)}),()=>true);})()`);
   await until(()=>main.evaluate(`document.querySelectorAll('.mb-calendar-conflict').length===1`),'changed schedule invalidates confirmation');await shot(main,'calendar-conflict-warning-zh-1200');

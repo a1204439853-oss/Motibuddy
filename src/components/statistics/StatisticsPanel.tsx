@@ -9,7 +9,7 @@ import {
   PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
 import {SavedWeeklyReports} from '@/components/agent/SavedAssistantViews';
-import TaskTimeline from './TaskTimeline';
+
 import { FocusContext, focusTotals } from '@/contexts/focusContext';
 import { focusDuration } from '@/components/focus/FocusSpace';
 
@@ -68,7 +68,7 @@ const StatisticsPanel = () => {
 
   
   return (
-    <div className="statistics-workspace space-y-3 overflow-y-auto max-h-full p-1"><TaskTimeline/>
+    <div className="statistics-workspace space-y-3 overflow-y-auto max-h-full p-1">
 
       {/* Stats summary cards */}
       <div className="grid grid-cols-3 gap-2">

@@ -9,6 +9,7 @@ import { runAgentSmoke } from './agent_smoke_checks.mjs';
 import { runScheduleSmoke } from './schedule_smoke_checks.mjs';
 import { runCompanionSmoke } from './companion_smoke_checks.mjs';
 import { runUnifiedSmoke } from './unified_v4_smoke_checks.mjs';
+import {runWorkspaceV5} from './workspace_v5_smoke_checks.mjs';
 import { runWorkspaceSmoke } from './workspace_v3_smoke_checks.mjs';
 import { runConflictSmoke } from './conflict_smoke_checks.mjs';
 import { runProductSmoke } from './product_smoke_checks.mjs';
@@ -184,11 +185,11 @@ try {
   browserPort = Number(lines[0]); browserConnection = await CDP.open(`ws://127.0.0.1:${browserPort}${lines[1].trim()}`);
 
   const main = await page(`${base}/`);
-  if(process.env.UNIFIED_ONLY||process.env.COMPANION_ONLY||process.env.WORKSPACE_ONLY){
+  if(process.env.WORKSPACE_V5||process.env.UNIFIED_ONLY||process.env.COMPANION_ONLY||process.env.WORKSPACE_ONLY){
     await route(main,'/login');await fillLogin(main);await main.evaluate('document.querySelector("form").requestSubmit()');await until(()=>main.evaluate(`document.body.innerText.includes('我的任务')`),'quick login');
     await main.send('Emulation.setDeviceMetricsOverride',{width:1200,height:675,deviceScaleFactor:1,mobile:false});
     await main.evaluate(`(()=>{const original=window.fetch;window.__agentRequests=[];window.fetch=async(url,options)=>{if(String(url).endsWith('/session'))return new Response(JSON.stringify({token:'mbs_'+'b'.repeat(64),expiresAt:Date.now()+600000}),{headers:{'Content-Type':'application/json'}});if(!String(url).endsWith('/generate'))return original(url,options);const input=JSON.parse(options.body);window.__agentRequests.push(input);const result=input.mode==='plan'?{mode:'plan',summary:'先从一小步开始。',items:[{taskId:input.tasks[0].id,minutes:20,reason:'这是已有的任务。',firstStep:'打开资料。'}],questions:[],warnings:[]}:{mode:'chat',summary:'我看见你今天的小小进步了，我们一起慢慢来。',questions:[],warnings:[]};return new Response(JSON.stringify({result}),{headers:{'Content-Type':'application/json'}});};})()`);
-    if(process.env.UNIFIED_ONLY)await runUnifiedSmoke({main,click,shot,passed,until,delay,route});else if(process.env.WORKSPACE_ONLY)await runWorkspaceSmoke({main,click,shot,passed,until,delay,route});else await runCompanionSmoke({main,click,shot,passed,until,delay,route});
+    if(process.env.WORKSPACE_V5)await runWorkspaceV5({main,click,shot,passed,until,delay,route});else if(process.env.UNIFIED_ONLY)await runUnifiedSmoke({main,click,shot,passed,until,delay,route});else if(process.env.WORKSPACE_ONLY)await runWorkspaceSmoke({main,click,shot,passed,until,delay,route});else await runCompanionSmoke({main,click,shot,passed,until,delay,route});
   }else{
   await until(() => main.evaluate('!!document.querySelector(".public-topbar-actions .language-switch")'), 'welcome language in top bar');
   assert.equal(await main.evaluate('!!document.querySelector(".public-settings-link")'), false);
@@ -221,7 +222,7 @@ try {
   await click(main, '添加任务'); await shot(main, 'task-form-zh-1200');
   assert.ok(await main.evaluate(`(()=>{const button=[...document.querySelectorAll('button')].find(node=>node.type==='submit');const r=button.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight})()`), 'task submit must be visible');
   await click(main, '取消'); passed('Chinese main window and task form fit 1200×675');
-  await click(main, '日历&数据统计'); await shot(main, 'statistics-zh-1200');
+  await click(main, '数据统计'); await shot(main, 'statistics-zh-1200');
   assert.ok(await main.evaluate('document.documentElement.scrollWidth <= innerWidth'), 'statistics horizontal overflow');
   await click(main, '任务清单');
   await click(main, '桌面小组件未开启');
@@ -321,11 +322,11 @@ try {
   await runFocusSmoke({ main, click, shot, passed, until, delay, route, fillLogin });
   }
   assert.equal(report.errors.length, 0, JSON.stringify(report.errors));
-  await writeFile(path.join(output, process.env.UNIFIED_ONLY?'report-unified.json':process.env.WORKSPACE_ONLY?'report-workspace.json':process.env.COMPANION_ONLY?'report-companion.json':'report.json'), JSON.stringify(report, null, 2));
+  await writeFile(path.join(output, process.env.WORKSPACE_V5?'report-workspace-v5.json':process.env.UNIFIED_ONLY?'report-unified.json':process.env.WORKSPACE_ONLY?'report-workspace.json':process.env.COMPANION_ONLY?'report-companion.json':'report.json'), JSON.stringify(report, null, 2));
   console.log(`Screenshots: ${output}`);
 } catch (error) {
   report.failure = error.stack;
-  await mkdir(output, { recursive: true }); await writeFile(path.join(output, process.env.UNIFIED_ONLY?'report-unified.json':process.env.WORKSPACE_ONLY?'report-workspace.json':process.env.COMPANION_ONLY?'report-companion.json':'report.json'), JSON.stringify(report, null, 2));
+  await mkdir(output, { recursive: true }); await writeFile(path.join(output, process.env.WORKSPACE_V5?'report-workspace-v5.json':process.env.UNIFIED_ONLY?'report-unified.json':process.env.WORKSPACE_ONLY?'report-workspace.json':process.env.COMPANION_ONLY?'report-companion.json':'report.json'), JSON.stringify(report, null, 2));
   console.error(error); process.exitCode = 1;
 } finally {
   if (browserConnection) { await browserConnection.send('Browser.close').catch(() => {}); browserConnection.close(); }

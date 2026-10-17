@@ -18,12 +18,14 @@ export async function runScheduleSmoke({main, click, shot, passed, until, delay}
   assert.equal(saved.timingMode,'range');assert.equal(new Date(saved.dueDate)-new Date(saved.startAt),120*60000);
   await main.evaluate(`(()=>{const select=[...document.querySelectorAll('select')].find(node=>node.querySelector('option[value=durationAsc]'));Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value').set.call(select,'durationDesc');select.dispatchEvent(new Event('change',{bubbles:true}));})()`);
   await shot(main,'schedule-tasks-zh-1200');
-  await click(main,'日历&数据统计');
+  await click(main,'日历');
   await until(()=>main.evaluate(`!!document.querySelector('.mb-calendar')`),'calendar rendered');
+  if(start.getDay()===1)await click(main,'下一段时间','aria-label');
   await main.evaluate(`document.querySelector('.mb-calendar-scroll').scrollTop=8*48`);
   assert.equal(await main.evaluate(`document.querySelectorAll('.mb-calendar-event').length>0`),true);
   await shot(main,'schedule-week-zh-1200');
   await fill('select[aria-label="日历视图"]','day','HTMLSelectElement');
+  await click(main,'今天');
   await click(main,'下一段时间','aria-label');
   await until(()=>main.evaluate(`document.querySelectorAll('.mb-calendar-event').length===1`),'day calendar event');
   await shot(main,'schedule-day-zh-1200');

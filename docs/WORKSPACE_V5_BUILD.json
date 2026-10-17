@@ -1,0 +1,82 @@
+{
+  "builtAtUtc": "2026-10-17T16:01:45.970Z",
+  "verifiedAtUtc": "2026-10-17T16:08:08.602Z",
+  "artifact": "MotiBuddy-Verify-weather-calendar.exe",
+  "bytes": 260557824,
+  "sha256": "887B77DC4DFD51B7F27074D70FF7D2F225965B8E97C96CD53DFEEB67C31C9EE7",
+  "copiedHashMatches": true,
+  "launcher": "Start-MotiBuddy-AI.cmd",
+  "validation": {
+    "typescript": "passed",
+    "nodeTests": 184,
+    "rustTests": 31,
+    "cargoCheck": "passed",
+    "frontendBuild": "passed",
+    "releaseBuild": "passed",
+    "browserRegression": {
+      "checks": 25,
+      "screenshots": 60,
+      "consoleErrors": 0
+    },
+    "workspaceRegression": {
+      "checks": 5,
+      "screenshots": 10,
+      "consoleErrors": 0
+    },
+    "weatherApiChecks": [
+      {
+        "name": "extended-weather-api",
+        "passed": true,
+        "hourlyEntries": 24,
+        "feelsAvailable": true,
+        "humidityAvailable": true,
+        "pressureAvailable": true,
+        "visibilityAvailable": true,
+        "uvAvailable": true,
+        "sunTimesAvailable": true
+      },
+      {
+        "name": "air-quality-api",
+        "passed": true,
+        "aqiAvailable": true
+      }
+    ],
+    "secretScan": "passed: source, frontend assets and executable"
+  },
+  "design": "Frosted white surfaces, playful outlined controls, coral and teal accents",
+  "publicDocumentation": "Project-relative paths; no private environment configuration or credentials included",
+  "browserChecks": [
+    "Development server blocks direct and filesystem URLs to private server configuration",
+    "Welcome and login switch inline in the top bar; login draft and URL preserved",
+    "Chinese task labels and numeric pet stats; user content preserved",
+    "Chinese main window and task form fit 1200×675",
+    "Sidebar and gear open combined settings; profile draft survives; widget syncs; saved data unchanged",
+    "Language is remembered after reload; legacy settings URL is compatible",
+    "Chinese profile, achievement and adoption screens render",
+    "New registration returns to login; first sign-in and adoption show three persisted starter examples",
+    "New pets show four positive-direction 70 stats; range tasks save, sort and appear in editable week/day calendars",
+    "Inline three-column assistant plans immediately with a timeline, connects automatically and animates the pet with a requested thinking line",
+    "Conversation keeps editable drafts across navigation; persisted drafts recover and failed batches retry without duplicates",
+    "Task cards sit above the chat composer; image previews and editable messages fit both desktop sizes and languages",
+    "Navigation cancels late AI results; a different account starts a fresh automatic session and can chat without credentials",
+    "Assistant uses the pet name; dictation stays editable, automatic intent proposes defaults, confirmation syncs tasks and navigation cancels late transcripts",
+    "Anniversary notes persist custom images and edits; earned badges grant experience once and show fullscreen confetti/fireworks",
+    "Pet personality persists; natural-language schedules prefill for review; task reminders and recurring jobs dispatch OS notifications and save receipts",
+    "Clipboard images attach without task-only labels; select-all is reversible; personality reaches AI instructions; focus records/settings/evidence are distinct",
+    "Task form blocks unconfirmed overlapping events; confirmed imports stay clear in the calendar and changing times invalidates prior confirmation",
+    "First-use survey saves preferences; recommendation runs immediately; bulk select/deselect changes the entire set; six compact cards fit one row without arrows",
+    "Assistant header personality updates local pet bubbles; daily plans and weekly reports save automatically and reopen in task/statistics modules",
+    "Journal conversations with photos create notebook pages only after explicit consent; user text stays separate from AI; editing, stickers, drawing and draft recovery persist",
+    "Scheduled-task controls appear at the end of chat; optional TTS sends only text and public voice choice; focus music can be enabled and disabled",
+    "Assistant navigation stays selected; six scenario cards toggle off; corrected drafts clear stale questions and become importable",
+    "Focus cycles switch between white and blurred video, celebrate once, exclude breaks, retain early-exit time and reload the same account statistics",
+    "A complete focus loop saves once; failed checkpoints pause without crediting downtime, retry safely and remain isolated across accounts"
+  ],
+  "workspaceChecks": [
+    "Development server blocks direct and filesystem URLs to private server configuration",
+    "Compact weather hides city/source controls, defaults to Beijing, resolves the consented city name and displays real-valued extended metrics with explicit US AQI",
+    "Calendar has independent schedule/month tabs with date handoff; statistics no longer contains the calendar",
+    "Weekly review charts and prose append to the latest response and scroll to the bottom; composer focus and scene icons use the widget teal",
+    "Focus suggestions are shared across scenarios and conversations, remain suppressed within ten minutes, and become eligible after the interval"
+  ]
+}

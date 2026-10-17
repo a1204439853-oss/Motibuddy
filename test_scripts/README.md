@@ -1,12 +1,15 @@
-# MotiBuddy Test Scripts User Guide
+# 验证脚本
 
-## 📋 Table of Contents
-1. [Environment Setup](#environment-setup)
-2. [Script Descriptions](#script-descriptions)
-3. [Detailed Operation Steps](#detailed-operation-steps)
-4. [FAQ](#faq)
+当前桌面界面的自动回归入口为 `localization_smoke.mjs`，使用 Node.js 24、隔离浏览器、合成账户和模拟原生接口，不读取真实账户数据。设置 `WORKSPACE_V5=1` 可以运行天气、独立日历及助手交互专项检查。
 
----
+业务和数据校验测试位于 `tests/`，通过项目根目录的 `npm run check` 执行；原生数据与通知测试使用 `npm run test:rust`。真实第三方服务验证脚本位于 `scripts/`，与界面测试分开运行。
+
+目录中的 Python、绘图及历史性能测量脚本是可选开发工具，不属于桌面发行程序。运行前需准备对应 Python 依赖；批处理入口从自身目录启动，使用 PATH 中的 Python，避免依赖特定开发工作站。
+
+
+## 历史性能测试工具
+
+以下保留可选 Python 工具的使用说明。示例输出和评估区间用于说明测试方式，不代表当前版本实测结果。
 
 ## Environment Setup
 
@@ -21,8 +24,8 @@ pip install matplotlib numpy psutil
 ### 2. Confirm MotiBuddy Installation Path
 
 Locate your MotiBuddy executable file path, typically:
-- `F:\MotiBuddy1\src-tauri\target\release\MotiBuddy.exe`
-- `F:\MotiBuddy1\src-tauri\target\release\deps\motibuddy.exe`
+- `src-tauri\target\release\MotiBuddy.exe`
+- `src-tauri\target\release\deps\motibuddy.exe`
 
 ---
 
@@ -123,14 +126,14 @@ Locate your MotiBuddy executable file path, typically:
 Edit `startup_time_test.py`, modify APP_PATH on line 17:
 
 ```python
-APP_PATH = r"F:\MotiBuddy1\src-tauri\target\release\MotiBuddy.exe"
+APP_PATH = r"src-tauri\target\release\MotiBuddy.exe"
 ```
 
 ### Step 2: Run Startup Time Test
 
 ```bash
 # In PowerShell
-cd F:\MotiBuddy1\test_scripts
+cd test_scripts
 python startup_time_test.py
 ```
 
@@ -245,7 +248,7 @@ The report will automatically open in your browser.
 ### Method 2: Manual Screenshots
 
 **Package Size Screenshot**:
-1. Open `F:\MotiBuddy1\src-tauri\target\release\`
+1. Open `src-tauri\target\release\`
 2. Right-click `MotiBuddy.exe` → Properties
 3. View "Size" field (~225 MB)
 4. Use `Win + Shift + S` to capture
@@ -273,7 +276,7 @@ pip install matplotlib numpy psutil
 1. Confirm `APP_PATH` is correct
 2. Check if file exists:
    ```powershell
-   Test-Path "F:\MotiBuddy1\src-tauri\target\release\MotiBuddy.exe"
+   Test-Path "src-tauri\target\release\MotiBuddy.exe"
    ```
 
 ### Q3: PowerShell execution policy restriction
@@ -321,36 +324,6 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 | 20-50ms | Good (slight delay) |
 | 50-100ms | Fair (noticeable) |
 | > 100ms | Needs Optimization (obvious delay) |
-
----
-
-## Thesis Usage Suggestions
-
-### Citing Test Results in Your Thesis
-
-**Startup Time**:
-```
-After 20 iterations of testing, MotiBuddy's average startup time is 2.25±0.18 seconds,
-meeting desktop application startup performance requirements (< 3 seconds).
-```
-
-**Voice Recognition**:
-```
-Using 10 groups of typical voice commands, each repeated 5 times,
-the average recognition accuracy reached 87.5%, with date/time parsing showing the highest accuracy (92%).
-```
-
-**Cross-Window Communication**:
-```
-Cross-window event propagation latency testing shows an average latency of 15.2ms,
-far below the user perception threshold (100ms), achieving near real-time data synchronization.
-```
-
-**System Resources**:
-```
-The installation package size is 225 MB, consistent with modern desktop application standards.
-Runtime memory usage is approximately 150-200 MB, within acceptable ranges.
-```
 
 ---
 

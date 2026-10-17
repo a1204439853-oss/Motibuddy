@@ -1,0 +1,22 @@
+{
+  "checkedAt": "2026-10-17T15:55:20.475Z",
+  "location": "Beijing public reference coordinates",
+  "checks": [
+    {
+      "name": "extended-weather-api",
+      "passed": true,
+      "hourlyEntries": 24,
+      "feelsAvailable": true,
+      "humidityAvailable": true,
+      "pressureAvailable": true,
+      "visibilityAvailable": true,
+      "uvAvailable": true,
+      "sunTimesAvailable": true
+    },
+    {
+      "name": "air-quality-api",
+      "passed": true,
+      "aqiAvailable": true
+    }
+  ]
+}

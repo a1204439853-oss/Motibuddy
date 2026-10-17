@@ -6,12 +6,11 @@ echo ========================================
 echo.
 echo This will run all performance tests.
 echo Make sure MotiBuddy is built at:
-echo F:\MotiBuddy1\src-tauri\target\release\MotiBuddy.exe
+echo %~dp0..\src-tauri\target\release\MotiBuddy.exe
 echo.
 pause
 
-F:
-cd F:\MotiBuddy1\test_scripts
+cd /d "%~dp0"
 
 echo.
 echo [Step 1] Checking Python environment...
@@ -76,7 +75,7 @@ echo ========================================
 echo.
 echo Generated %FILE_COUNT% chart files.
 echo.
-echo Location: F:\MotiBuddy1\test_scripts\
+echo Location: %~dp0..\test_scripts\
 echo.
 echo Files ready for your thesis:
 echo   - startup_time_analysis.png

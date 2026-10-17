@@ -5,8 +5,7 @@ echo   Quick Test - Python Environment
 echo ========================================
 echo.
 
-F:
-cd F:\MotiBuddy1\test_scripts
+cd /d "%~dp0"
 
 echo Current directory: %CD%
 echo.

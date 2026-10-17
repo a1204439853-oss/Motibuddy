@@ -5,7 +5,7 @@
   "sha256": "9246A22AC1357E19EF6235F4C28043048CF5B084AB2F9431576CABE23874F9CA",
   "productName": "MotiBuddy Verify",
   "applicationId": "com.motibuddy.verify",
-  "buildCommand": "npm run tauri:build -- --config F:\\MotiBuddy1\\src-tauri\\tauri.verify.conf.json --bundles none --ci",
+  "buildCommand": "npm run tauri:build -- --config src-tauri\\tauri.verify.conf.json --bundles none --ci",
   "validation": {
     "typescript": "passed",
     "nodeTests": 135,

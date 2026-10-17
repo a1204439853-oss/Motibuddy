@@ -5,8 +5,7 @@ echo   MotiBuddy Test with Full Output
 echo ========================================
 echo.
 
-F:
-cd F:\MotiBuddy1\test_scripts
+cd /d "%~dp0"
 
 echo [Test 1] Simple Python Test
 echo ----------------------------------------

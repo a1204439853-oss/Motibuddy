@@ -29,6 +29,7 @@ export function archiveGenerated(settings:Record<string,unknown>,scenario:string
   return settings;
 }
 export function validateCompanionSettings(settings:Record<string,unknown>){
+  if(settings.assistantFocusPromptedAt!==undefined)z.string().datetime().parse(settings.assistantFocusPromptedAt);
   if(settings.soundVolume!==undefined)z.number().int().min(0).max(100).parse(settings.soundVolume);
   if(settings.ttsEnabled!==undefined)z.boolean().parse(settings.ttsEnabled);
   if(settings.weatherPlace!==undefined)z.object({name:z.string().min(1).max(100),latitude:z.number().min(-90).max(90),longitude:z.number().min(-180).max(180)}).strict().parse(settings.weatherPlace);

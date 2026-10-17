@@ -11,7 +11,7 @@ echo   pip install matplotlib numpy
 echo.
 pause
 
-cd /d "F:\MotiBuddy1\test_scripts"
+cd /d "%~dp0..\test_scripts"
 
 echo.
 echo [Step 1] Generating demo charts (no need to run actual tests)...
@@ -25,7 +25,7 @@ echo   Charts Generated!
 echo ========================================
 echo.
 echo Check the following files in:
-echo F:\MotiBuddy1\test_scripts\
+echo %~dp0..\test_scripts\
 echo.
 echo Charts (ready for your thesis):
 echo   1. startup_time_analysis.png

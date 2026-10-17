@@ -5,8 +5,7 @@ echo   Testing All Chart Generation
 echo ========================================
 echo.
 
-F:
-cd F:\MotiBuddy1\test_scripts
+cd /d "%~dp0"
 
 echo [Test 1] Voice Recognition Test
 echo ----------------------------------------

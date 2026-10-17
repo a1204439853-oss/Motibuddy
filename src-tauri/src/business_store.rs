@@ -190,6 +190,7 @@ pub fn validate_data(data: &BusinessData, owner: &str) -> Result<(), String> {
         }
         require(history["activeId"].is_null()||history["activeId"].as_str().map_or(false,|id|ids.contains(id)))?;
     }
+    if let Some(at)=data.settings.get("assistantFocusPromptedAt"){require(date(at))?;}
     if let Some(music)=data.settings.get("focusMusic"){require(music["enabled"].is_boolean()&&number(&music["volume"],0.0,100.0))?;}
     if let Some(track)=data.settings.get("focusMusic").and_then(|m|m.get("track")){require(["meditation","dream","lemon","cities"].contains(&track.as_str().unwrap_or("")))?;}
     if let Some(voice)=data.settings.get("ttsVoice"){require(["girl","boy"].contains(&voice.as_str().unwrap_or("")))?;}
@@ -652,8 +653,9 @@ mod tests {
         data.settings["chatHistory"]=json!({"version":1,"activeId":"chat-one","threads":[{"id":"chat-one","title":"Read","createdAt":"2026-10-17T01:00:00Z","updatedAt":"2026-10-17T01:01:00Z","messages":[{"id":1,"role":"user","text":"Read chapter one"},{"id":2,"role":"assistant","text":"One small step"}]}]});
         data.settings["soundVolume"]=json!(35);data.settings["ttsEnabled"]=json!(false);data.settings["weatherPlace"]=json!({"name":"Hangzhou","latitude":30.25,"longitude":120.16});data.settings["focusMusic"]=json!({"enabled":true,"volume":40,"track":"dream"});
         data.settings["profileSurvey"]=json!({"status":"complete","goals":"Read","interests":"Books","minutes":60,"rhythm":"evening","ageGroup":"25-34","occupation":"office","habits":["learning","rest"]});
+        data.settings["assistantFocusPromptedAt"]=json!("2026-10-17T01:00:00Z");
         let saved=store.commit("A",initial.revision,"chat-save",data.clone()).unwrap();assert_eq!(store.read("A").unwrap().unwrap(),saved);
-        for (key,value) in [("soundVolume",json!(101)),("weatherPlace",json!({"name":"X","latitude":91,"longitude":0})),("chatHistory",json!({"version":1,"activeId":"missing","threads":[]}))]{let mut bad=data.clone();bad.settings[key]=value;assert!(store.commit("A",saved.revision,"invalid-chat-edit",bad).is_err());assert_eq!(store.read("A").unwrap().unwrap(),saved);}
+        for (key,value) in [("assistantFocusPromptedAt",json!("invalid")),("soundVolume",json!(101)),("weatherPlace",json!({"name":"X","latitude":91,"longitude":0})),("chatHistory",json!({"version":1,"activeId":"missing","threads":[]}))]{let mut bad=data.clone();bad.settings[key]=value;assert!(store.commit("A",saved.revision,"invalid-chat-edit",bad).is_err());assert_eq!(store.read("A").unwrap().unwrap(),saved);}
     }
     #[test]
     fn journal_edit_draft_and_voice_preferences_persist_without_damaging_prior_record() {

@@ -2,7 +2,7 @@ import '@/components/ui/workspace.css';
 import { t } from '@/i18n/core';
 import { useLocale } from '@/i18n/react';
 import WeatherCard from '@/components/ui/WeatherCard';
-import CalendarOverview from '@/components/ui/CalendarOverview';
+import CalendarWorkspace from '@/components/statistics/CalendarWorkspace';
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/contexts/authContext';
@@ -293,7 +293,7 @@ const MainApp = () => {
                       />
                     ) : activeView === 'statistics' ? (
                       <StatisticsPanel />
-                    ) : activeView === 'weather' ? <WeatherCard detailed /> : activeView === 'calendar' ? <CalendarOverview/> : activeView === 'focus' ? <FocusSpace suggestedMinutes={suggestedMinutes} /> : null}
+                    ) : activeView === 'weather' ? <WeatherCard detailed /> : activeView === 'calendar' ? <CalendarWorkspace/> : activeView === 'focus' ? <FocusSpace suggestedMinutes={suggestedMinutes} /> : null}
                   </div>
                 </div>
 

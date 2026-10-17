@@ -5,7 +5,7 @@ echo   MotiBuddy Test Runner
 echo ========================================
 echo.
 
-cd /d "F:\MotiBuddy1\test_scripts"
+cd /d "%~dp0..\test_scripts"
 
 echo [1/5] Testing environment...
 echo ----------------------------------------
@@ -60,6 +60,6 @@ echo   Tests Complete!
 echo ========================================
 echo.
 echo Check the PNG files in:
-echo F:\MotiBuddy1\test_scripts\
+echo %~dp0..\test_scripts\
 echo.
 pause
