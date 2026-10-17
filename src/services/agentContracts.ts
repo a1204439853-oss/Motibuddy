@@ -14,7 +14,11 @@ export const agentRequestSchema = z.object({
   completeMissing: z.boolean().optional(),
   singleTimeAsStart:z.boolean().optional(),
   scheduled:z.boolean().optional(),
+  deepThinking:z.boolean().optional(),
+  webSearch:z.boolean().optional(),
+  searchQuery:z.string().trim().min(1).max(128).optional(),
   news: z.boolean().optional(),
+  journalConversation:z.boolean().optional(),
   personality: z.enum(['gentle','tsundere','witty','humorous','cool','soft']).optional(),
   now: z.string().datetime({ offset: true }), timeZone: text(100),
   instruction: z.string().trim().max(4000),
@@ -44,7 +48,7 @@ export const agentDraftSchema = z.object({
 });
 const notes = z.array(text(600)).max(12);
 export const agentResultSchema = z.discriminatedUnion('mode', [
-  z.object({ mode: z.literal('chat'), summary: text(2000), questions: notes, warnings: notes }).strict(),
+  z.object({ mode: z.literal('chat'), summary: text(2000), journalReady:z.boolean().optional(), questions: notes, warnings: notes }).strict(),
   z.object({
     mode: z.literal('plan'), summary: text(2000),
     items: z.array(z.object({ taskId: text(128), minutes: z.number().int().min(1).max(720), reason: text(1000), firstStep: text(1000) }).strict()).max(30),

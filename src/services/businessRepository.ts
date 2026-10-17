@@ -6,6 +6,7 @@ import { decodeInteractions } from './petInteractions.ts';
 import { WriteBarrier } from './writeBarrier.ts';
 import { validateProductSettings } from './productData.ts';
 import {validateCompanionSettings} from './companionRecords.ts';
+import {chatHistorySchema} from './assistantHistory.ts';
 
 export interface BusinessData {
   tasks: Task[];
@@ -27,6 +28,7 @@ export function decodeBusinessData(value: unknown, owner: string): BusinessData 
   if (data.settings.petInteractions !== undefined) decodeInteractions(data.settings.petInteractions);
   validateProductSettings(data.settings);
   validateCompanionSettings(data.settings);
+  if(data.settings.chatHistory!==undefined)chatHistorySchema.parse(data.settings.chatHistory);
   return {
     tasks: decodeTasks(data.tasks), pet: data.pet === null ? null : decodePet(data.pet, owner),
     achievements: achievements.parse(data.achievements) as Achievement[], settings: data.settings,

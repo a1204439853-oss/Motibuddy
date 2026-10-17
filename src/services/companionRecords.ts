@@ -1,9 +1,10 @@
 import {z} from 'zod';
+import {focusMusicSchema} from './focusMusicSettings.ts';
 import type {Task} from '../types/index.ts';
 import type {AgentResult} from './agentContracts.ts';
 import {planTimeline} from './planTimeline.ts';
 import {weeklyComparison} from './agentScenarios.ts';
-export const surveySchema=z.object({status:z.enum(['complete','deferred']),goals:z.string().max(500),interests:z.string().max(500),minutes:z.number().int().min(5).max(480),rhythm:z.enum(['morning','afternoon','evening','flexible'])}).strict();
+export const surveySchema=z.object({status:z.enum(['complete','deferred']),goals:z.string().max(500),interests:z.string().max(500),minutes:z.number().int().min(5).max(480),rhythm:z.enum(['morning','afternoon','evening','flexible']),ageGroup:z.enum(['prefer-not','under18','18-24','25-34','35-44','45-59','60plus']).optional(),occupation:z.enum(['prefer-not','student','office','freelance','creative','caregiver','retired','other']).optional(),habits:z.array(z.enum(['learning','health','career','creative','social','rest'])).max(6).optional()}).strict();
 export const planRecordSchema=z.object({id:z.string().uuid(),createdAt:z.string().datetime(),date:z.string(),summary:z.string().max(2500),slots:z.array(z.object({taskId:z.string(),title:z.string(),start:z.string().datetime(),end:z.string().datetime(),reason:z.string(),firstStep:z.string(),fixed:z.boolean()})).max(30)});
 export const weekRecordSchema=z.object({id:z.string().uuid(),createdAt:z.string().datetime(),summary:z.string().max(2500),evidence:z.object({completed:z.number(),open:z.number(),missingCompletionDate:z.number(),weekToDate:z.number(),days:z.array(z.object({date:z.string(),completed:z.number()})),weeks:z.array(z.object({start:z.string(),total:z.number(),comparable:z.number()}))})});
 const point=z.object({x:z.number().min(0).max(1000),y:z.number().min(0).max(1000)});
@@ -28,6 +29,10 @@ export function archiveGenerated(settings:Record<string,unknown>,scenario:string
   return settings;
 }
 export function validateCompanionSettings(settings:Record<string,unknown>){
+  if(settings.soundVolume!==undefined)z.number().int().min(0).max(100).parse(settings.soundVolume);
+  if(settings.ttsEnabled!==undefined)z.boolean().parse(settings.ttsEnabled);
+  if(settings.weatherPlace!==undefined)z.object({name:z.string().min(1).max(100),latitude:z.number().min(-90).max(90),longitude:z.number().min(-180).max(180)}).strict().parse(settings.weatherPlace);
+  if(settings.focusMusic!==undefined)focusMusicSchema.parse(settings.focusMusic);
   if(settings.journalDraft!==undefined&&settings.journalDraft!==null)journalEntrySchema.parse(settings.journalDraft);
   if(settings.profileSurvey!==undefined)surveySchema.parse(settings.profileSurvey);
   if(settings.dailyPlans!==undefined)z.array(planRecordSchema).max(90).parse(settings.dailyPlans);

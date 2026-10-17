@@ -188,7 +188,7 @@ const TaskList = ({ onEditTask }: TaskListProps) => {
           {[
             { value: 'all', label: t("All") },
             {value:'today',label:locale==='zh-CN'?'今日计划':'Daily plan'},
-            {value:'daily',label:locale==='zh-CN'?'每日任务':'Scheduled tasks'},
+            {value:'daily',label:locale==='zh-CN'?'定时任务':'Scheduled tasks'},
             { value: TaskStatus.IN_PROGRESS, label: t("In Progress") },
             { value: TaskStatus.COMPLETED, label: t("Completed") },
             { value: TaskStatus.OVERDUE, label: t("Overdue") }

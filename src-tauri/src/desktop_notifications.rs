@@ -2,13 +2,28 @@ use serde_json::Value;
 use std::{collections::HashSet,sync::{Mutex,atomic::AtomicU64}};
 #[derive(Default)]
 pub struct NotificationAccount(pub Mutex<Option<(String,String)>>,pub AtomicU64);
+// A stable product identity also gives portable builds a readable Windows sender,
+// independent of the verification build's data-directory identifier.
+const NOTIFICATION_ID:&str="MotiBuddy";
+#[cfg(windows)]
+fn notification_icon()->Result<std::path::PathBuf,String>{
+ let root=std::env::var_os("LOCALAPPDATA").ok_or("NOTIFICATION_ICON_UNAVAILABLE")?;
+ let folder=std::path::PathBuf::from(root).join("MotiBuddy").join("Notifications");
+ std::fs::create_dir_all(&folder).map_err(|_|"NOTIFICATION_ICON_UNAVAILABLE")?;
+ let path=folder.join("logo.png");let bytes=include_bytes!("../../public/app-mark.png");
+ if std::fs::read(&path).ok().as_deref()!=Some(bytes.as_slice()){std::fs::write(&path,bytes).map_err(|_|"NOTIFICATION_ICON_UNAVAILABLE")?;}
+ Ok(path)
+}
 #[cfg(windows)]
 pub fn register(app_id:&str)->Result<(),String>{
     use winreg::{RegKey,enums::HKEY_CURRENT_USER};
     if app_id.len()>128 || !app_id.chars().all(|c|c.is_ascii_alphanumeric()||c=='.'||c=='-'){return Err("NOTIFICATION_ID_INVALID".into());}
+    let app_id=NOTIFICATION_ID;
     let user=RegKey::predef(HKEY_CURRENT_USER);
     let (key,_)=user.create_subkey(format!(r"Software\Classes\AppUserModelId\{}",app_id)).map_err(|_|"NOTIFICATION_REGISTRATION_FAILED")?;
     key.set_value("DisplayName",&"MotiBuddy").map_err(|_|"NOTIFICATION_REGISTRATION_FAILED")?;
+    let icon=notification_icon()?;
+    key.set_value("IconUri",&icon.to_string_lossy().to_string()).map_err(|_|"NOTIFICATION_REGISTRATION_FAILED")?;
     key.set_value("IconBackgroundColor",&"0").map_err(|_|"NOTIFICATION_REGISTRATION_FAILED")?;
     for (path,name) in [(format!(r"Software\Microsoft\Windows\CurrentVersion\Notifications\Settings\{}",app_id),"Enabled"),(r"Software\Microsoft\Windows\CurrentVersion\PushNotifications".into(),"ToastEnabled")]{
         if let Ok(key)=user.open_subkey(path){if key.get_value::<u32,_>(name).ok()==Some(0){return Err("NOTIFICATIONS_DISABLED".into());}}
@@ -21,7 +36,9 @@ pub fn register(_app_id:&str)->Result<(),String>{Err("WINDOWS_ONLY".into())}
 pub fn show(app_id:&str,title:&str,body:&str)->Result<(),String>{
     if title.trim().is_empty()||title.chars().count()>100||body.chars().count()>1000{return Err("INVALID_NOTIFICATION".into());}
     register(app_id)?;
-    tauri_winrt_notification::Toast::new(app_id).title(title).text1(body)
+    let icon=notification_icon()?;
+    tauri_winrt_notification::Toast::new(NOTIFICATION_ID).title(title).text1(body)
+      .icon(&icon,tauri_winrt_notification::IconCrop::Square,"MotiBuddy")
       .sound(Some(tauri_winrt_notification::Sound::Default))
       .duration(tauri_winrt_notification::Duration::Long).show().map_err(|_|"NOTIFICATION_FAILED".to_string())
 }

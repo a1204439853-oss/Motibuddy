@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { Toaster } from 'sonner';
 import App from "./App.tsx";
 import "./index.css";
+import './components/ui/unified.css';
 import { connectLocaleWindows } from './i18n/react';
 
 connectLocaleWindows();

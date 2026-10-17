@@ -12,7 +12,7 @@ export async function runScheduleSmoke({main, click, shot, passed, until, delay}
   const local=d=>new Date(+d-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
   await fill('input[aria-label="开始时间"]',local(start));await fill('#dueDate',local(end));
   await shot(main,'schedule-range-form-zh-1200');
-  await main.evaluate(`document.querySelector('form').requestSubmit()`);
+  await main.evaluate(`(document.querySelector('#title')?.closest('form')??document.querySelector('form')).requestSubmit()`);
   await until(async()=> (await state()).data.tasks.some(task=>task.title==='日历测试：项目集中工作'),'range task saved');
   const saved=(await state()).data.tasks.find(task=>task.title==='日历测试：项目集中工作');
   assert.equal(saved.timingMode,'range');assert.equal(new Date(saved.dueDate)-new Date(saved.startAt),120*60000);

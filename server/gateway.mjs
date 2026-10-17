@@ -4,6 +4,7 @@ import { agentRequestSchema, validateAgentResult } from '../src/services/agentCo
 import { buildMessages } from './prompts.mjs';
 import { fetchNews } from './news.mjs';
 import {synthesize} from './tts.mjs';
+import {searchWeb} from './search.mjs';
 
 const digest = value => createHash('sha256').update(value).digest();
 export function readConfig(env = process.env) {
@@ -24,13 +25,15 @@ export async function callDeepSeek(request, config, fetchImpl = fetch, signal) {
   const abort = AbortSignal.any([AbortSignal.timeout(config.timeoutMs), ...(signal ? [signal] : [])]);
   let response;
   let news;
+  let search;
   if(request.news){try{news=await fetchNews(fetchImpl,abort);}catch{throw new GatewayError('UPSTREAM_UNAVAILABLE',502);}}
+  if(request.webSearch){try{search=await searchWeb(request.searchQuery||request.instruction.slice(-128),config,fetchImpl,abort);}catch{throw new GatewayError('SEARCH_UNAVAILABLE',502);}}
   try {
     response = await fetchImpl('https://api.deepseek.com/chat/completions', {
       method: 'POST', redirect: 'error', signal: abort,
       headers: { Authorization: `Bearer ${config.apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'deepseek-flash', messages: buildMessages(request, news),
-        thinking: { type: 'disabled' }, response_format: { type: 'json_object' }, max_tokens: 5000, stream: false }),
+      body: JSON.stringify({ model: 'deepseek-flash', messages: buildMessages(request, news,search),
+        thinking: { type: request.deepThinking?'enabled':'disabled' },...(request.deepThinking?{reasoning_effort:'high'}:{}),response_format: { type: 'json_object' }, max_tokens: request.deepThinking?12000:5000, stream: false }),
     });
   } catch { throw new GatewayError('UPSTREAM_UNAVAILABLE', 502); }
   if (!response.ok) {
@@ -46,13 +49,16 @@ export async function callDeepSeek(request, config, fetchImpl = fetch, signal) {
     for (;;) {
       const { done, value } = await reader.read(); if (done) break;
       bytes += value.byteLength;
-      if (bytes > 256_000) { await reader.cancel(); throw new Error(); }
+      if (bytes > 512_000) { await reader.cancel(); throw new Error(); }
       parts.push(Buffer.from(value));
     }
     const envelope = JSON.parse(Buffer.concat(parts).toString('utf8'));
     if (envelope.choices?.[0]?.finish_reason !== 'stop') throw new Error();
-    const result=validateAgentResult(JSON.parse(envelope.choices[0].message.content), request);
-    if(news){result.summary=(result.summary.slice(0,1000)+'\n\n'+(request.locale==='zh-CN'?`来源：${news[0].publisher}（仅此来源）；抓取于 `:`Source: ${news[0].publisher} only; retrieved `)+new Date().toISOString()+'\n'+news.slice(0,4).map(item=>`${item.published.slice(0,10)} ${item.title.slice(0,60)}\n${item.url}`).join('\n')).slice(0,2000);}
+    let raw=JSON.parse(envelope.choices[0].message.content);
+    if(news){const briefs=raw.newsBriefs;if(!Array.isArray(briefs)||briefs.length!==Math.min(4,news.length))throw Error();const paragraphs=briefs.map((brief,index)=>{if(typeof brief.title!=='string'||[...brief.title].length>40||!Array.isArray(brief.sentences)||brief.sentences.length!==2||brief.sentences.some(s=>typeof s!=='string'||!s.trim()||[...s].length>100))throw Error();return `**${index+1}. ${brief.title}**\n${brief.sentences.join(request.locale==='zh-CN'?'':' ')}`;});const {newsBriefs:_,...rest}=raw;raw={...rest,summary:paragraphs.join('\n\n')};}
+    const result=validateAgentResult(raw, request);
+    const sources=news?.slice(0,4)??search;
+    if(sources?.length){const prose=result.summary.split(/\n(?:来源|Sources?):/i)[0].replace(/\[([^\]]+)\]\(https?:\/\/[^)]+\)/g,'$1').replace(/https?:\/\/\S+/g,'').slice(0,1450);result.summary=(prose+'\n\n'+(request.locale==='zh-CN'?'来源：':'Sources: ')+(news?`${news[0].publisher} · `:'')+new Date().toISOString().slice(0,10)+'\n'+sources.map((item,i)=>`${i+1}. ${item.title.slice(0,65)}\n${item.url}`).join('\n')).slice(0,2000);}
     return result;
   } catch { throw new GatewayError('INVALID_MODEL_RESULT', 502); }
 }

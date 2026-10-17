@@ -1,0 +1,5 @@
+import {useState} from 'react';
+import {useLocale} from '@/i18n/react';
+import {useBusinessSettings} from '@/hooks/useBusinessSettings';
+import {narrationVolume} from '@/services/narration';
+export default function SoundSettings(){const store=useBusinessSettings(),{locale}=useLocale(),[error,setError]=useState(false);const volume=Number(store.settings.soundVolume??70);return <section className="settings-group sound-settings"><h2>{locale==='zh-CN'?'声音':'Sound'}</h2><label>{locale==='zh-CN'?'应用音量':'App volume'}<output>{volume}%</output><input aria-label={locale==='zh-CN'?'应用音量':'App volume'} type="range" min={0} max={100} step={1} value={volume} disabled={store.loading||store.error} onChange={e=>{const soundVolume=Number(e.target.value);narrationVolume(soundVolume);void store.save(s=>({...s,soundVolume})).catch(()=>setError(true));}}/></label><p>{locale==='zh-CN'?'控制助手播报和专注音乐；系统通知声音使用 Windows 的音量设置。':'Controls spoken replies and focus music. Windows controls notification volume.'}</p>{error&&<p role="alert">{locale==='zh-CN'?'音量未保存，请重试。':'Volume could not be saved. Retry.'}</p>}</section>;}

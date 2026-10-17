@@ -1,5 +1,8 @@
+import '@/components/ui/workspace.css';
 import { t } from '@/i18n/core';
 import { useLocale } from '@/i18n/react';
+import WeatherCard from '@/components/ui/WeatherCard';
+import CalendarOverview from '@/components/ui/CalendarOverview';
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/contexts/authContext';
@@ -14,6 +17,8 @@ import VoiceInput from '@/components/voice/VoiceInput';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { TaskPriority } from '@/types';
+import {FocusContext} from '@/contexts/focusContext';
+import {suggestedFocus} from '@/services/assistantHistory';
 import AgentPanel from '@/components/agent/AgentPanel';
 import FocusSpace from '@/components/focus/FocusSpace';
 import NotebookModule from '@/components/notebook/NotebookModule';
@@ -23,12 +28,15 @@ const MainApp = () => {
   const { currentUser, currentPet, isAuthenticated, sessionVersion } = useContext(AuthContext);
   const { addTask } = useContext(TaskContext);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
-  const [activeView, setActiveView] = useState<'tasks' | 'statistics' | 'agent' | 'focus' | 'anniversaries'>('tasks');
+  const [activeView, setActiveView] = useState<'tasks' | 'statistics' | 'agent' | 'focus' | 'anniversaries' | 'weather' | 'calendar'>('tasks');
   const [isTaskFormOpen, setIsTaskFormOpen] = useState<boolean>(false);
   const [editingTask, setEditingTask] = useState<any>(null);
   const [agentMessageId, setAgentMessageId] = useState(0);
 
   const navigate = useNavigate();
+  const focus=useContext(FocusContext);
+  const [suggestedMinutes,setSuggestedMinutes]=useState<number>();
+  const enterSuggestedFocus=async(minutes:number)=>{try{await focus.start(suggestedFocus(minutes));setSuggestedMinutes(minutes);setActiveView('focus');}catch{toast.error(t('Focus records unavailable. Retry in Focus space.'));}};
 
   // Handle voice task creation
   const handleVoiceTaskCreated = async (task: {
@@ -184,7 +192,7 @@ const MainApp = () => {
               <div className="flex flex-col lg:flex-row gap-2 lg:gap-3 flex-1" style={{ minHeight: 0 }}>
                 {/* Task management section */}
                 <div className="flex-1 min-w-0" style={{ minHeight: 0 }}>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-1" style={{ display: activeView === 'agent' || activeView === 'focus' || activeView === 'anniversaries' ? 'none' : undefined }}>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-1" style={{ display: activeView === 'agent' || activeView === 'focus' || activeView === 'anniversaries' || activeView === 'weather' || activeView === 'calendar' ? 'none' : undefined }}>
                     <h1 style={{
                       fontSize: 'clamp(16px, 2.2vw, 22px)',
                       fontWeight: 'bold',
@@ -268,14 +276,14 @@ const MainApp = () => {
                     boxShadow: 'none',
                     borderRadius: '6px',
                     overflow: 'visible',
-                    height: activeView === 'agent' || activeView === 'focus' || activeView === 'anniversaries' ? '100%' : isTaskFormOpen ? 'calc(100% - 70px)' : 'calc(100% - 28px)',
+                    height: activeView === 'agent' || activeView === 'focus' || activeView === 'anniversaries' || activeView === 'weather' || activeView === 'calendar' ? '100%' : isTaskFormOpen ? 'calc(100% - 70px)' : 'calc(100% - 28px)',
                     minHeight: '160px',
                     padding: '1px'
                   }}>
                     <div style={{ display: activeView === 'agent' ? 'block' : 'none', height: '100%' }}>
-                      <AgentPanel key={`${currentUser.id}:${sessionVersion}`} active={activeView === 'agent'} onMessageSent={() => setAgentMessageId(value => value + 1)} />
+                      <AgentPanel key={`${currentUser.id}:${sessionVersion}`} active={activeView === 'agent'} onFocusRequested={minutes=>void enterSuggestedFocus(minutes)} onMessageSent={() => setAgentMessageId(value => value + 1)} />
                     </div>
-                    <div style={{display:activeView==='anniversaries'?'block':'none',height:'100%'}}><NotebookModule key={`${currentUser.id}:${sessionVersion}`}/></div>
+                    <div style={{display:activeView==='anniversaries'?'block':'none',height:'100%'}}><NotebookModule active={activeView==='anniversaries'} key={`${currentUser.id}:${sessionVersion}`}/></div>
                     {activeView === 'tasks' ? (
                       <TaskList
                         onEditTask={(task) => {
@@ -285,12 +293,12 @@ const MainApp = () => {
                       />
                     ) : activeView === 'statistics' ? (
                       <StatisticsPanel />
-                    ) : activeView === 'focus' ? <FocusSpace /> : null}
+                    ) : activeView === 'weather' ? <WeatherCard detailed /> : activeView === 'calendar' ? <CalendarOverview/> : activeView === 'focus' ? <FocusSpace suggestedMinutes={suggestedMinutes} /> : null}
                   </div>
                 </div>
 
                 {/* Pet section */}
-                <div className="w-full lg:w-[32%] xl:w-[30%]" style={{ minWidth: '280px', maxWidth: '380px' }}>
+                <div id="pet-companion-region" className="w-full lg:w-[32%] xl:w-[30%]" style={{ minWidth: '280px', maxWidth: '380px' }}>
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -303,7 +311,7 @@ const MainApp = () => {
                       overflow: 'auto'
                     }}
                   >
-                    <PetDisplay key={`${currentUser.id}:${sessionVersion}`} agentMessageId={agentMessageId} />
+                    <div data-pet-panel><PetDisplay key={`${currentUser.id}:${sessionVersion}`} agentMessageId={agentMessageId} /></div><div id="pet-profile-slot"/>
                   </motion.div>
                 </div>
               </div>

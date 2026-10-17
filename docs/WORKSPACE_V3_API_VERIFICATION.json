@@ -1,0 +1,28 @@
+{
+  "checkedAt": "2026-10-17T15:01:12.593Z",
+  "syntheticInputsOnly": true,
+  "checks": [
+    {
+      "name": "real-deepseek-thinking-and-search",
+      "passed": true,
+      "sourceSection": true,
+      "characters": 767
+    },
+    {
+      "name": "real-news-two-sentences-per-event",
+      "passed": true,
+      "events": 4,
+      "sourceSection": true
+    },
+    {
+      "name": "real-gateway-tts-girl",
+      "passed": true,
+      "bytes": 21024
+    },
+    {
+      "name": "real-gateway-tts-boy",
+      "passed": true,
+      "bytes": 12412
+    }
+  ]
+}

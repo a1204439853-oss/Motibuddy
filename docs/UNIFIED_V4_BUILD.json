@@ -1,0 +1,128 @@
+{
+  "builtAtUtc": "2026-10-17T15:03:35.776Z",
+  "checkedAtUtc": "2026-10-17T15:13:44.369Z",
+  "artifact": "MotiBuddy-Verify-unified.exe",
+  "bytes": 260556288,
+  "sha256": "7C6ACEFC02AEBEA8FA12A72073D04F4845483FE5DB2EB977EE0F561E624DFA2E",
+  "copiedHashMatches": true,
+  "applicationId": "com.motibuddy.verify",
+  "notificationIdentity": "MotiBuddy",
+  "launcher": "Start-MotiBuddy-AI.cmd",
+  "branch": "codex/desktop-reliability",
+  "validation": {
+    "typescript": "passed",
+    "nodeTestsPassed": 179,
+    "rustTestsPassed": 31,
+    "nativeAcceptanceTestsExplicitlyRun": 1,
+    "cargoCheck": "passed",
+    "frontendBuild": "passed",
+    "releaseBuild": "passed",
+    "fullBrowser": {
+      "checks": 25,
+      "screenshots": 60,
+      "errors": 0
+    },
+    "unifiedBrowser": {
+      "checks": 6,
+      "screenshots": 10,
+      "errors": 0
+    },
+    "realApiChecks": [
+      {
+        "name": "general-science-question-answered-without-task-redirection",
+        "passed": true,
+        "characters": 130
+      },
+      {
+        "name": "journal-keeps-listening-then-offers-only-when-story-finishes",
+        "passed": true,
+        "listening": false,
+        "ready": true
+      },
+      {
+        "name": "fresh-recommendations-avoid-the-previous-batch",
+        "passed": true,
+        "firstCount": 3,
+        "secondCount": 3,
+        "noExactRepeats": true
+      },
+      {
+        "name": "live-weather-provides-city-local-hourly-series",
+        "passed": true,
+        "hours": 48,
+        "timeZone": "Asia/Shanghai"
+      },
+      {
+        "name": "real-deepseek-thinking-and-search",
+        "passed": true,
+        "sourceSection": true,
+        "characters": 767
+      },
+      {
+        "name": "real-news-two-sentences-per-event",
+        "passed": true,
+        "events": 4,
+        "sourceSection": true
+      },
+      {
+        "name": "real-gateway-tts-girl",
+        "passed": true,
+        "bytes": 21024
+      },
+      {
+        "name": "real-gateway-tts-boy",
+        "passed": true,
+        "bytes": 12412
+      }
+    ],
+    "secretScan": "Source, dist and EXE passed",
+    "gitWhitespace": "checked"
+  },
+  "nativeToast": {
+    "dispatchAccepted": true,
+    "registryDisplayName": "MotiBuddy",
+    "logoRegistered": true,
+    "systemSoundRequested": true,
+    "visualAndAuditoryAcceptance": "manual-user-check"
+  },
+  "manualNotes": [
+    "Exit the previous app from its tray before launching the new EXE.",
+    "Use Start-MotiBuddy-AI.cmd to start or reuse the private local AI service.",
+    "Windows notification appearance and actual speaker sound still require human confirmation."
+  ],
+  "browserChecks": [
+    "Development server blocks direct and filesystem URLs to private server configuration",
+    "Welcome and login switch inline in the top bar; login draft and URL preserved",
+    "Chinese task labels and numeric pet stats; user content preserved",
+    "Chinese main window and task form fit 1200×675",
+    "Sidebar and gear open combined settings; profile draft survives; widget syncs; saved data unchanged",
+    "Language is remembered after reload; legacy settings URL is compatible",
+    "Chinese profile, achievement and adoption screens render",
+    "New registration returns to login; first sign-in and adoption show three persisted starter examples",
+    "New pets show four positive-direction 70 stats; range tasks save, sort and appear in editable week/day calendars",
+    "Inline three-column assistant plans immediately with a timeline, connects automatically and animates the pet with a requested thinking line",
+    "Conversation keeps editable drafts across navigation; persisted drafts recover and failed batches retry without duplicates",
+    "Task cards sit above the chat composer; image previews and editable messages fit both desktop sizes and languages",
+    "Navigation cancels late AI results; a different account starts a fresh automatic session and can chat without credentials",
+    "Assistant uses the pet name; dictation stays editable, automatic intent proposes defaults, confirmation syncs tasks and navigation cancels late transcripts",
+    "Anniversary notes persist custom images and edits; earned badges grant experience once and show fullscreen confetti/fireworks",
+    "Pet personality persists; natural-language schedules prefill for review; task reminders and recurring jobs dispatch OS notifications and save receipts",
+    "Clipboard images attach without task-only labels; select-all is reversible; personality reaches AI instructions; focus records/settings/evidence are distinct",
+    "Task form blocks unconfirmed overlapping events; confirmed imports stay clear in the calendar and changing times invalidates prior confirmation",
+    "First-use survey saves preferences; recommendation runs immediately; bulk select/deselect changes the entire set; six compact cards fit one row without arrows",
+    "Assistant header personality updates local pet bubbles; daily plans and weekly reports save automatically and reopen in task/statistics modules",
+    "Journal conversations with photos create notebook pages only after explicit consent; user text stays separate from AI; editing, stickers, drawing and draft recovery persist",
+    "Scheduled-task controls appear at the end of chat; optional TTS sends only text and public voice choice; focus music can be enabled and disabled",
+    "Assistant navigation stays selected; six scenario cards toggle off; corrected drafts clear stale questions and become importable",
+    "Focus cycles switch between white and blurred video, celebrate once, exclude breaks, retain early-exit time and reload the same account statistics",
+    "A complete focus loop saves once; failed checkpoints pause without crediting downtime, retry safely and remain isolated across accounts"
+  ],
+  "unifiedChecks": [
+    "Development server blocks direct and filesystem URLs to private server configuration",
+    "Hourly weather uses city-local time; sidebar clock has no seconds and opens a navigable month calendar with daily agenda",
+    "Carousel loops in new conversations; compact cards remain manual after a message; header controls share one row, sources collapse and microphone is an adjacent circular icon",
+    "Choosing a voice triggers real MP3 decoding/playback/end while preserving muted automatic replies; personality and voice use matching selects",
+    "Another batch changes recommendation context and excludes recent titles; ongoing stories are not archived, and a complete multi-turn story saves only with explicit consent",
+    "All four local music tracks really play; rapid track/volume edits persist together, playback respects global volume, and one research block rotates on reopening"
+  ]
+}

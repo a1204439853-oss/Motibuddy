@@ -10,6 +10,9 @@ import LanguageSwitch from '@/components/ui/LanguageSwitch';
 import NotificationTest from '@/components/ui/NotificationTest';
 import ProfileSurvey from '@/components/agent/ProfileSurvey';
 import PersonalitySetting from '@/components/ui/PersonalitySetting';
+import SoundSettings from '@/components/ui/SoundSettings';
+import {prepareAgentImage} from '@/services/agentClient';
+import '@/components/ui/workspace.css';
 import { invoke } from '@tauri-apps/api/tauri';
 import { isTauri } from '@/services/tauriCommands';
 
@@ -28,6 +31,7 @@ const ProfilePage = () => {
   const [username, setUsername] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [avatar, setAvatar] = useState<string>('');
+  const [avatarBusy,setAvatarBusy]=useState(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   
@@ -79,7 +83,7 @@ const ProfilePage = () => {
   if (!currentUser) return null;
   
   // Handle avatar file upload
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       // Check file size (max 2MB)
@@ -88,12 +92,7 @@ const ProfilePage = () => {
         return;
       }
       
-      // Convert to base64
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatar(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      setAvatarBusy(true);try{setAvatar(await prepareAgentImage(file,400));}catch{toast.error(t('Please choose an image file'));}finally{setAvatarBusy(false);}
     }
   };
 
@@ -229,7 +228,7 @@ const ProfilePage = () => {
   };
   
   return (
-    <div style={{ position: 'relative', width: '100%', minHeight: '100vh', overflow: 'hidden' }}>
+    <div className="profile-page" style={{ position: 'relative', width: '100%', minHeight: '100vh', overflow: 'hidden' }}>
       {/* Background Image */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
         <img
@@ -241,14 +240,14 @@ const ProfilePage = () => {
       </div>
       
       <div className="w-full min-h-screen flex items-center justify-center p-4">
-        <motion.div 
+        <motion.div className="profile-panel"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
           style={{ 
             position: 'relative', zIndex: 3, backgroundColor: 'rgba(255, 255, 255, 0.9)', 
             borderRadius: '12px', boxShadow: '4px 4px 0 #222222', border: '2px solid #222222',
-            padding: '20px', width: '100%', maxWidth: '480px', maxHeight: 'calc(100dvh - 32px)', overflowY: 'auto'
+            padding: '20px', width: '100%', maxWidth: '760px', maxHeight: 'calc(100dvh - 32px)', overflowY: 'auto'
           }}
         >
           <div className="flex items-center justify-between mb-4">
@@ -299,7 +298,7 @@ const ProfilePage = () => {
                     <i className="fa-solid fa-camera text-white text-xl"></i>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/png,image/jpeg,image/webp"
                       onChange={handleAvatarChange}
                       style={{ display: 'none' }}
                     />
@@ -343,7 +342,7 @@ const ProfilePage = () => {
                 />
               </div>
               
-              <PersonalitySetting />
+              <section className="settings-group"><h2>{t("Pet assistant")}</h2><PersonalitySetting /></section><SoundSettings/>
               <NotificationTest/>
               <button className="personality-setting" onClick={()=>setSurveyOpen(true)}>{t('Display language')==='显示语言'?'我的兴趣与目标 · 编辑画像':'Interests & goals · Edit preferences'}</button>
               {surveyOpen&&<ProfileSurvey force onClose={()=>setSurveyOpen(false)}/>}
@@ -357,7 +356,7 @@ const ProfilePage = () => {
                 <div className="flex gap-2">
                   <motion.button
                     onClick={handleSaveProfile}
-                    disabled={isLoading}
+                    disabled={isLoading||avatarBusy}
                     style={{
                       backgroundColor: '#00CECB', color: 'black', border: '2px solid #222222',
                       padding: '8px 16px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer',

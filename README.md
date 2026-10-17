@@ -7,7 +7,7 @@
 
 **MotiBuddy** is a gamified intelligent task management application that integrates virtual pet nurturing mechanisms to enhance emotional attachment and overcome procrastination.
 
-本机最新验收版（2026-10-17）：双击 `Start-MotiBuddy-AI.cmd` 启动 `MotiBuddy-Verify-companion.exe`。本轮包含有声 Windows 提醒、宠物个性、可选腾讯播报、计划/周报归档、画像推荐和可编辑手账。功能、限制与手动验收见 [陪伴体验改进说明](docs/COMPANION_V2.md)，构建验证见 [本轮构建记录](docs/COMPANION_BUILD.json)。
+本机最新验收版（2026-10-17）：双击 `Start-MotiBuddy-AI.cmd` 启动 `MotiBuddy-Verify-unified.exe`。本轮统一各模块界面，加入小时天气和可点击月历，修复音乐切换保存，完善音色试听、场景轮播、换一批推荐、树洞确认保存、通用问答和 Windows 提醒。包含上一轮的历史对话、头像与初始手账功能。详见 [本轮功能与手动验收](docs/UNIFIED_V4.md) 和 [构建验证记录](docs/UNIFIED_V4_BUILD.json)。
 
 ![MotiBuddy Logo](src-tauri/icons/icon.ico)
 

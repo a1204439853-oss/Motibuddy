@@ -173,12 +173,33 @@ pub fn validate_data(data: &BusinessData, owner: &str) -> Result<(), String> {
         require(date(&achievement["unlockedAt"]))?;
     }
     require(data.settings.is_object())?;
+    if let Some(volume)=data.settings.get("soundVolume"){require(volume.as_u64().map_or(false,|v|v<=100))?;}
+    if let Some(enabled)=data.settings.get("ttsEnabled"){require(enabled.is_boolean())?;}
+    if let Some(place)=data.settings.get("weatherPlace"){require(place["name"].as_str().map_or(false,|s|!s.is_empty()&&s.chars().count()<=100)&&number(&place["latitude"],-90.0,90.0)&&number(&place["longitude"],-180.0,180.0))?;}
+    if let Some(history)=data.settings.get("chatHistory"){
+        require(history["version"]==1&&history.get("activeId").is_some()&&history.to_string().len()<=8000000)?;
+        let threads=history["threads"].as_array().ok_or("INVALID_CHAT_HISTORY")?;require(threads.len()<=100)?;let mut ids=HashSet::new();
+        for thread in threads{
+            let id=thread["id"].as_str().ok_or("INVALID_CHAT_THREAD")?;require(valid_id(id)&&ids.insert(id)&&date(&thread["createdAt"])&&date(&thread["updatedAt"])&&thread["title"].as_str().map_or(false,|s|s.chars().count()<=120))?;
+            let messages=thread["messages"].as_array().ok_or("INVALID_CHAT_MESSAGES")?;require(messages.len()<=200)?;let mut message_ids=HashSet::new();
+            for message in messages{require(message["id"].as_u64().map_or(false,|id|id>0&&message_ids.insert(id))&&["user","assistant"].contains(&message["role"].as_str().unwrap_or(""))&&message["text"].as_str().map_or(false,|s|s.chars().count()<=8000))?;
+                if let Some(image)=message.get("image"){require(image.as_str().map_or(false,|s|s.len()<=600000&&["data:image/png;base64,","data:image/jpeg;base64,","data:image/webp;base64,"].iter().any(|p|s.starts_with(p))))?;}
+                if let Some(widget)=message.get("widget"){require(widget=="schedule")?;}
+            }
+            if let Some(workspace)=thread.get("workspace"){require(workspace["version"]==1&&date(&workspace["savedAt"])&&workspace["result"].is_object())?;}
+        }
+        require(history["activeId"].is_null()||history["activeId"].as_str().map_or(false,|id|ids.contains(id)))?;
+    }
     if let Some(music)=data.settings.get("focusMusic"){require(music["enabled"].is_boolean()&&number(&music["volume"],0.0,100.0))?;}
+    if let Some(track)=data.settings.get("focusMusic").and_then(|m|m.get("track")){require(["meditation","dream","lemon","cities"].contains(&track.as_str().unwrap_or("")))?;}
     if let Some(voice)=data.settings.get("ttsVoice"){require(["girl","boy"].contains(&voice.as_str().unwrap_or("")))?;}
     if let Some(profile)=data.settings.get("profileSurvey"){
         require(["complete","deferred"].contains(&profile["status"].as_str().unwrap_or(""))&&profile["minutes"].as_u64().map_or(false,|n|n>=5&&n<=480))?;
         require(["morning","afternoon","evening","flexible"].contains(&profile["rhythm"].as_str().unwrap_or("")))?;
         for key in ["goals","interests"]{require(profile[key].as_str().map_or(false,|s|s.chars().count()<=500))?;}
+        if let Some(age)=profile.get("ageGroup"){require(["prefer-not","under18","18-24","25-34","35-44","45-59","60plus"].contains(&age.as_str().unwrap_or("")))?;}
+        if let Some(role)=profile.get("occupation"){require(["prefer-not","student","office","freelance","creative","caregiver","retired","other"].contains(&role.as_str().unwrap_or("")))?;}
+        if let Some(habits)=profile.get("habits"){require(habits.as_array().map_or(false,|a|a.len()<=6&&a.iter().all(|v|["learning","health","career","creative","social","rest"].contains(&v.as_str().unwrap_or("")))))?;}
     }
     for (key,limit) in [("dailyPlans",90),("weeklyReports",52),("journalEntries",200)]{
         let empty=Value::Array(vec![]);
@@ -624,6 +645,15 @@ mod tests {
         data.settings["focusSpace"]["history"][0]["focusMs"] = json!(999999999);
         assert!(store.commit("A", saved.revision, "invalid-focus", data).is_err());
         assert_eq!(store.read("A").unwrap().unwrap(), saved);
+    }
+    #[test]
+    fn chat_history_profile_and_volume_roundtrip_and_reject_invalid_edits() {
+        let directory=Directory::new();let store=directory.store();let initial=store.initialize("A",empty()).unwrap();let mut data=initial.data;
+        data.settings["chatHistory"]=json!({"version":1,"activeId":"chat-one","threads":[{"id":"chat-one","title":"Read","createdAt":"2026-10-17T01:00:00Z","updatedAt":"2026-10-17T01:01:00Z","messages":[{"id":1,"role":"user","text":"Read chapter one"},{"id":2,"role":"assistant","text":"One small step"}]}]});
+        data.settings["soundVolume"]=json!(35);data.settings["ttsEnabled"]=json!(false);data.settings["weatherPlace"]=json!({"name":"Hangzhou","latitude":30.25,"longitude":120.16});data.settings["focusMusic"]=json!({"enabled":true,"volume":40,"track":"dream"});
+        data.settings["profileSurvey"]=json!({"status":"complete","goals":"Read","interests":"Books","minutes":60,"rhythm":"evening","ageGroup":"25-34","occupation":"office","habits":["learning","rest"]});
+        let saved=store.commit("A",initial.revision,"chat-save",data.clone()).unwrap();assert_eq!(store.read("A").unwrap().unwrap(),saved);
+        for (key,value) in [("soundVolume",json!(101)),("weatherPlace",json!({"name":"X","latitude":91,"longitude":0})),("chatHistory",json!({"version":1,"activeId":"missing","threads":[]}))]{let mut bad=data.clone();bad.settings[key]=value;assert!(store.commit("A",saved.revision,"invalid-chat-edit",bad).is_err());assert_eq!(store.read("A").unwrap().unwrap(),saved);}
     }
     #[test]
     fn journal_edit_draft_and_voice_preferences_persist_without_damaging_prior_record() {

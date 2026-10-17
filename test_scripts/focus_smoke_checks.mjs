@@ -92,14 +92,14 @@ export async function runFocusSmoke({ main, click, shot, passed, until, delay, r
   saved=(await state()).data.settings.focusSpace;
   assert.equal(saved.history[2].completedCycles,0);assert.ok(saved.history[2].focusMs>=13000&&saved.history[2].focusMs<20000);
   // Simulate a new process: retain committed records, clear runtime auth via normal boot, and sign in again.
-  await main.send('Page.reload');await delay(1000);await route(main,'/login');await fillLogin(main);await main.evaluate(`document.querySelector('form').requestSubmit()`);
+  await main.send('Page.reload');await delay(1000);await route(main,'/login');await fillLogin(main);await main.evaluate(`(document.querySelector('#title')?.closest('form')??document.querySelector('form')).requestSubmit()`);
   await until(()=>main.evaluate(`document.body.innerText.includes('我的任务')`),'login after focus restart');
   await click(main,'专注空间');await until(()=>main.evaluate(`!!document.querySelector('.focus-setup .focus-primary')&&!document.querySelector('.focus-setup .focus-primary').disabled`),'focus history restored');
   assert.deepEqual((await state()).data.settings.focusSpace.history,saved.history);
   assert.deepEqual(await main.evaluate(`[...document.querySelectorAll('.focus-history strong')].slice(1,3).map(node=>node.textContent)`),['3','2']);
   passed('Focus cycles switch between white and blurred video, celebrate once, exclude breaks, retain early-exit time and reload the same account statistics');
   await route(main,'/profile');await click(main,'退出登录');await route(main,'/login');
-  await fill('input[name=email]','new-buddy@example.test');await fill('input[name=password]','NewBuddy2026');await main.evaluate(`document.querySelector('form').requestSubmit()`);
+  await fill('input[name=email]','new-buddy@example.test');await fill('input[name=password]','NewBuddy2026');await main.evaluate(`(document.querySelector('#title')?.closest('form')??document.querySelector('form')).requestSubmit()`);
   await until(()=>main.evaluate(`document.body.innerText.includes('我的任务')`),'focus isolation account login');
   await click(main,'专注空间');await until(()=>main.evaluate(`!!document.querySelector('.focus-setup .focus-primary')&&!document.querySelector('.focus-setup .focus-primary').disabled`),'other account focus setup');
   assert.equal((await state()).data.settings.focusSpace,undefined);

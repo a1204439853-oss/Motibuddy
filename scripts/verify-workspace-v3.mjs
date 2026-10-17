@@ -1,0 +1,12 @@
+import {writeFile,mkdir} from 'node:fs/promises';
+import {callDeepSeek,readConfig} from '../server/gateway.mjs';
+const config=readConfig(),origin='https://tauri.localhost',root='http://127.0.0.1:8787/api/agent';
+const report={checkedAt:new Date().toISOString(),syntheticInputsOnly:true,checks:[]};
+async function check(name,action){try{const detail=await action();report.checks.push({name,passed:true,...detail});console.log('PASS '+name);}catch{report.checks.push({name,passed:false});console.log('FAIL '+name);process.exitCode=1;}}
+const request={mode:'chat',locale:'zh-CN',now:new Date().toISOString(),timeZone:'Asia/Shanghai',instruction:'请用两句话介绍 DeepSeek 官方 API 的思考功能，参考官方文档。',availableMinutes:30,energy:'normal',tasks:[]};
+await check('real-deepseek-thinking-and-search',async()=>{const r=await callDeepSeek({...request,deepThinking:true,webSearch:true,searchQuery:'DeepSeek API thinking mode site:api-docs.deepseek.com'},config);if(!r.summary.includes('来源：')||r.summary.split('来源：')[0].includes('https://'))throw Error();return {sourceSection:true,characters:r.summary.length};});
+await check('real-news-two-sentences-per-event',async()=>{const r=await callDeepSeek({...request,scheduled:true,news:true,instruction:'请播报晨间新闻。每个事件两句介绍，正文不要链接。'},config);const body=r.summary.split('来源：')[0];if(body.includes('https://')||[...body.matchAll(/\*\*\d\./g)].length<1||/无权|没有权限|不能.*创建/.test(body))throw Error();return {events:[...body.matchAll(/\*\*\d\./g)].length,sourceSection:true};});
+const sessionResponse=await fetch(root+'/session',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:'{}'});const session=await sessionResponse.json();if(!sessionResponse.ok)throw Error('Local session unavailable');
+await mkdir('node_modules/.cache/motibuddy-companion',{recursive:true});
+for(const voice of ['girl','boy'])await check('real-gateway-tts-'+voice,async()=>{const response=await fetch(root+'/tts',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json',Authorization:'Bearer '+session.token},body:JSON.stringify({text:'你好，今天也陪你认真走一小步。',voice})});const d=await response.json();if(!response.ok||typeof d.audio!=='string')throw Error();const bytes=Buffer.from(d.audio,'base64');if(bytes.length<1000)throw Error();await writeFile('node_modules/.cache/motibuddy-companion/tts-'+voice+'.mp3',bytes);return {bytes:bytes.length};});
+await writeFile('docs/WORKSPACE_V3_API_VERIFICATION.json',JSON.stringify(report,null,2)+'\n');

@@ -7,7 +7,7 @@ export function parseNews(xml,now=new Date()){
     const field=name=>clean(match[1].match(new RegExp(`<${name}[^>]*>([\\s\\S]*?)<\\/${name}>`,'i'))?.[1]??'');
     const title=field('title'),url=field('link'),published=field('pubDate');const date=new Date(published);
     if(!title||!/^https:\/\/(?:(?:www\.)?bbc\.(?:com|co\.uk)|www\.chinanews\.com(?:\.cn)?)\//.test(url)||!Number.isFinite(+date)||+date>+now+3600000||+now-+date>7*86400000)return [];
-    return [{title:title.slice(0,250),url,published:date.toISOString(),publisher:url.includes('chinanews.com')?'中国新闻网':'BBC News World'}];
+    return [{title:title.slice(0,250),description:field('description').slice(0,1400),url,published:date.toISOString(),publisher:url.includes('chinanews.com')?'中国新闻网':'BBC News World'}];
   });
   if(!entries.length)throw new Error('No recent publisher news');return entries.slice(0,8);
 }

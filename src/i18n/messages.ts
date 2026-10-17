@@ -1,5 +1,6 @@
 /** Display copy only. Stored task values, identities and user content stay unchanged. */
 export const zhCN: Record<string, string> = {
+  'Please choose an image file':'请选择可读取的 PNG、JPEG 或 WebP 图片',
   'Focus space': '专注空间', 'Focus statistics': '专注统计', 'Total focus time': '累计专注时长', 'Completed focus rounds': '累计完成轮次',
   'Focus sessions started': '累计专注次数',
   'Loading focus records…': '正在读取专注记录…', 'Focus records unavailable. Retry in Focus space.': '专注记录暂不可用，请到专注空间重试。',

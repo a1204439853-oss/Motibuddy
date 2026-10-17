@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import {focusMusicSchema} from './focusMusicSettings.ts';
 import type { Task } from '../types/index.ts';
 export const personalitySchema = z.enum(['gentle', 'tsundere', 'witty', 'humorous', 'cool', 'soft']);
 export type Personality = z.infer<typeof personalitySchema>;
@@ -52,7 +53,7 @@ export function conflictApproval(a: Pick<Task,'startAt'|'dueDate'>, b: Pick<Task
 export function validateProductSettings(settings: Record<string, unknown>) {
   if(settings.anniversaries !== undefined) anniversariesSchema.parse(settings.anniversaries);
   if(settings.scheduledJobs !== undefined) scheduledJobsSchema.parse(settings.scheduledJobs);
-  if(settings.focusMusic!==undefined)z.object({enabled:z.boolean(),volume:z.number().min(0).max(100)}).strict().parse(settings.focusMusic);
+  if(settings.focusMusic!==undefined)focusMusicSchema.parse(settings.focusMusic);
   if(settings.petPersonality !== undefined) personalitySchema.parse(settings.petPersonality);
   if(settings.petInteractionCount !== undefined) z.number().int().nonnegative().safe().parse(settings.petInteractionCount);
   if(settings.achievementRewards !== undefined) z.array(z.string().min(1).max(80)).max(100).refine(ids=>new Set(ids).size===ids.length).parse(settings.achievementRewards);

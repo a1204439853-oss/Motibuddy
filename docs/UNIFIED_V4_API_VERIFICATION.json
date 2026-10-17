@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-10-17T14:53:14.476Z",
+  "syntheticInputsOnly": true,
+  "checks": [
+    {
+      "name": "general-science-question-answered-without-task-redirection",
+      "passed": true,
+      "characters": 130
+    },
+    {
+      "name": "journal-keeps-listening-then-offers-only-when-story-finishes",
+      "passed": true,
+      "listening": false,
+      "ready": true
+    },
+    {
+      "name": "fresh-recommendations-avoid-the-previous-batch",
+      "passed": true,
+      "firstCount": 3,
+      "secondCount": 3,
+      "noExactRepeats": true
+    },
+    {
+      "name": "live-weather-provides-city-local-hourly-series",
+      "passed": true,
+      "hours": 48,
+      "timeZone": "Asia/Shanghai"
+    }
+  ]
+}

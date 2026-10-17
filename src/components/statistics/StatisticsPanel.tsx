@@ -68,8 +68,8 @@ const StatisticsPanel = () => {
 
   
   return (
-    <div className="space-y-3 overflow-y-auto max-h-full p-1">
-      <SavedWeeklyReports/>
+    <div className="statistics-workspace space-y-3 overflow-y-auto max-h-full p-1"><TaskTimeline/>
+
       {/* Stats summary cards */}
       <div className="grid grid-cols-3 gap-2">
         <motion.div
@@ -144,7 +144,7 @@ const StatisticsPanel = () => {
 
       {/* Weekly Task Timeline - Full Width */}
       <section className="focus-statistics" aria-label={t('Focus statistics')}><h3>{t('Focus statistics')}</h3><div><span>{t('Total focus time')}</span><strong>{focusUnavailable ? '—' : focusDuration(totals.focusMs, locale)}</strong></div><div><span>{t('Focus sessions started')}</span><strong>{focusUnavailable ? '—' : totals.entries}</strong></div><div><span>{t('Completed focus rounds')}</span><strong>{focusUnavailable ? '—' : totals.completedCycles}</strong></div><p>{focus.loading ? t('Loading focus records…') : focus.error ? t('Focus records unavailable. Retry in Focus space.') : t('Breaks are excluded. Partial focus time is retained when you leave early.')}</p></section>
-      <TaskTimeline />
+
 
       {/* Task distribution charts */}
       <div className="grid grid-cols-3 gap-3">
@@ -409,6 +409,7 @@ const StatisticsPanel = () => {
         <i className="fa-solid fa-download text-sm"></i>
         <span>{t("Export")}</span>
       </motion.button>
+      <SavedWeeklyReports/>
     </div>
   );
 };

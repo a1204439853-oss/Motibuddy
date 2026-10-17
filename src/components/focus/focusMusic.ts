@@ -1,9 +1,11 @@
-import {useEffect,useRef} from 'react';
-// Locally synthesized instrumental notes. No recordings, network requests or lyrics.
-export function useFocusMusic(playing:boolean,volume:number){
- const audio=useRef<AudioContext>(),timer=useRef<ReturnType<typeof setInterval>>(),gain=useRef<GainNode>();
- const prime=()=>{if(!audio.current){audio.current=new AudioContext();gain.current=audio.current.createGain();gain.current.gain.value=0;gain.current.connect(audio.current.destination);}void audio.current.resume().catch(()=>{});};
- useEffect(()=>{if(!playing){if(timer.current)clearInterval(timer.current);if(gain.current)gain.current.gain.setTargetAtTime(0,audio.current!.currentTime,.2);return;}prime();const ctx=audio.current!;gain.current!.gain.setTargetAtTime(volume/100*.16,ctx.currentTime,.4);let step=0;const melody=[261.63,329.63,392,523.25,440,392,329.63,293.66,246.94,293.66,369.99,493.88,440,369.99,293.66,329.63];
- const note=()=>{const now=ctx.currentTime;for(const [frequency,level]of [[melody[step++%melody.length],.35],[130.81,.08]] as const){const osc=ctx.createOscillator(),envelope=ctx.createGain();osc.type='sine';osc.frequency.value=frequency;envelope.gain.setValueAtTime(0,now);envelope.gain.linearRampToValueAtTime(level,now+.08);envelope.gain.exponentialRampToValueAtTime(.0001,now+2.8);osc.connect(envelope);envelope.connect(gain.current!);osc.start(now);osc.stop(now+3);osc.onended=()=>{osc.disconnect();envelope.disconnect();};}};note();timer.current=setInterval(note,950);return()=>{if(timer.current)clearInterval(timer.current);if(gain.current)gain.current.gain.setTargetAtTime(0,ctx.currentTime,.2);};},[playing,volume]);
- useEffect(()=>()=>{if(timer.current)clearInterval(timer.current);void audio.current?.close();},[]);return prime;
+import {useEffect,useRef,useState} from 'react';
+export const focusTracks=[{id:'meditation',title:'Meditation Impromptu 01',zh:'静心钢琴',isrc:'USUAN1100163'},{id:'dream',title:'Dream Culture',zh:'水色梦境',isrc:'USUAN1300046'},{id:'lemon',title:'Easy Lemon',zh:'轻甜柠檬',isrc:'USUAN1200076'},{id:'cities',title:'Floating Cities',zh:'浮空之城',isrc:'USUAN1600018'}] as const;
+export function useFocusMusic(playing:boolean,volume:number,track='meditation'){
+ const audio=useRef<HTMLAudioElement>(),[error,setError]=useState(false),generation=useRef(0);
+ const playingRef=useRef(playing);playingRef.current=playing;
+ const ensure=()=>{if(!audio.current){audio.current=new Audio();audio.current.loop=true;audio.current.preload='auto';}const player=audio.current;if(!player.src.endsWith('/music/'+track+'.mp3'))player.src='/music/'+track+'.mp3';player.volume=playingRef.current?Math.max(0,Math.min(1,volume/100)):0;return player;};
+ const prime=()=>{const player=ensure();void player.play().then(()=>{if(!playingRef.current)player.pause();}).catch(()=>setError(true));};
+ useEffect(()=>{const player=ensure();const id=++generation.current;setError(false);let fade:ReturnType<typeof setInterval>|undefined;if(playing){void player.play().catch(()=>{if(id===generation.current)setError(true);});}else{fade=setInterval(()=>{player.volume=Math.max(0,player.volume-.08);if(player.volume<=0){player.pause();clearInterval(fade);}},40);}return()=>{if(fade)clearInterval(fade);};},[playing,volume,track]);
+ useEffect(()=>()=>{generation.current++;audio.current?.pause();if(audio.current){audio.current.removeAttribute('src');audio.current.load();}},[]);
+ return {prime,error};
 }

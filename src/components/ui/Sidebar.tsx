@@ -7,10 +7,11 @@ import { motion } from 'framer-motion';
 import { invoke } from '@tauri-apps/api/tauri';
 import { isTauri } from '@/services/tauriCommands';
 import { toast } from 'sonner';
+import WeatherCard from './WeatherCard';
 
 interface SidebarProps {
-  activeView: 'tasks' | 'statistics' | 'agent' | 'focus' | 'anniversaries';
-  setActiveView: (view: 'tasks' | 'statistics' | 'agent' | 'focus' | 'anniversaries') => void;
+  activeView: 'tasks' | 'statistics' | 'agent' | 'focus' | 'anniversaries' | 'weather' | 'calendar';
+  setActiveView: (view: 'tasks' | 'statistics' | 'agent' | 'focus' | 'anniversaries' | 'weather' | 'calendar') => void;
   currentUser: User;
   currentPet: Pet;
   isAuthenticated: boolean;
@@ -19,6 +20,8 @@ interface SidebarProps {
 const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthenticated }: SidebarProps) => {
   const { locale } = useLocale();
   const navigate = useNavigate();
+  const [now,setNow]=useState(new Date());
+  useEffect(()=>{const timer=setInterval(()=>setNow(new Date()),15000);return()=>clearInterval(timer);},[]);
   const [widgetVisible, setWidgetVisible] = useState(false);
   
   // Inspirational quotes array
@@ -250,193 +253,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
   
   return (
     <div className="flex flex-col h-full">
-      {/* Pet quick info */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        style={{
-          padding: '16px',
-          borderBottom: '1px solid #222222'
-        }}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div 
-              style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                overflow: 'hidden',
-                marginRight: '10px',
-                border: '2px solid #222222',
-                boxShadow: '2px 2px 0 #222222',
-                cursor: 'pointer'
-              }}
-              onClick={() => navigate('/profile')}
-            >
-              <img 
-                src={getAvatarImage()} 
-                alt={currentUser?.username || currentPet.name} 
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover'
-                }}
-              />
-            </div>
-            <div>
-              <p style={{
-                fontWeight: 'bold',
-                color: '#222222',
-                margin: 0,
-                fontSize: '16px',
-                fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif'
-              }}>{currentPet.name}</p>
-              <p style={{
-                fontSize: '12px',
-                color: '#222222',
-                margin: '2px 0 0 0',
-                fontWeight: 'bold',
-                fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif'
-              }}>{t("Level")}{' '}{currentPet.level}</p>
-            </div>
-          </div>
-          <span style={{
-            padding: '4px 10px',
-            borderRadius: '9999px',
-            fontSize: '11px',
-            fontWeight: 'bold',
-            backgroundColor: 'white',
-            color: getPetMoodColor(),
-            border: '2px solid #222222',
-            boxShadow: '2px 2px 0 rgba(0, 0, 0, 0.1)',
-            fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif',
-            textTransform: 'capitalize'
-          }}>
-            {label(getPetMood())}
-          </span>
-        </div>
-        
-        {/* Pet quick stats */}
-        <div className="mt-4 space-y-2">
-          <div className="space-y-1">
-            <div className="flex justify-between">
-              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{t("Health")}</span>
-              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{currentPet.health}/100</span>
-            </div>
-            <div style={{
-              width: '100%',
-              height: '6px',
-              backgroundColor: '#222222',
-              borderRadius: '9999px',
-              border: '1px solid #222222',
-              boxShadow: 'inset 1px 1px 0 rgba(0, 0, 0, 0.2)',
-              margin: 0,
-              padding: 0
-            }}>
-              <div 
-                style={{
-                  height: '100%',
-                  borderRadius: '9999px',
-                  backgroundColor: currentPet.health > 70 ? '#00CECB' : currentPet.health > 30 ? '#FFD700' : '#FF5E5B',
-                  width: `${currentPet.health}%`,
-                  boxShadow: 'inset -1px 0 0 rgba(0, 0, 0, 0.2)',
-                  margin: 0,
-                  padding: 0
-                }}
-              ></div>
-            </div>
-          </div>
-          
-          <div className="space-y-1">
-            <div className="flex justify-between">
-              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{t("Happiness")}</span>
-              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{currentPet.happiness}/100</span>
-            </div>
-            <div style={{
-              width: '100%',
-              height: '6px',
-              backgroundColor: '#222222',
-              borderRadius: '9999px',
-              border: '1px solid #222222',
-              boxShadow: 'inset 1px 1px 0 rgba(0, 0, 0, 0.2)',
-              margin: 0,
-              padding: 0
-            }}>
-              <div 
-                style={{
-                  height: '100%',
-                  borderRadius: '9999px',
-                  backgroundColor: currentPet.happiness > 70 ? '#00CECB' : currentPet.happiness > 30 ? '#FFD700' : '#FF5E5B',
-                  width: `${currentPet.happiness}%`,
-                  boxShadow: 'inset -1px 0 0 rgba(0, 0, 0, 0.2)',
-                  margin: 0,
-                  padding: 0
-                }}
-              ></div>
-            </div>
-          </div>
-          
-          <div className="space-y-1">
-            <div className="flex justify-between">
-              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{t("Fullness")}</span>
-              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{100 - currentPet.hunger}/100</span>
-            </div>
-            <div style={{
-              width: '100%',
-              height: '6px',
-              backgroundColor: '#222222',
-              borderRadius: '9999px',
-              border: '1px solid #222222',
-              boxShadow: 'inset 1px 1px 0 rgba(0, 0, 0, 0.2)',
-              margin: 0,
-              padding: 0
-            }}>
-              <div 
-                style={{
-                  height: '100%',
-                  borderRadius: '9999px',
-                  backgroundColor: currentPet.hunger < 30 ? '#00CECB' : currentPet.hunger < 70 ? '#FFD700' : '#FF5E5B',
-                  width: `${100 - currentPet.hunger}%`,
-                  boxShadow: 'inset -1px 0 0 rgba(0, 0, 0, 0.2)',
-                  margin: 0,
-                  padding: 0
-                }}
-              ></div>
-            </div>
-          </div>
-          
-          <div className="space-y-1">
-            <div className="flex justify-between">
-              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{t("Energy")}</span>
-              <span style={{ color: '#222222', fontWeight: 'bold', fontSize: '11px', fontFamily: 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif' }}>{currentPet.energy}/100</span>
-            </div>
-            <div style={{
-              width: '100%',
-              height: '6px',
-              backgroundColor: '#222222',
-              borderRadius: '9999px',
-              border: '1px solid #222222',
-              boxShadow: 'inset 1px 1px 0 rgba(0, 0, 0, 0.2)',
-              margin: 0,
-              padding: 0
-            }}>
-              <div 
-                style={{
-                  height: '100%',
-                  borderRadius: '9999px',
-                  backgroundColor: currentPet.energy > 70 ? '#00CECB' : currentPet.energy > 30 ? '#FFD700' : '#FF5E5B',
-                  width: `${currentPet.energy}%`,
-                  boxShadow: 'inset -1px 0 0 rgba(0, 0, 0, 0.2)',
-                  margin: 0,
-                  padding: 0
-                }}
-              ></div>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-      
+      <section className="sidebar-profile"><button className="sidebar-avatar" aria-label={locale==='zh-CN'?'更换头像':'Change avatar'} onClick={()=>navigate('/profile')}><img src={getAvatarImage()} alt={currentUser.username}/></button><button className="sidebar-clock" aria-label={locale==='zh-CN'?'查看日历':'Open calendar'} aria-current={activeView==='calendar'?'page':undefined} onClick={()=>setActiveView('calendar')}><p>{now.toLocaleDateString(locale,{month:'long',day:'numeric',weekday:'short'})}</p><time>{now.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit',hour12:false})}</time><i className="fa-regular fa-calendar" aria-hidden="true"/></button></section><WeatherCard onOpen={()=>setActiveView('weather')} selected={activeView==='weather'}/>
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto py-3">
         <div className="px-4 mb-3">

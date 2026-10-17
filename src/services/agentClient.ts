@@ -5,7 +5,7 @@ export const AGENT_GATEWAY_URL = 'http://127.0.0.1:8787/api/agent/generate';
 export class AgentClientError extends Error {
   constructor(public code: string) { super(code); }
 }
-const errors = new Set(['ORIGIN_DENIED', 'UNAUTHORIZED', 'RATE_LIMITED', 'REQUEST_IN_PROGRESS', 'INVALID_REQUEST', 'BODY_TOO_LARGE', 'UPSTREAM_BUSY', 'UPSTREAM_REJECTED', 'UPSTREAM_UNAVAILABLE', 'INVALID_MODEL_RESULT']);
+const errors = new Set(['ORIGIN_DENIED', 'UNAUTHORIZED', 'RATE_LIMITED', 'REQUEST_IN_PROGRESS', 'INVALID_REQUEST', 'BODY_TOO_LARGE', 'UPSTREAM_BUSY', 'UPSTREAM_REJECTED', 'UPSTREAM_UNAVAILABLE', 'INVALID_MODEL_RESULT','SEARCH_UNAVAILABLE']);
 let session: { token: string; expiresAt: number; owner: string } | null = null;
 export function clearAgentConnection() { session = null; }
 export async function automaticSession(owner: string, signal: AbortSignal): Promise<string> {

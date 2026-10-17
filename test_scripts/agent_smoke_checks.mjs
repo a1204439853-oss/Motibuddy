@@ -47,7 +47,7 @@ export async function runAgentSmoke({ main, click, shot, passed, until, delay, r
   await send('我有30分钟，今天有点累');await idle();
   assert.equal((await state()).data.pet.experience,petExperience);
   assert.deepEqual(await main.evaluate(`(()=>{const r=window.__agentRequests[1];return {mode:r.mode,minutes:r.minutes,energy:r.energy}})()`),{mode:'plan',minutes:30,energy:'low'});
-  assert.ok(await main.evaluate(`document.querySelector('[data-testid=pet-dialogue] p').innerText.includes('认真想')`));
+  assert.ok(await main.evaluate(`/认真想|好好回答/.test(document.querySelector('[data-testid=pet-dialogue] p').innerText)`));
   assert.equal(await main.evaluate(`document.querySelector('[data-testid=pet-interaction]').dataset.activeVideo`),'random');
   await click(main,'保存今日计划');
   assert.equal((await state()).data.settings.agentTodayPlan.plan.items.length,1);
@@ -122,7 +122,7 @@ export async function runAgentSmoke({ main, click, shot, passed, until, delay, r
   await click(main,'发送');await idle();
   assert.equal(await main.evaluate(`document.querySelectorAll('.mb-agent-card').length`),2);
   assert.equal(await main.evaluate(`window.__agentRequests.at(-1).mode`),'assist');
-  assert.equal(await main.evaluate(`getComputedStyle(document.querySelector('[data-testid=pet-dialogue]')).backgroundColor`),'rgba(0, 0, 0, 0)');
+  assert.equal(await main.evaluate(`getComputedStyle(document.querySelector('[data-testid=pet-dialogue]')).backgroundColor`),'rgba(255, 255, 255, 0.1)');
   const count=(await state()).data.tasks.length;
   await main.evaluate(`document.querySelectorAll('.mb-agent-card input[type=checkbox]')[1].click()`);
   await click(main,'确认录入 1 项');await idle();

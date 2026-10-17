@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url';
 import { runAgentSmoke } from './agent_smoke_checks.mjs';
 import { runScheduleSmoke } from './schedule_smoke_checks.mjs';
 import { runCompanionSmoke } from './companion_smoke_checks.mjs';
+import { runUnifiedSmoke } from './unified_v4_smoke_checks.mjs';
+import { runWorkspaceSmoke } from './workspace_v3_smoke_checks.mjs';
 import { runConflictSmoke } from './conflict_smoke_checks.mjs';
 import { runProductSmoke } from './product_smoke_checks.mjs';
 import { runFocusSmoke } from './focus_smoke_checks.mjs';
@@ -57,8 +59,8 @@ class CDP {
       this.pending.set(id, { resolve, reject, timer }); this.socket.send(JSON.stringify({ id, method, params }));
     });
   }
-  async evaluate(expression) {
-    const response = await this.send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true }).catch(error=>{throw new Error(`${error.message}: ${expression.slice(0,240)}`);});
+  async evaluate(expression,userGesture=false) {
+    const response = await this.send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true,userGesture }).catch(error=>{throw new Error(`${error.message}: ${expression.slice(0,240)}`);});
     if (response.exceptionDetails) throw new Error(response.exceptionDetails.exception?.description ?? response.exceptionDetails.text);
     return response.result.value;
   }
@@ -74,7 +76,7 @@ const fixture = `(() => {
       tasks:[{id:'one',title:'Ship localization',description:'中英文任务内容保持原样，不随界面语言改变。',priority:'high',status:'in-progress',createdAt:now,dueDate:due},
         {id:'two',title:'准备下一次产品迭代与测试清单',description:'核对任务、伙伴、设置和小组件。',priority:'urgent',status:'pending',createdAt:now,dueDate:due}],
       pet:{id:'pet',userId:'i18n-user',name:'团团',type:'cat',level:2,experience:18,health:85,happiness:78,hunger:35,energy:65,lastInteraction:now,lastFed:now,createdAt:now},
-      achievements:[],settings:{theme:'default',profileSurvey:{status:'deferred',goals:'',interests:'',minutes:30,rhythm:'flexible'}} }}));
+      achievements:[],settings:{theme:'default',ttsEnabled:false,profileSurvey:{status:'deferred',goals:'',interests:'',minutes:30,rhythm:'flexible'}} }}));
     localStorage.setItem('__i18n_fixture','yes');
   }
   let listenerId=0, widgetVisible=false; const listeners=new Map();
@@ -90,7 +92,7 @@ const fixture = `(() => {
       if(message.cmd==='read_business_state')return reply(JSON.parse(localStorage.getItem(stateKey)??'null'));
       if(message.cmd==='initialize_business_state'){
         const existing=localStorage.getItem(stateKey);if(existing)return reply(JSON.parse(existing));
-        message.data.settings.profileSurvey??={status:'deferred',goals:'',interests:'',minutes:30,rhythm:'flexible'};
+        message.data.settings.ttsEnabled??=false; message.data.settings.profileSurvey??={status:'deferred',goals:'',interests:'',minutes:30,rhythm:'flexible'};
         const state={schemaVersion:1,userId:message.userId,revision:1,operations:[],data:message.data};
         localStorage.setItem(stateKey,JSON.stringify(state));return reply(state);
       }
@@ -138,7 +140,7 @@ async function page(url, width = 1600, height = 900) {
   return connection;
 }
 async function click(page, text) {
-  assert.equal(await page.evaluate(`(()=>{const button=[...document.querySelectorAll('button')].find(node=>node.getClientRects().length&&(node.textContent.replace(/\\s+/g,' ').trim()===${JSON.stringify(text)}||node.getAttribute('aria-label')===${JSON.stringify(text)}));if(!button)return false;button.click();return true})()`), true, `button: ${text}`);
+  assert.equal(await page.evaluate(`(()=>{const button=[...document.querySelectorAll('button')].find(node=>node.getClientRects().length&&(node.textContent.replace(/\\s+/g,' ').trim()===${JSON.stringify(text)}||node.getAttribute('aria-label')===${JSON.stringify(text)}));if(!button)return false;button.click();return true})()`,true), true, `button: ${text}`);
   await delay(250);
 }
 async function route(page, target) {
@@ -182,11 +184,11 @@ try {
   browserPort = Number(lines[0]); browserConnection = await CDP.open(`ws://127.0.0.1:${browserPort}${lines[1].trim()}`);
 
   const main = await page(`${base}/`);
-  if(process.env.COMPANION_ONLY){
+  if(process.env.UNIFIED_ONLY||process.env.COMPANION_ONLY||process.env.WORKSPACE_ONLY){
     await route(main,'/login');await fillLogin(main);await main.evaluate('document.querySelector("form").requestSubmit()');await until(()=>main.evaluate(`document.body.innerText.includes('我的任务')`),'quick login');
     await main.send('Emulation.setDeviceMetricsOverride',{width:1200,height:675,deviceScaleFactor:1,mobile:false});
     await main.evaluate(`(()=>{const original=window.fetch;window.__agentRequests=[];window.fetch=async(url,options)=>{if(String(url).endsWith('/session'))return new Response(JSON.stringify({token:'mbs_'+'b'.repeat(64),expiresAt:Date.now()+600000}),{headers:{'Content-Type':'application/json'}});if(!String(url).endsWith('/generate'))return original(url,options);const input=JSON.parse(options.body);window.__agentRequests.push(input);const result=input.mode==='plan'?{mode:'plan',summary:'先从一小步开始。',items:[{taskId:input.tasks[0].id,minutes:20,reason:'这是已有的任务。',firstStep:'打开资料。'}],questions:[],warnings:[]}:{mode:'chat',summary:'我看见你今天的小小进步了，我们一起慢慢来。',questions:[],warnings:[]};return new Response(JSON.stringify({result}),{headers:{'Content-Type':'application/json'}});};})()`);
-    await runCompanionSmoke({main,click,shot,passed,until,delay,route});
+    if(process.env.UNIFIED_ONLY)await runUnifiedSmoke({main,click,shot,passed,until,delay,route});else if(process.env.WORKSPACE_ONLY)await runWorkspaceSmoke({main,click,shot,passed,until,delay,route});else await runCompanionSmoke({main,click,shot,passed,until,delay,route});
   }else{
   await until(() => main.evaluate('!!document.querySelector(".public-topbar-actions .language-switch")'), 'welcome language in top bar');
   assert.equal(await main.evaluate('!!document.querySelector(".public-settings-link")'), false);
@@ -293,9 +295,9 @@ try {
   await route(main, '/profile'); await click(main, '退出登录');
   await click(main, '创建账号');
   await until(() => main.evaluate('!!document.querySelector("input[name=username]")'), 'registration form');
-  await main.evaluate(`(()=>{for(const [name,value] of [['username','NewBuddy'],['email','new-buddy@example.test'],['password','NewBuddy2026'],['confirmPassword','NewBuddy2026']]){const input=document.querySelector('input[name='+name+']');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));}document.querySelector('form').requestSubmit()})()`);
+  await main.evaluate(`(()=>{for(const [name,value] of [['username','NewBuddy'],['email','new-buddy@example.test'],['password','NewBuddy2026'],['confirmPassword','NewBuddy2026']]){const input=document.querySelector('input[name='+name+']');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));}(document.querySelector('#title')?.closest('form')??document.querySelector('form')).requestSubmit()})()`);
   await until(() => main.evaluate('!!document.querySelector("input[name=email]") && !document.querySelector("input[name=username]")'), 'successful inline registration returns to login');
-  await main.evaluate(`(()=>{for(const [name,value] of [['email','new-buddy@example.test'],['password','NewBuddy2026']]){const input=document.querySelector('input[name='+name+']');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));}document.querySelector('form').requestSubmit()})()`);
+  await main.evaluate(`(()=>{for(const [name,value] of [['email','new-buddy@example.test'],['password','NewBuddy2026']]){const input=document.querySelector('input[name='+name+']');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));}(document.querySelector('#title')?.closest('form')??document.querySelector('form')).requestSubmit()})()`);
   await until(() => main.evaluate('location.pathname==="/create-pet"'), 'new account reaches adoption');
   const newUserId = await main.evaluate('localStorage.getItem("currentUserId")');
   assert.ok(newUserId && newUserId !== 'i18n-user');
@@ -319,11 +321,11 @@ try {
   await runFocusSmoke({ main, click, shot, passed, until, delay, route, fillLogin });
   }
   assert.equal(report.errors.length, 0, JSON.stringify(report.errors));
-  await writeFile(path.join(output, process.env.COMPANION_ONLY?'report-companion.json':'report.json'), JSON.stringify(report, null, 2));
+  await writeFile(path.join(output, process.env.UNIFIED_ONLY?'report-unified.json':process.env.WORKSPACE_ONLY?'report-workspace.json':process.env.COMPANION_ONLY?'report-companion.json':'report.json'), JSON.stringify(report, null, 2));
   console.log(`Screenshots: ${output}`);
 } catch (error) {
   report.failure = error.stack;
-  await mkdir(output, { recursive: true }); await writeFile(path.join(output, process.env.COMPANION_ONLY?'report-companion.json':'report.json'), JSON.stringify(report, null, 2));
+  await mkdir(output, { recursive: true }); await writeFile(path.join(output, process.env.UNIFIED_ONLY?'report-unified.json':process.env.WORKSPACE_ONLY?'report-workspace.json':process.env.COMPANION_ONLY?'report-companion.json':'report.json'), JSON.stringify(report, null, 2));
   console.error(error); process.exitCode = 1;
 } finally {
   if (browserConnection) { await browserConnection.send('Browser.close').catch(() => {}); browserConnection.close(); }

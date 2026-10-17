@@ -1,0 +1,80 @@
+{
+  "builtAtUtc": "2026-10-17T11:00:04.797Z",
+  "checkedAtUtc": "2026-10-17T11:04:36.831Z",
+  "artifact": "MotiBuddy-Verify-workspace.exe",
+  "bytes": 260548608,
+  "sha256": "FBFB56A3027450E2F5609F395C19DC3DB623AE1EAD1FD065C1118D46C726CE60",
+  "copiedHashMatches": true,
+  "applicationId": "com.motibuddy.verify",
+  "launcher": "Start-MotiBuddy-AI.cmd",
+  "preChangeCheckpoint": {
+    "commit": "49d7e31b9098b7bcd82cccc0090881073cb09c55",
+    "branch": "codex/desktop-reliability",
+    "remoteVerified": true
+  },
+  "currentChangesCommitted": false,
+  "validation": {
+    "typescript": "passed",
+    "nodeTestsPassed": 175,
+    "rustTestsPassed": 31,
+    "ignoredNativeAcceptanceTestsExplicitlyRun": 1,
+    "nativeToastDispatch": "passed with fixed brand title and logo",
+    "nativePopupVisualAndSoundAuditoryAcceptance": "pending-user",
+    "cargoCheck": "passed",
+    "frontendBuild": "passed",
+    "releaseBuild": "passed",
+    "fullBrowserChecks": 25,
+    "fullBrowserScreenshots": 60,
+    "targetedBrowserChecks": 4,
+    "targetedBrowserScreenshots": 10,
+    "browserRuntimeErrors": 0,
+    "browserFixtures": "isolated synthetic account, AI, weather and actual MP3 audio",
+    "browserAudio": "AudioContext decode/start/ended observed; mute prevented further TTS calls; focus music currentTime advanced",
+    "realApiChecksPassed": 4,
+    "realWeatherForecastAndGeocoding": "passed with public Hangzhou coordinates via configured system proxy",
+    "runningLocalGateway": "ready",
+    "secretScan": "passed",
+    "launcherTestsPassed": 4
+  },
+  "music": [
+    {
+      "file": "meditation.mp3",
+      "bytes": 7042622,
+      "sha256": "AC1332A12FE020CBEEE206C7F33A82E29109D5CE63636E3302454E3BDFC36187",
+      "mpegHeaderVerified": true,
+      "author": "Kevin MacLeod (incompetech.com)",
+      "license": "CC BY 4.0"
+    },
+    {
+      "file": "dream.mp3",
+      "bytes": 8576659,
+      "sha256": "F12CBB52BD4B92BD6CF8A343645567C119627E9CBF98108A3EB6AC2CC275EE46",
+      "mpegHeaderVerified": true,
+      "author": "Kevin MacLeod (incompetech.com)",
+      "license": "CC BY 4.0"
+    },
+    {
+      "file": "lemon.mp3",
+      "bytes": 5057420,
+      "sha256": "2486B8ECFE4575F9AB31613A2C03C2EE45E6E5280301D05B4DD7237C9E1C2531",
+      "mpegHeaderVerified": true,
+      "author": "Kevin MacLeod (incompetech.com)",
+      "license": "CC BY 4.0"
+    },
+    {
+      "file": "cities.mp3",
+      "bytes": 5892113,
+      "sha256": "E7365652410D1FBC8A14D87537855D625C1A5FA8B7DE8C626F47C13256EF2DDD",
+      "mpegHeaderVerified": true,
+      "author": "Kevin MacLeod (incompetech.com)",
+      "license": "CC BY 4.0"
+    }
+  ],
+  "limits": {
+    "historyThreads": 100,
+    "messagesPerThread": 200,
+    "historyBytesApprox": 8000000,
+    "geolocation": "explicit in-product consent required; never supplied to AI",
+    "backgroundReminders": "application must remain running, including tray; no execution after actual quit or during sleep"
+  }
+}

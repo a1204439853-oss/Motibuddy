@@ -1,0 +1,15 @@
+import {useContext,useState} from 'react';
+import {TaskContext} from '@/contexts/taskContext';
+import {useLocale} from '@/i18n/react';
+import {useBusinessSettings} from '@/hooks/useBusinessSettings';
+import {localDateKey} from '@/services/companionRecords';
+
+export default function CalendarOverview(){
+ const {locale}=useLocale(),s=(a:string,b:string)=>locale==='zh-CN'?a:b,{tasks}=useContext(TaskContext),store=useBusinessSettings();
+ const [day,setDay]=useState(()=>new Date()),[month,setMonth]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1));
+ const start=new Date(month.getFullYear(),month.getMonth(),1);start.setDate(1-(start.getDay()+6)%7);
+ const dates=Array.from({length:42},(_,i)=>new Date(start.getFullYear(),start.getMonth(),start.getDate()+i));
+ const daily=tasks.filter(t=>localDateKey(t.startAt??t.dueDate)===localDateKey(day)).sort((a,b)=>+(a.startAt??a.dueDate)-+(b.startAt??b.dueDate));
+ const anniversaries=(store.settings.anniversaries??[]) as {id:string;title:string;date:string}[];
+ return <section className="calendar-overview module-panel"><header className="module-heading"><div><span className="module-eyebrow">{s('每一天，都值得认真对待','A little room for every day')}</span><h1>{s('日历','Calendar')}</h1></div><button onClick={()=>{const now=new Date();setDay(now);setMonth(new Date(now.getFullYear(),now.getMonth(),1));}}>{s('今天','Today')}</button></header><div className="month-controls"><button aria-label={s('上个月','Previous month')} onClick={()=>setMonth(new Date(month.getFullYear(),month.getMonth()-1,1))}>‹</button><h2>{month.toLocaleDateString(locale,{year:'numeric',month:'long'})}</h2><button aria-label={s('下个月','Next month')} onClick={()=>setMonth(new Date(month.getFullYear(),month.getMonth()+1,1))}>›</button></div><div className="month-grid">{(locale==='zh-CN'?['一','二','三','四','五','六','日']:['M','T','W','T','F','S','S']).map((d,i)=><span className="weekday" key={i}>{d}</span>)}{dates.map(d=><button key={localDateKey(d)} aria-pressed={localDateKey(d)===localDateKey(day)} className={d.getMonth()!==month.getMonth()?'outside-month':''} onClick={()=>setDay(d)}><time>{d.getDate()}</time><span className="calendar-dots">{tasks.some(t=>localDateKey(t.startAt??t.dueDate)===localDateKey(d))&&<i/>}{anniversaries.some(a=>a.date?.slice(5,10)===localDateKey(d).slice(5))&&<i/>}</span></button>)}</div><section className="calendar-day-agenda"><h2>{day.toLocaleDateString(locale,{month:'long',day:'numeric',weekday:'long'})}</h2>{daily.length?daily.map(t=><article key={t.id}><time>{(t.startAt??t.dueDate).toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit',hour12:false})}</time><div><strong>{t.title}</strong><p>{t.status==='completed'?s('已完成','Completed'):t.timingMode==='range'?s('日程安排','Scheduled'):s('截止时间','Deadline')}</p></div></article>):<p className="module-muted">{s('这一天还没有任务安排，留一点空白也很好。','Nothing scheduled. A little space can be lovely.')}</p>}{anniversaries.filter(a=>a.date?.slice(5,10)===localDateKey(day).slice(5)).map(a=><article key={a.id}>♡ {a.title}</article>)}</section></section>;
+}
