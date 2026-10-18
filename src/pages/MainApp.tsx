@@ -1,9 +1,9 @@
-import '@/components/ui/workspace.css';
 import { t } from '@/i18n/core';
 import { useLocale } from '@/i18n/react';
 import WeatherCard from '@/components/ui/WeatherCard';
 import CalendarWorkspace from '@/components/statistics/CalendarWorkspace';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState, useRef } from 'react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/contexts/authContext';
 import { TaskContext } from '@/contexts/taskContext';
@@ -25,10 +25,20 @@ import NotebookModule from '@/components/notebook/NotebookModule';
 
 const MainApp = () => {
   useLocale();
+  const reducedMotion = useReducedMotion();
+  const viewContent = useRef<HTMLDivElement>(null);
   const { currentUser, currentPet, isAuthenticated, sessionVersion } = useContext(AuthContext);
   const { addTask } = useContext(TaskContext);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [activeView, setActiveView] = useState<'tasks' | 'statistics' | 'agent' | 'focus' | 'anniversaries' | 'weather' | 'calendar'>('tasks');
+  useEffect(() => {
+    if (reducedMotion || !viewContent.current?.animate) return;
+    const animation = viewContent.current.animate(
+      [{ transform: 'translateY(8px)', opacity: .7 }, { transform: 'translateY(0)', opacity: 1 }],
+      { duration: 180, easing: 'cubic-bezier(.2,.8,.2,1)' }
+    );
+    return () => animation.cancel();
+  }, [activeView, reducedMotion]);
   const [isTaskFormOpen, setIsTaskFormOpen] = useState<boolean>(false);
   const [editingTask, setEditingTask] = useState<any>(null);
   const [agentMessageId, setAgentMessageId] = useState(0);
@@ -126,7 +136,7 @@ const MainApp = () => {
   }
 
   return (
-    <div data-main-shell style={{
+    <div data-main-shell className="neo-workspace" style={{
       position: 'relative',
       minHeight: '100vh',
       overflow: 'hidden',
@@ -137,7 +147,7 @@ const MainApp = () => {
       backgroundRepeat: 'no-repeat'
     }}>
       {/* White overlay with 80% opacity */}
-      <div style={{
+      <div className="neo-workspace-overlay" style={{
         position: 'absolute',
         top: 0,
         left: 0,
@@ -165,14 +175,13 @@ const MainApp = () => {
         <div className="flex flex-1 overflow-hidden" style={{ height: 'calc(100vh - 48px)' }}>
           {/* Sidebar */}
           <motion.div
+            className="neo-sidebar-rail bg-white overflow-hidden flex flex-col h-full"
             initial={false}
-            animate={{ width: isSidebarOpen ? '22%' : '0px' }}
-            className="bg-white shadow-lg overflow-hidden transition-all duration-300 flex flex-col h-full"
+            animate={{ width: isSidebarOpen ? 'var(--neo-sidebar-width)' : '0px' }}
             style={{
               boxShadow: '3px 0 0 rgba(0, 0, 0, 0.1)',
               minHeight: '100%',
-              maxWidth: '280px',
-              minWidth: isSidebarOpen ? '240px' : '0px'
+              flexShrink: 0
             }}
           >
             {isSidebarOpen && (
@@ -187,12 +196,12 @@ const MainApp = () => {
           </motion.div>
 
           {/* Main content */}
-          <div className="flex-1 overflow-hidden p-2 lg:p-3" style={{ height: '100%' }}>
+          <div className="neo-main-content flex-1 overflow-hidden" style={{ height: '100%', minWidth: 0 }}>
             <div className="h-full flex flex-col">
-              <div className="flex flex-col lg:flex-row gap-2 lg:gap-3 flex-1" style={{ minHeight: 0 }}>
+              <div className="neo-workspace-columns flex flex-col lg:flex-row flex-1" style={{ minHeight: 0 }}>
                 {/* Task management section */}
-                <div className="flex-1 min-w-0" style={{ minHeight: 0 }}>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-1" style={{ display: activeView === 'agent' || activeView === 'focus' || activeView === 'anniversaries' || activeView === 'weather' || activeView === 'calendar' ? 'none' : undefined }}>
+                <div className="neo-primary-column flex-1 min-w-0" style={{ minHeight: 0 }}>
+                  <div className="neo-page-heading flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2" style={{ display: activeView === 'agent' || activeView === 'focus' || activeView === 'anniversaries' || activeView === 'weather' || activeView === 'calendar' ? 'none' : undefined }}>
                     <h1 style={{
                       fontSize: 'clamp(16px, 2.2vw, 22px)',
                       fontWeight: 'bold',
@@ -204,9 +213,10 @@ const MainApp = () => {
                     </h1>
 
                     {activeView === 'tasks' && (
-                      <div className="flex gap-2" style={{ marginTop: '24px' }}>
+                      <div className="flex gap-2">
                         <VoiceInput onTaskCreated={handleVoiceTaskCreated} />
                         <button
+                          className="neo-button neo-primary"
                           onClick={() => setIsTaskFormOpen(!isTaskFormOpen)}
                           style={{
                             backgroundColor: '#00CECB',
@@ -256,7 +266,7 @@ const MainApp = () => {
                       initial={{ opacity: 0, y: -20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
-                      className="mb-2 bg-white p-2 rounded border-2 border-black"
+                      className="neo-task-form bg-white border-2 border-black"
                       style={{
                         boxShadow: '2px 2px 0 #222222'
                       }}
@@ -272,7 +282,7 @@ const MainApp = () => {
                   )}
 
                   {/* Content based on active view */}
-                  <div style={{
+                  <div ref={viewContent} className="neo-view-content" data-active-view={activeView} style={{
                     boxShadow: 'none',
                     borderRadius: '6px',
                     overflow: 'visible',
@@ -298,12 +308,11 @@ const MainApp = () => {
                 </div>
 
                 {/* Pet section */}
-                <div id="pet-companion-region" className="w-full lg:w-[32%] xl:w-[30%]" style={{ minWidth: '280px', maxWidth: '380px' }}>
+                <div id="pet-companion-region" className="neo-companion-column">
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.2 }}
-                    className="bg-white p-2 lg:p-3 rounded border-2 border-black h-full"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="neo-companion-panel bg-white h-full"
                     style={{
                       boxShadow: '2px 2px 0 #222222',
                       minHeight: '220px',

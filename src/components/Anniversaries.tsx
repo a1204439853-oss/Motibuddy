@@ -3,7 +3,6 @@ import { useLocale } from '@/i18n/react';
 import { useBusinessSettings } from '@/hooks/useBusinessSettings';
 import { anniversariesSchema, anniversaryDate, type Anniversary } from '@/services/productData';
 import { prepareAgentImage } from '@/services/agentClient';
-import './ui/product.css';
 const backgrounds={sunshine:'#fff2bd',mint:'#d9f3e6',rose:'#ffe0df',sky:'#ddedff'};
 export default function Anniversaries(){
   const {locale}=useLocale(),s=(zh:string,en:string)=>locale==='zh-CN'?zh:en;

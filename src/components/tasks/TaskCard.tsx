@@ -16,7 +16,7 @@ interface TaskCardProps {
 }
 
 const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationStart }: TaskCardProps) => {
-  useLocale();
+  const { locale } = useLocale();
   const { completeTask, uncompleteTask, updateTask, deleteTask } = useContext(TaskContext);
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
@@ -89,23 +89,10 @@ const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationS
   };
 
   return (
-    <motion.div
+    <article
+      className={`neo-task-card${isCompleting ? ' is-completing' : ''}`}
+      data-status={task.status}
       aria-busy={isPending}
-      layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ 
-        opacity: isCompleting ? 0.7 : 1, 
-        y: 0,
-        scale: isCompleting ? 0.9 : 1,
-        zIndex: isCompleting ? 0 : 1
-      }}
-      exit={{ opacity: 0, scale: 0.8 }}
-      transition={{ 
-        layout: { duration: 0.5, ease: [0.4, 0, 0.2, 1] },
-        opacity: { duration: 0.3 },
-        scale: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
-        y: { duration: 0.3 }
-      }}
       style={{
         backgroundColor: 'white',
         padding: '12px',
@@ -126,19 +113,18 @@ const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationS
         <div className="flex-1">
           {/* Task title and status */}
           <div className="flex items-start gap-2">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
+            <button
+              type="button"
+              aria-label={`${task.status === 'completed' ? (locale === 'zh-CN' ? '重新打开任务' : 'Reopen task') : (locale === 'zh-CN' ? '完成任务' : 'Complete task')}：${task.title}`}
+              aria-pressed={task.status === 'completed'}
               onClick={handleToggleComplete}
               disabled={isPending}
-              className="mt-0.5 flex-shrink-0"
+              className="neo-task-toggle"
             >
               {task.status === 'completed' ? (
-                <i className="fa-solid fa-check-circle text-green-500 text-lg"></i>
-              ) : (
-                <i className="fa-regular fa-circle text-gray-400 text-lg"></i>
-              )}
-            </motion.button>
+                <i className="fa-solid fa-check" aria-hidden="true"></i>
+              ) : null}
+            </button>
             
             <div className="flex-1">
               <h3 style={{
@@ -153,7 +139,8 @@ const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationS
               </h3>
               
               {task.description && (
-                <p style={{
+                <div className="neo-task-description-wrap">
+                <p className="neo-task-description" style={{
                   fontSize: '11px',
                   color: task.status === 'completed' ? '#808080' : '#222222',
                   fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
@@ -162,9 +149,10 @@ const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationS
                 }}>
                   {task.description}
                 </p>
+                </div>
               )}
               
-              <div className="flex flex-wrap gap-1.5 mt-2">
+              <div className="neo-task-meta flex flex-wrap gap-1.5 mt-2">
                 {/* Priority badge */}
                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
                   {label(task.priority)}
@@ -207,8 +195,8 @@ const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationS
         {/* Actions menu */}
         <div className="relative ml-2" style={{ position: 'relative', zIndex: 1000, overflow: 'visible' }}>
           <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+            aria-label={locale === 'zh-CN' ? `任务操作：${task.title}` : `Task actions: ${task.title}`}
+            aria-expanded={isMenuOpen}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
           >
@@ -217,6 +205,7 @@ const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationS
           
           {isMenuOpen && (
             <motion.div
+              className="neo-task-menu"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               style={{
@@ -264,7 +253,7 @@ const TaskCard = ({ task, onEditTask, isCompleting = false, onCompleteAnimationS
           )}
         </div>
       </div>
-    </motion.div>
+    </article>
   );
 };
 

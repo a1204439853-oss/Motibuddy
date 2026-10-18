@@ -6,7 +6,6 @@ import {journalEntrySchema,type JournalEntry} from '@/services/companionRecords'
 import {prepareAgentImage} from '@/services/agentClient';
 import {z} from 'zod';
 import {registerExitPreparation} from '@/services/exitPreparation';
-import './notebook.css';
 export default function Notebook(){
  const {locale}=useLocale(),s=(a:string,b:string)=>locale==='zh-CN'?a:b,store=useBusinessSettings();const entries=z.array(journalEntrySchema).parse(store.settings.journalEntries??[]);const [index,setIndex]=useState(0),[draft,setDraft]=useState<JournalEntry|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[drawing,setDrawing]=useState(false),[deleting,setDeleting]=useState(false);const activeStroke=useRef<JournalEntry['strokes'][number]|null>(null);const entry=draft??entries[Math.min(index,entries.length-1)];
  const [ready,setReady]=useState(false);const lastSaved=useRef<string>();const readyRef=useRef(ready);readyRef.current=ready;const liveDraft=useRef(draft);liveDraft.current=draft;const saveRef=useRef(store.save);saveRef.current=store.save;

@@ -4,6 +4,8 @@ import { useContext, useState, useEffect, useLayoutEffect, useRef, useCallback }
 import { AuthContext } from '@/contexts/authContext';
 import { PetContext } from '@/contexts/petContext';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { neoTransition } from '@/lib/neoMotion';
 import { toast } from 'sonner';
 import {useBusinessSettings} from '@/hooks/useBusinessSettings';
 import {personalityBubble} from '@/services/petPersonality';
@@ -35,6 +37,8 @@ const PRIORITY: Record<VideoType, number> = {
 
 const PetDisplay = ({ agentMessageId = 0 }: { agentMessageId?: number }) => {
   const {locale}=useLocale();
+  const reducedMotion = useReducedMotion();
+  const [reacting, setReacting] = useState(false);
   const personalityStore=useBusinessSettings();
   const { currentPet } = useContext(AuthContext);
   const { interactWithPet, feedPet, playWithPet, getPetDialogue } = useContext(PetContext);
@@ -47,6 +51,12 @@ const PetDisplay = ({ agentMessageId = 0 }: { agentMessageId?: number }) => {
 
   // Video state
   const [activeVideo, setActiveVideo] = useState<VideoType>(VIDEOS.IDLE);
+  useEffect(() => {
+    if (reducedMotion || activeVideo === VIDEOS.IDLE || activeVideo === VIDEOS.SICK) { setReacting(false); return; }
+    setReacting(true);
+    const timer = setTimeout(() => setReacting(false), 420);
+    return () => clearTimeout(timer);
+  }, [activeVideo, reducedMotion]);
   const [randomVideoVariant, setRandomVideoVariant] = useState(1);
 
   // Refs for video elements - use a single ref object
@@ -400,9 +410,9 @@ const PetDisplay = ({ agentMessageId = 0 }: { agentMessageId?: number }) => {
   const status = statusConfig[petMood] || statusConfig.neutral;
 
   return (
-    <div className="flex flex-col items-center w-full">
+    <div className="neo-pet-display flex flex-col items-center w-full">
       {/* Pet name and level */}
-      <div className="text-center mb-4">
+      <div className="neo-pet-heading">
         <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#222222', marginBottom: '8px', fontFamily }}>
           {currentPet.name}
         </h2>
@@ -410,13 +420,18 @@ const PetDisplay = ({ agentMessageId = 0 }: { agentMessageId?: number }) => {
       </div>
 
       {/* Experience bar */}
-      <div style={{ width: '100%', maxWidth: '200px', height: '8px', backgroundColor: '#f0f0f0', borderRadius: '4px', marginBottom: '16px', border: '2px solid #222222' }}>
+      <div className="neo-pet-xp" style={{ width: '100%', maxWidth: '200px', height: '8px', backgroundColor: '#f0f0f0', borderRadius: '4px', marginBottom: '16px', border: '2px solid #222222' }}>
         <div style={{ height: '100%', backgroundColor: '#FFD700', borderRadius: '4px', width: `${(currentPet.experience / (currentPet.level * 50)) * 100}%`, borderRight: '2px solid #222222' }}></div>
       </div>
 
       {/* Pet video container */}
-      <div className="relative mb-4 w-full flex justify-center">
+      <div className="neo-pet-stage relative w-full flex justify-center">
         <div
+          className={`neo-pet-hit${reacting ? ' neo-pet-reaction' : ''}`}
+          role="button"
+          tabIndex={0}
+          aria-label={locale === 'zh-CN' ? `摸摸${currentPet.name}` : `Pet ${currentPet.name}`}
+          onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); handlePetClick(); } }}
           onClick={handlePetClick}
           data-testid="pet-interaction"
           data-active-video={activeVideo}
@@ -458,8 +473,9 @@ const PetDisplay = ({ agentMessageId = 0 }: { agentMessageId?: number }) => {
         {showDialogue && (
           <motion.div
             data-testid="pet-dialogue"
-            initial={{ opacity: 0, y: 30 }}
+            initial={reducedMotion ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={neoTransition}
             style={{
               position: 'absolute',
               bottom: '-12px',
@@ -485,7 +501,7 @@ const PetDisplay = ({ agentMessageId = 0 }: { agentMessageId?: number }) => {
       </div>
 
       {/* Stats bars - 原始样式 */}
-      <div className="w-full space-y-2 mb-4">
+      <div className="neo-pet-stats w-full space-y-2">
         {([{ key: 'health', title: 'Health' }, { key: 'happiness', title: 'Happiness' }, { key: 'hunger', title: 'Fullness' }, { key: 'energy', title: 'Energy' }] as const).map((stat) => {
           const value = stat.key === 'hunger' ? 100 - currentPet.hunger : currentPet[stat.key];
           const color = value > 70 ? '#00CECB' : value > 30 ? '#FFD700' : '#FF5E5B';
@@ -495,7 +511,7 @@ const PetDisplay = ({ agentMessageId = 0 }: { agentMessageId?: number }) => {
                 <span style={{ fontWeight: 'bold', color: '#222222', fontFamily }}>{t(stat.title)}</span>
                 <span style={{ color: '#222222', fontWeight: 'bold', fontFamily }}>{value}/100</span>
               </div>
-              <div style={{ width: '100%', height: '8px', backgroundColor: '#f0f0f0', borderRadius: '4px', border: '2px solid #222222' }}>
+              <div className="neo-pet-stat-track" style={{ width: '100%', height: '8px', backgroundColor: '#f0f0f0', borderRadius: '4px', border: '2px solid #222222' }}>
                 <div style={{ height: '100%', backgroundColor: color, borderRadius: '4px', width: `${value}%`, borderRight: '2px solid #222222' }}></div>
               </div>
             </div>
@@ -504,7 +520,7 @@ const PetDisplay = ({ agentMessageId = 0 }: { agentMessageId?: number }) => {
       </div>
 
       {/* Pet status - 卡片样式 */}
-      <div style={{
+      <div className="neo-pet-status" style={{
         backgroundColor: 'rgba(255, 255, 255, 0.8)',
         borderRadius: '10px',
         padding: '12px 16px',
@@ -520,7 +536,7 @@ const PetDisplay = ({ agentMessageId = 0 }: { agentMessageId?: number }) => {
       </div>
 
       {/* Action buttons - 更长的按钮 */}
-      <div className="flex gap-4 w-full">
+      <div className="neo-pet-actions flex w-full">
         <button
           onClick={handleFeed}
           disabled={isInteractionPlayingRef.current}

@@ -253,7 +253,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
   };
   
   return (
-    <div className="flex flex-col h-full">
+    <div className="neo-sidebar flex flex-col h-full">
       <section className="sidebar-profile"><button className="sidebar-avatar" aria-label={locale==='zh-CN'?'更换头像':'Change avatar'} onClick={()=>navigate('/profile')}><img src={getAvatarImage()} alt={currentUser.username}/></button><button className="sidebar-clock" aria-label={locale==='zh-CN'?'查看日历':'Open calendar'} aria-current={activeView==='calendar'?'page':undefined} onClick={()=>setActiveView('calendar')}><p>{now.toLocaleDateString(locale,{month:'long',day:'numeric',weekday:'short'})}</p><time>{now.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit',hour12:false})}</time><i className="fa-regular fa-calendar" aria-hidden="true"/></button></section><WeatherCard onOpen={()=>setActiveView('weather')} selected={activeView==='weather'}/>
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto py-3">
@@ -272,6 +272,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
         <div className="space-y-1.5 px-3">
           {navItems.map((item) => (
             <button
+              className="neo-nav-item"
               key={item.id}
               aria-current={activeView === item.id ? 'page' : undefined}
               onClick={item.onClick}
@@ -313,7 +314,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
               <span>{item.label}</span>
               
               {item.badge && (
-                <span style={{
+                <span data-widget-state={item.badge === 'Active' ? 'active' : 'inactive'} style={{
                   marginLeft: 'auto',
                   padding: '2px 8px',
                   borderRadius: '9999px',
@@ -352,6 +353,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
         
         <div className="px-3 pb-3">
           <button
+            className="neo-nav-item"
             onClick={() => navigate('/profile')}
             style={{
               width: '100%',

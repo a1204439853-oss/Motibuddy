@@ -5,7 +5,6 @@ import { TaskContext } from '@/contexts/taskContext';
 import { calendarDay, localDay, shiftDay, weekStart } from '@/services/calendarSchedule';
 import type { Task } from '@/types';
 import TaskForm from '@/components/tasks/TaskForm';
-import './calendar.css';
 import { taskConflicts, conflictKey, conflictApproval } from '@/services/productData';
 import { useBusinessSettings } from '@/hooks/useBusinessSettings';
 

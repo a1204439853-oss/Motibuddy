@@ -12,7 +12,6 @@ import ProfileSurvey from '@/components/agent/ProfileSurvey';
 import PersonalitySetting from '@/components/ui/PersonalitySetting';
 import SoundSettings from '@/components/ui/SoundSettings';
 import {prepareAgentImage} from '@/services/agentClient';
-import '@/components/ui/workspace.css';
 import { invoke } from '@tauri-apps/api/tauri';
 import { isTauri } from '@/services/tauriCommands';
 
@@ -243,7 +242,7 @@ const ProfilePage = () => {
         <motion.div className="profile-panel"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.18 }}
           style={{ 
             position: 'relative', zIndex: 3, backgroundColor: 'rgba(255, 255, 255, 0.9)', 
             borderRadius: '12px', boxShadow: '4px 4px 0 #222222', border: '2px solid #222222',
@@ -271,7 +270,7 @@ const ProfilePage = () => {
             {/* Avatar */}
             <div className="flex flex-col items-center">
               <div 
-                className="w-20 h-20 rounded-full overflow-hidden border-2 border-orange-100 shadow-md mb-3 relative"
+                className="neo-profile-avatar w-20 h-20 rounded-full overflow-hidden border-2 mb-3 relative"
                 style={{ position: 'relative' }}
               >
                 <img 
@@ -629,9 +628,9 @@ const Modal = ({ children, onClose }: { children: React.ReactNode; onClose: () =
     onClick={onClose}
   >
     <motion.div
-      initial={{ scale: 0.9, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      exit={{ scale: 0.9, opacity: 0 }}
+      initial={{ y: 8, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: -6, opacity: 0 }}
       style={{
         backgroundColor: 'white', borderRadius: '12px', padding: '24px',
         maxWidth: '400px', width: '100%', border: '3px solid #222222', boxShadow: '6px 6px 0 #222222'

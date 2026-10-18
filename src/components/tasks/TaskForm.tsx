@@ -149,8 +149,8 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
           {task ? t("Edit Task") : t("Add New Task")}
         </h2>
         <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
+          whileHover={{ x: -1, y: -1 }}
+          whileTap={{ x: 2, y: 2 }}
           type="button"
           onClick={onClose}
           disabled={isSubmitting}
@@ -274,8 +274,8 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
       {/* Submit button */}
       <div className="flex gap-2 pt-2">
         <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          whileHover={{ x: -1, y: -1 }}
+          whileTap={{ x: 2, y: 2 }}
           type="submit"
           disabled={isSubmitting}
           style={{
@@ -314,8 +314,8 @@ const TaskForm = ({ onClose, task }: TaskFormProps) => {
         </motion.button>
         
         <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          whileHover={{ x: -1, y: -1 }}
+          whileTap={{ x: 2, y: 2 }}
           type="button"
           onClick={onClose}
           disabled={isSubmitting}

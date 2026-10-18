@@ -4,7 +4,6 @@ import { useLocale } from '@/i18n/react';
 import { useBusinessSettings } from '@/hooks/useBusinessSettings';
 import { nextJobTime, scheduledJobsSchema, parseScheduleText, type ScheduledJob } from '@/services/productData';
 import { enableDesktopNotifications } from '@/services/desktopNotifications';
-import './ui/product.css';
 export default function ScheduledTasks({request,compact=false}:{request?:{id:number;text:string};compact?:boolean}){
   const {locale}=useLocale(),s=(zh:string,en:string)=>locale==='zh-CN'?zh:en,store=useBusinessSettings();
   const jobs=scheduledJobsSchema.parse(store.settings.scheduledJobs??[]);

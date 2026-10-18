@@ -265,8 +265,8 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
     <div className="relative">
       {/* Voice input button - 统一风格 */}
       <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ x: -1, y: -1 }}
+        whileTap={{ x: 2, y: 2 }}
         onClick={isRecording ? stopVoiceRecognition : startVoiceRecognition}
         disabled={!isSupported}
         style={{
@@ -295,9 +295,9 @@ const VoiceInput = ({ onTaskCreated }: VoiceInputProps) => {
       <AnimatePresence>
         {isRecording && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
             style={{
               position: 'absolute',
               top: 'calc(100% + 8px)',

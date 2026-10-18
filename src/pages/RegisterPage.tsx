@@ -81,7 +81,7 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
   };
 
   return (
-    <div style={{ position: 'relative', minHeight: '100vh', overflow: 'hidden' }}>
+    <div className="neo-auth" style={{ position: 'relative', minHeight: '100vh', overflow: 'hidden' }}>
       <PublicHeader onLogin={onSwitchToLogin} />
       {/* Background Video */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
@@ -125,7 +125,7 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
         justifyContent: 'center', 
         padding: '76px 20px 24px'
       }}>
-        <div style={{ width: '100%', maxWidth: '320px' }}>
+        <div className="neo-auth-panel" style={{ width: '100%', maxWidth: '320px' }}>
           <h1 style={{ 
             fontSize: '32px', 
             fontWeight: 'bold', 

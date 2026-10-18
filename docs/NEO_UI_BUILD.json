@@ -1,0 +1,45 @@
+{
+  "builtAtUtc": "2026-10-18T04:09:31.3632350+00:00",
+  "artifact": "MotiBuddy-Verify-neo-ui.exe",
+  "bytes": 260563456,
+  "sha256": "65d424d9327e054c8f1705cfef4ad5e73c35a38dc162ec1e1c3b3d9f165ad26a",
+  "applicationIdentifier": "com.motibuddy.verify",
+  "buildCommand": "npm run tauri -- build --config src-tauri/tauri.verify.conf.json --bundles none --ci",
+  "validation": {
+    "typescript": "passed",
+    "businessTests": 184,
+    "nativeTests": 31,
+    "nativeIgnoredTests": 1,
+    "frontendProductionBuild": "passed",
+    "windowsReleaseBuild": "passed",
+    "ui": [
+      {
+        "name": "full-regression",
+        "passed": 25,
+        "screenshots": 60,
+        "runtimeErrors": 0
+      },
+      {
+        "name": "production-design",
+        "passed": 5,
+        "screenshots": 13,
+        "runtimeErrors": 0
+      },
+      {
+        "name": "weather-calendar",
+        "passed": 5,
+        "screenshots": 10,
+        "runtimeErrors": 0
+      },
+      {
+        "name": "assistant-media",
+        "passed": 6,
+        "screenshots": 10,
+        "runtimeErrors": 0
+      }
+    ],
+    "credentialScan": "passed",
+    "copiedExecutableHashMatches": true
+  },
+  "manualDesktopAcceptance": "pending"
+}

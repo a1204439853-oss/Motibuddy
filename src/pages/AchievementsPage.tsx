@@ -37,7 +37,7 @@ const AchievementsPage = () => {
   }
 
   return (
-    <div style={{ position: 'relative', width: '100%', minHeight: '100vh', overflow: 'hidden' }}>
+    <div className="neo-achievements" style={{ position: 'relative', width: '100%', minHeight: '100vh', overflow: 'hidden' }}>
       {/* Background Image */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
         <img
@@ -65,10 +65,10 @@ const AchievementsPage = () => {
       </div>
       
       <div className="w-full min-h-screen flex items-center justify-center p-4">
-        <motion.div
+        <motion.div className="neo-achievement-panel"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.18 }}
           style={{ 
             position: 'relative', 
             zIndex: 3, 

@@ -6,7 +6,7 @@ export async function runFocusSmoke({ main, click, shot, passed, until, delay, r
   // Sidebar selection must survive mouse leave and React updates.
   assert.equal(await main.evaluate(`document.querySelector('button[aria-current=page]').textContent.trim()`),'宠物助手');
   await main.evaluate(`document.querySelector('button[aria-current=page]').dispatchEvent(new MouseEvent('mouseout',{bubbles:true}))`);
-  assert.equal(await main.evaluate(`getComputedStyle(document.querySelector('button[aria-current=page]')).backgroundColor`),'rgb(255, 94, 91)');
+  assert.equal(await main.evaluate(`getComputedStyle(document.querySelector('button[aria-current=page]')).backgroundColor`),'rgb(69, 214, 197)');
   assert.equal(await main.evaluate(`document.querySelectorAll('.mb-agent-shortcut').length`),6);
   await main.evaluate(`document.querySelector('.mb-agent-shortcut').click()`);await until(()=>main.evaluate(`document.querySelector('.mb-agent-log').getAttribute('aria-busy')==='false'`),'auto plan idle');await delay(100);
   assert.equal(await main.evaluate(`document.querySelector('.mb-agent-shortcut').getAttribute('aria-pressed')`),'true');

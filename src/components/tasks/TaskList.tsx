@@ -6,6 +6,8 @@ import { TaskStatus, Task } from '@/types';
 import { formatDate, getTimeRemaining } from '@/lib/utils';
 import TaskCard from './TaskCard';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { neoEase, neoTransition } from '@/lib/neoMotion';
 import { Empty } from '../Empty';
 import {SavedDailyPlan} from '@/components/agent/SavedAssistantViews';
 import ScheduledTasks from '@/components/ScheduledTasks';
@@ -17,6 +19,7 @@ interface TaskListProps {
 
 const TaskList = ({ onEditTask }: TaskListProps) => {
   const {locale}=useLocale();
+  const reducedMotion = useReducedMotion();
   const { tasks, sortTasks, filterTasks, searchTasks, isLoading, isSaving, loadError, saveError, retryLoad } = useContext(TaskContext);
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all' | 'today' | 'daily'>('all');
   const [sortCriteria, setSortCriteria] = useState<'dueDate' | 'priority' | 'createdAt' | 'durationAsc' | 'durationDesc'>('dueDate');
@@ -26,6 +29,8 @@ const TaskList = ({ onEditTask }: TaskListProps) => {
   const [isAtBottom, setIsAtBottom] = useState(false);
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
   const taskListRef = useRef<HTMLDivElement>(null);
+  const completionTimer = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => () => clearTimeout(completionTimer.current), []);
   
   // Update visible tasks when filters, sort criteria, search query, or tasks change
   const visibleTasks = useMemo(() => {
@@ -108,9 +113,10 @@ const TaskList = ({ onEditTask }: TaskListProps) => {
     setCompletingTaskId(taskId);
     
     // Clear the completing state after animation completes
-    setTimeout(() => {
+    clearTimeout(completionTimer.current);
+    completionTimer.current = setTimeout(() => {
       setCompletingTaskId(null);
-    }, 800);
+    }, 520);
   };
   
   // Task counts for each status
@@ -122,7 +128,7 @@ const TaskList = ({ onEditTask }: TaskListProps) => {
   };
   
   return (
-    <div className="space-y-3 h-full flex flex-col">
+    <div className="neo-task-list space-y-3 h-full flex flex-col">
       {(loadError || saveError) && (
         <div role="alert" className="rounded-lg border-2 border-red-600 bg-white p-3 text-sm text-red-800">
           <p>{t(loadError || saveError || "")}</p>
@@ -133,7 +139,7 @@ const TaskList = ({ onEditTask }: TaskListProps) => {
         {isLoading ? t("Loading tasks…") : t("Saving task changes…")}
       </p>}
       {/* Search and filters */}
-      <div className="bg-white p-3 rounded-lg border-2 border-black" style={{ boxShadow: '3px 3px 0 #222222' }}>
+      <div className="neo-task-toolbar bg-white p-3 rounded-lg border-2 border-black">
         <div className="flex flex-col md:flex-row gap-2">
           {/* Search input */}
           <div className="relative flex-1">
@@ -184,7 +190,7 @@ const TaskList = ({ onEditTask }: TaskListProps) => {
         </div>
         
         {/* Status filters */}
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="neo-task-filters mt-3 flex flex-wrap gap-2">
           {[
             { value: 'all', label: t("All") },
             {value:'today',label:locale==='zh-CN'?'今日计划':'Daily plan'},
@@ -193,11 +199,10 @@ const TaskList = ({ onEditTask }: TaskListProps) => {
             { value: TaskStatus.COMPLETED, label: t("Completed") },
             { value: TaskStatus.OVERDUE, label: t("Overdue") }
           ].map((status) => (
-            <motion.button
+            <button
               key={status.value}
               aria-label={status.label}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              aria-pressed={filterStatus === status.value}
               onClick={() => setFilterStatus(status.value as TaskStatus | 'all' | 'today' | 'daily')}
               style={{
                 padding: '4px 10px',
@@ -215,7 +220,7 @@ const TaskList = ({ onEditTask }: TaskListProps) => {
               }}
             >
               {status.label} {status.value!=='today'&&status.value!=='daily'&&<span className="ml-1 bg-white text-gray-700 rounded-full px-2 py-0.5 text-xs">{taskCounts[status.value as keyof typeof taskCounts]}</span>}
-            </motion.button>
+            </button>
           ))}
         </div>
       </div>
@@ -227,8 +232,8 @@ const TaskList = ({ onEditTask }: TaskListProps) => {
           <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              className="space-y-2 pr-1 pb-8 overflow-y-auto h-full scrollbar-hide"
+              transition={neoTransition}
+              className="neo-task-scroll space-y-3 overflow-y-auto h-full"
               ref={taskListRef}
               style={{
                 scrollbarWidth: 'none', /* Firefox */
@@ -239,20 +244,11 @@ const TaskList = ({ onEditTask }: TaskListProps) => {
               {visibleTasks.map((task, index) => (
                 <motion.div
                   key={task.id}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ 
-                    opacity: 1, 
-                    y: 0,
-                    scale: completingTaskId === task.id ? 0.9 : 1
-                  }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ 
-                    layout: { duration: 0.5, ease: [0.4, 0, 0.2, 1] },
-                    opacity: { duration: 0.3 },
-                    scale: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
-                    y: { duration: 0.3 }
-                  }}
+                  layout={reducedMotion ? false : 'position'}
+                  initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: reducedMotion ? 0 : -6 }}
+                  transition={{ duration: reducedMotion ? 0 : 0.18, ease: neoEase }}
                   style={{
                     position: 'relative',
                     zIndex: completingTaskId === task.id ? 0 : visibleTasks.length - index

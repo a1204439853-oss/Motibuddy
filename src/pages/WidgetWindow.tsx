@@ -339,9 +339,9 @@ const WidgetWindow = () => {
       }}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="rounded-2xl"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="neo-widget"
         style={{
           width: 'min(360px, 100%)',
           maxHeight: 'calc(100vh - 40px)',
@@ -358,8 +358,7 @@ const WidgetWindow = () => {
       >
         {loadError && <p role="alert" className="p-3 text-sm text-red-700 bg-red-50">{t(loadError)}</p>}
         {/* Header - Draggable */}
-        <div 
-          className="px-3 py-1.5 flex items-center justify-between"
+        <div className="neo-widget-header px-3 py-1.5 flex items-center justify-between"
           style={{ 
             backgroundColor: 'rgba(255, 94, 91, 0.95)',
             borderBottom: '1px solid rgba(34, 34, 34, 0.1)',

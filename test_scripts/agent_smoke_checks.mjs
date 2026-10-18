@@ -122,7 +122,7 @@ export async function runAgentSmoke({ main, click, shot, passed, until, delay, r
   await click(main,'发送');await idle();
   assert.equal(await main.evaluate(`document.querySelectorAll('.mb-agent-card').length`),2);
   assert.equal(await main.evaluate(`window.__agentRequests.at(-1).mode`),'assist');
-  assert.equal(await main.evaluate(`getComputedStyle(document.querySelector('[data-testid=pet-dialogue]')).backgroundColor`),'rgba(255, 255, 255, 0.1)');
+  assert.equal(await main.evaluate(`getComputedStyle(document.querySelector('[data-testid=pet-dialogue]')).backgroundColor`),'rgb(255, 254, 248)');
   const count=(await state()).data.tasks.length;
   await main.evaluate(`document.querySelectorAll('.mb-agent-card input[type=checkbox]')[1].click()`);
   await click(main,'确认录入 1 项');await idle();

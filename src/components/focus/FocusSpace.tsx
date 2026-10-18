@@ -4,7 +4,6 @@ import { FocusContext, focusTotals } from '@/contexts/focusContext';
 import { useLocale } from '@/i18n/react';
 import { focusConfigSchema } from '@/services/focusSession';
 import { focusQuotes } from './focusQuotes';
-import './focus.css';
 import {registerExitPreparation} from '@/services/exitPreparation';
 import {useBusinessSettings} from '@/hooks/useBusinessSettings';
 import {useFocusMusic,focusTracks} from './focusMusic';

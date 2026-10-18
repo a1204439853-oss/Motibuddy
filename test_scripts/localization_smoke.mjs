@@ -10,6 +10,7 @@ import { runScheduleSmoke } from './schedule_smoke_checks.mjs';
 import { runCompanionSmoke } from './companion_smoke_checks.mjs';
 import { runUnifiedSmoke } from './unified_v4_smoke_checks.mjs';
 import {runWorkspaceV5} from './workspace_v5_smoke_checks.mjs';
+import {runNeoSmoke} from './neo_ui_smoke_checks.mjs';
 import { runWorkspaceSmoke } from './workspace_v3_smoke_checks.mjs';
 import { runConflictSmoke } from './conflict_smoke_checks.mjs';
 import { runProductSmoke } from './product_smoke_checks.mjs';
@@ -22,6 +23,7 @@ const port = 4175;
 const base = `http://127.0.0.1:${port}`;
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 const report = { checks: [], screenshots: [], errors: [] };
+const reportFile = path.join(output, process.env.NEO_ONLY ? (process.env.UI_PREVIEW_BUILD ? 'report-neo-production.json' : 'report-neo.json') : process.env.WORKSPACE_V5 ? 'report-workspace-v5.json' : process.env.UNIFIED_ONLY ? 'report-unified.json' : process.env.WORKSPACE_ONLY ? 'report-workspace.json' : process.env.COMPANION_ONLY ? 'report-companion.json' : 'report.json');
 let server, browser, browserConnection;
 
 async function until(action, description, timeout = 30000) {
@@ -160,22 +162,24 @@ async function shot(page, name, preserveReward = false) {
   await page.send('Page.bringToFront');
   await delay(700);
   const result = await page.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
-  const file = path.join(output, `${name}.png`); await writeFile(file, Buffer.from(result.data, 'base64'));
+  const file = path.join(output, `${process.env.UI_PREVIEW_BUILD ? 'production-' : ''}${name}.png`); await writeFile(file, Buffer.from(result.data, 'base64'));
   report.screenshots.push(file);
 }
 function passed(name) { report.checks.push(name); console.log(`PASS ${name}`); }
 let browserPort;
 try {
   await mkdir(output, { recursive: true }); await mkdir(profile, { recursive: true });
-  server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--port', String(port), '--strictPort'], { cwd: root, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+  server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', ...(process.env.UI_PREVIEW_BUILD ? ['preview'] : []), '--host', '127.0.0.1', '--port', String(port), '--strictPort'], { cwd: root, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
   let serverLog = ''; server.stdout.on('data', data => { serverLog += data; }); server.stderr.on('data', data => { serverLog += data; });
   await until(async () => { if (server.exitCode !== null) throw new Error(serverLog); return (await fetch(base)).ok; }, 'local preview server');
   for (const privatePath of ['/server/.env.local', `/@fs/${root.replaceAll('\\', '/')}/server/.env.local`]) {
     const response = await until(()=>fetch(`${base}${privatePath}`),'private configuration route');
-    assert.ok([403, 404].includes(response.status), 'development server must not serve private environment files');
+    if (process.env.UI_PREVIEW_BUILD && response.status === 200) {
+      assert.ok(response.headers.get('content-type')?.includes('text/html') && (await response.clone().text()).trimStart().toLowerCase().startsWith('<!doctype html>'), 'production preview may return only the SPA shell for unknown routes');
+    } else assert.ok([403, 404].includes(response.status), 'development server must not serve private environment files');
     await response.body?.cancel();
   }
-  passed('Development server blocks direct and filesystem URLs to private server configuration');
+  passed('Preview server does not serve private configuration through direct or filesystem URLs');
   const executable = ['C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', 'C:/Program Files/Google/Chrome/Application/chrome.exe'];
   let browserPath; for (const item of executable) { try { await access(item); browserPath = item; break; } catch {} }
   if (!browserPath) throw new Error('A local Edge or Chrome installation is required');
@@ -185,11 +189,11 @@ try {
   browserPort = Number(lines[0]); browserConnection = await CDP.open(`ws://127.0.0.1:${browserPort}${lines[1].trim()}`);
 
   const main = await page(`${base}/`);
-  if(process.env.WORKSPACE_V5||process.env.UNIFIED_ONLY||process.env.COMPANION_ONLY||process.env.WORKSPACE_ONLY){
+  if(process.env.NEO_ONLY||process.env.WORKSPACE_V5||process.env.UNIFIED_ONLY||process.env.COMPANION_ONLY||process.env.WORKSPACE_ONLY){
     await route(main,'/login');await fillLogin(main);await main.evaluate('document.querySelector("form").requestSubmit()');await until(()=>main.evaluate(`document.body.innerText.includes('我的任务')`),'quick login');
     await main.send('Emulation.setDeviceMetricsOverride',{width:1200,height:675,deviceScaleFactor:1,mobile:false});
     await main.evaluate(`(()=>{const original=window.fetch;window.__agentRequests=[];window.fetch=async(url,options)=>{if(String(url).endsWith('/session'))return new Response(JSON.stringify({token:'mbs_'+'b'.repeat(64),expiresAt:Date.now()+600000}),{headers:{'Content-Type':'application/json'}});if(!String(url).endsWith('/generate'))return original(url,options);const input=JSON.parse(options.body);window.__agentRequests.push(input);const result=input.mode==='plan'?{mode:'plan',summary:'先从一小步开始。',items:[{taskId:input.tasks[0].id,minutes:20,reason:'这是已有的任务。',firstStep:'打开资料。'}],questions:[],warnings:[]}:{mode:'chat',summary:'我看见你今天的小小进步了，我们一起慢慢来。',questions:[],warnings:[]};return new Response(JSON.stringify({result}),{headers:{'Content-Type':'application/json'}});};})()`);
-    if(process.env.WORKSPACE_V5)await runWorkspaceV5({main,click,shot,passed,until,delay,route});else if(process.env.UNIFIED_ONLY)await runUnifiedSmoke({main,click,shot,passed,until,delay,route});else if(process.env.WORKSPACE_ONLY)await runWorkspaceSmoke({main,click,shot,passed,until,delay,route});else await runCompanionSmoke({main,click,shot,passed,until,delay,route});
+    if(process.env.NEO_ONLY)await runNeoSmoke({main,click,shot,passed,until,delay,route});else if(process.env.WORKSPACE_V5)await runWorkspaceV5({main,click,shot,passed,until,delay,route});else if(process.env.UNIFIED_ONLY)await runUnifiedSmoke({main,click,shot,passed,until,delay,route});else if(process.env.WORKSPACE_ONLY)await runWorkspaceSmoke({main,click,shot,passed,until,delay,route});else await runCompanionSmoke({main,click,shot,passed,until,delay,route});
   }else{
   await until(() => main.evaluate('!!document.querySelector(".public-topbar-actions .language-switch")'), 'welcome language in top bar');
   assert.equal(await main.evaluate('!!document.querySelector(".public-settings-link")'), false);
@@ -226,7 +230,7 @@ try {
   assert.ok(await main.evaluate('document.documentElement.scrollWidth <= innerWidth'), 'statistics horizontal overflow');
   await click(main, '任务清单');
   await click(main, '桌面小组件未开启');
-  assert.equal(await main.evaluate(`(()=>{const badge=[...document.querySelectorAll('span')].find(node=>node.textContent==='已开启');return badge&&getComputedStyle(badge).backgroundColor==='rgb(0, 206, 203)'})()`), true, 'translated widget badge keeps its active color');
+  assert.equal(await main.evaluate(`(()=>{const badge=document.querySelector('[data-widget-state=active]');return badge&&getComputedStyle(badge).backgroundColor==='rgb(69, 214, 197)'})()`), true, 'translated widget badge keeps its active color');
   await click(main, '桌面小组件已开启');
 
   await click(main, '个人资料与设置');
@@ -322,11 +326,11 @@ try {
   await runFocusSmoke({ main, click, shot, passed, until, delay, route, fillLogin });
   }
   assert.equal(report.errors.length, 0, JSON.stringify(report.errors));
-  await writeFile(path.join(output, process.env.WORKSPACE_V5?'report-workspace-v5.json':process.env.UNIFIED_ONLY?'report-unified.json':process.env.WORKSPACE_ONLY?'report-workspace.json':process.env.COMPANION_ONLY?'report-companion.json':'report.json'), JSON.stringify(report, null, 2));
+  await writeFile(reportFile, JSON.stringify(report, null, 2));
   console.log(`Screenshots: ${output}`);
 } catch (error) {
   report.failure = error.stack;
-  await mkdir(output, { recursive: true }); await writeFile(path.join(output, process.env.WORKSPACE_V5?'report-workspace-v5.json':process.env.UNIFIED_ONLY?'report-unified.json':process.env.WORKSPACE_ONLY?'report-workspace.json':process.env.COMPANION_ONLY?'report-companion.json':'report.json'), JSON.stringify(report, null, 2));
+  await mkdir(output, { recursive: true }); await writeFile(reportFile, JSON.stringify(report, null, 2));
   console.error(error); process.exitCode = 1;
 } finally {
   if (browserConnection) { await browserConnection.send('Browser.close').catch(() => {}); browserConnection.close(); }

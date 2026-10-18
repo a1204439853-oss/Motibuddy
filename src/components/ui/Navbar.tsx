@@ -19,7 +19,7 @@ const Navbar = ({ currentPet, onToggleSidebar }: NavbarProps) => {
     return '😐';
   };
 
-  return <div style={{
+  return <div className="neo-navbar" style={{
     backgroundColor: 'white', height: '48px', padding: '0 20px', display: 'flex',
     alignItems: 'center', justifyContent: 'space-between', zIndex: 100,
     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',

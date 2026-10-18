@@ -1,0 +1,13 @@
+/* One ordered entry for both windows: production chunking must not reorder
+   legacy component rules after the shared design system. */
+@import '../../index.css';
+@import './workspace.css';
+@import './product.css';
+@import '../agent/agent.css';
+@import '../focus/focus.css';
+@import '../notebook/notebook.css';
+@import '../statistics/calendar.css';
+@import './reward.css';
+@import './unified.css';
+@import './workspace-v5.css';
+@import './neo-brutalism.css';

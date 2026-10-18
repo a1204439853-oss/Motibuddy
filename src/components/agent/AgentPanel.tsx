@@ -1,4 +1,5 @@
 import { useContext, useEffect, useRef, useState } from 'react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { AuthContext } from '@/contexts/authContext';
 import { TaskContext } from '@/contexts/taskContext';
 import { useLocale } from '@/i18n/react';
@@ -9,7 +10,6 @@ import { agentWorkspaceSchema, duplicateTaskKey, prepareAgentBatch, saveAgentPla
 import { conversationInstruction, planPreferences } from '@/services/agentConversation';
 import type { AgentDraft, AgentRequest, AgentResult } from '@/services/agentContracts';
 import AgentResultCards from './AgentResultCards';
-import './agent.css';
 import FormattedText from '@/components/ui/FormattedText';
 import ProfileSurvey from './ProfileSurvey';
 import AssistantSettings from './AssistantSettings';
@@ -30,6 +30,7 @@ type Copy = [string, string];
 type Message = { id: number; role: 'user' | 'assistant'; text: string | Copy; image?: string; widget?:'schedule' };
 const stampKey = () => JSON.stringify(readSessionStamp(localStorage));
 export default function AgentPanel({ active, onMessageSent,onFocusRequested }: { active: boolean; onMessageSent: () => void;onFocusRequested:(minutes:number)=>void }) {
+  const reducedMotion = useReducedMotion();
   const { locale } = useLocale();
   const s = (zh: string, en: string) => locale === 'zh-CN' ? zh : en;
   const display = (value: string | Copy) => Array.isArray(value) ? s(...value) : value;
@@ -110,8 +111,8 @@ export default function AgentPanel({ active, onMessageSent,onFocusRequested }: {
   useEffect(()=>{if(restoring||!historyDirty||busy||restoreFailed)return;const timer=setTimeout(()=>{void saveConversation().catch(()=>{if(isCurrent())setError(['对话尚未保存，请保留页面重试。','Conversation is not saved. Keep this page open and retry.']);});},700);return()=>clearTimeout(timer);},[messages,historyDirty,busy,restoring,threadVersion]);
   const flushRef=useRef<()=>Promise<void>>();flushRef.current=async()=>{if(dirty&&result)await persist(result);else if(historyDirty)await saveConversation();};
   useEffect(()=>registerExitPreparation(async()=>{await flushRef.current?.();}),[]);
-  useEffect(() => { if (active) { inputRef.current?.focus(); logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' }); } }, [active, messages.length, busy, scenario]);
-  useEffect(()=>{if(!active||scenario!=='schedule'||!scheduleMessageId)return;const log=logRef.current,card=log?.querySelector<HTMLElement>(`[data-message-id="${scheduleMessageId}"]`);if(log&&card)log.scrollTo({top:card.getBoundingClientRect().top-log.getBoundingClientRect().top+log.scrollTop,behavior:'smooth'});},[active,scenario,scheduleMessageId]);
+  useEffect(() => { if (active) { inputRef.current?.focus(); logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: reducedMotion ? 'instant' : 'smooth' }); } }, [active, messages.length, busy, scenario, reducedMotion]);
+  useEffect(()=>{if(!active||scenario!=='schedule'||!scheduleMessageId)return;const log=logRef.current,card=log?.querySelector<HTMLElement>(`[data-message-id="${scheduleMessageId}"]`);if(log&&card)log.scrollTo({top:card.getBoundingClientRect().top-log.getBoundingClientRect().top+log.scrollTop,behavior:reducedMotion?'instant':'smooth'});},[active,scenario,scheduleMessageId,reducedMotion]);
 
   useEffect(() => {
     const leave = (event: BeforeUnloadEvent) => { if (dirty || locked || historyDirty) event.preventDefault(); };
@@ -261,9 +262,9 @@ export default function AgentPanel({ active, onMessageSent,onFocusRequested }: {
     catch(err){if(isCurrent())showError(err);}finally{if(isCurrent()){busyRef.current=false;setBusy(false);inputRef.current?.focus();}}
   };
   useEffect(()=>{
-    if(!active||hasAsked||messages.some(message=>message.role==='user')||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    if(!active||hasAsked||messages.some(message=>message.role==='user')||reducedMotion)return;
     const timer=setInterval(()=>{const row=shortcutsRef.current;if(!row||row.matches(':hover'))return;const max=row.scrollWidth-row.clientWidth;if(max<=0)return;const duplicate=row.querySelector<HTMLElement>('[data-carousel-copy]'),first=row.firstElementChild;const loop=duplicate&&first?duplicate.getBoundingClientRect().left-first.getBoundingClientRect().left:max;if(row.scrollLeft>=loop)row.scrollLeft-=loop;else row.scrollLeft+=.8;},40);return()=>clearInterval(timer);
-  },[active,messages,hasAsked]);
+  },[active,messages,hasAsked,reducedMotion]);
   const blocked = busy || restoring || restoreFailed || isLoading || isSaving || !!loadError;
   const stale = result?.mode === 'plan' && fingerprint !== taskFingerprint(tasks);
   return <><section className="mb-agent" aria-label={s('宠物助手', 'Pet assistant')}>

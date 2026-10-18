@@ -166,7 +166,7 @@ const PetCreationPage = () => {
   const fontFamily = 'Comic Sans MS, Arial Rounded MT Bold, Helvetica, sans-serif';
   
   return (
-    <div style={{ position: 'relative', width: '100%', minHeight: '100vh', overflow: 'hidden' }}>
+    <div className="neo-adoption" style={{ position: 'relative', width: '100%', minHeight: '100vh', overflow: 'hidden' }}>
       {/* Background Image */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
         <img
@@ -194,10 +194,10 @@ const PetCreationPage = () => {
       </div>
       
       <div className="w-full min-h-screen flex items-center justify-center p-4">
-        <motion.div 
+        <motion.div className="neo-adoption-panel"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.18 }}
           style={{
             position: 'relative', 
             zIndex: 3, 
@@ -223,8 +223,8 @@ const PetCreationPage = () => {
                 {petTypes.map((pet) => (
                   <motion.div
                     key={pet.type}
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
+                    whileHover={{ x: -1, y: -1 }}
+                    whileTap={{ x: 2, y: 2 }}
                     onClick={() => setSelectedPetType(pet.type)}
                     style={{
                       padding: '12px',
@@ -356,9 +356,9 @@ const PetCreationPage = () => {
               }}
             >
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
+                initial={{ y: 8, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -6, opacity: 0 }}
                 style={{
                   backgroundColor: 'white', borderRadius: '12px', padding: '24px',
                   maxWidth: '400px', width: '100%', border: '3px solid #222222', boxShadow: '6px 6px 0 #222222'
@@ -410,9 +410,9 @@ const PetCreationPage = () => {
               }}
             >
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
+                initial={{ y: 8, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -6, opacity: 0 }}
                 style={{
                   backgroundColor: 'white', borderRadius: '12px', padding: '24px',
                   maxWidth: '400px', width: '100%', border: '3px solid #222222', boxShadow: '6px 6px 0 #222222'
