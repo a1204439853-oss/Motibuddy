@@ -7,6 +7,16 @@ import {searchWeb} from '../server/search.mjs';
 import {callDeepSeek} from '../server/gateway.mjs';
 const now=new Date().toISOString();
 const thread=(text)=>({id:crypto.randomUUID(),title:text,createdAt:now,updatedAt:now,messages:[{id:1,role:'user',text},{id:2,role:'assistant',text:'Small progress matters.'}]});
+
+test('message timestamps survive history roundtrips without inventing dates for legacy messages',()=>{
+ const legacy=thread('旧记录'),dated={...thread('新记录'),messages:[{id:1,role:'user',text:'开始吧',createdAt:'2026-10-18T01:41:00.000Z'}]};
+ const saved=saveChatThread(saveChatThread(undefined,legacy),dated),before=JSON.stringify(saved);
+ const reopened=chatHistorySchema.parse(JSON.parse(before));
+ assert.equal(reopened.threads[0].messages[0].createdAt,'2026-10-18T01:41:00.000Z');
+ assert.equal(reopened.threads[1].messages[0].createdAt,undefined);
+ assert.throws(()=>saveChatThread(saved,{...dated,messages:[{...dated.messages[0],createdAt:'invalid'}]}));
+ assert.equal(JSON.stringify(saved),before);
+});
 test('searchable conversation history preserves older threads and resumes the selected thread',()=>{
  const first=thread('读书计划'),second=thread('运动');let h=saveChatThread(undefined,first);h=saveChatThread(h,second);assert.equal(h.activeId,second.id);const updated={...first,messages:[...first.messages,{id:3,role:'user',text:'下周继续读第二章'}]};h=saveChatThread(h,updated);assert.equal(h.threads.length,2);assert.equal(h.activeId,first.id);assert.equal(searchChatThreads(h.threads,'第二章')[0].id,first.id);assert.equal(searchChatThreads(h.threads,'small PROGRESS').length,2);assert.equal(h.threads[1].messages[0].text,'运动');
  assert.throws(()=>chatHistorySchema.parse({...h,activeId:crypto.randomUUID()}));assert.throws(()=>chatHistorySchema.parse({...h,threads:[first,first]}));

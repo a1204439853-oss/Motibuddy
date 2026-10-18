@@ -1,13 +1,13 @@
 {
-  "builtAtUtc": "2026-10-18T04:09:31.3632350+00:00",
-  "artifact": "MotiBuddy-Verify-neo-ui.exe",
-  "bytes": 260563456,
-  "sha256": "65d424d9327e054c8f1705cfef4ad5e73c35a38dc162ec1e1c3b3d9f165ad26a",
+  "builtAtUtc": "2026-10-18T04:40:24.9481666+00:00",
+  "artifact": "MotiBuddy-Verify-ui-details.exe",
+  "bytes": 260564480,
+  "sha256": "d5ab06cca228436e44e55af9a780d322a583dd7a3d1a78f29bbbd7ad4f54bff9",
   "applicationIdentifier": "com.motibuddy.verify",
   "buildCommand": "npm run tauri -- build --config src-tauri/tauri.verify.conf.json --bundles none --ci",
   "validation": {
     "typescript": "passed",
-    "businessTests": 184,
+    "businessTests": 185,
     "nativeTests": 31,
     "nativeIgnoredTests": 1,
     "frontendProductionBuild": "passed",
@@ -20,20 +20,20 @@
         "runtimeErrors": 0
       },
       {
+        "name": "design-details",
+        "passed": 6,
+        "screenshots": 15,
+        "runtimeErrors": 0
+      },
+      {
         "name": "production-design",
-        "passed": 5,
-        "screenshots": 13,
+        "passed": 6,
+        "screenshots": 15,
         "runtimeErrors": 0
       },
       {
         "name": "weather-calendar",
         "passed": 5,
-        "screenshots": 10,
-        "runtimeErrors": 0
-      },
-      {
-        "name": "assistant-media",
-        "passed": 6,
         "screenshots": 10,
         "runtimeErrors": 0
       }

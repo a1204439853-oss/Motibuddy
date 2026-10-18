@@ -25,13 +25,13 @@ const Navbar = ({ currentPet, onToggleSidebar }: NavbarProps) => {
     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
   }}>
     <div className="flex items-center">
-      <button onClick={onToggleSidebar} aria-label={t('Toggle navigation')} style={{
+      <button className="neo-unframed" onClick={onToggleSidebar} aria-label={t('Toggle navigation')} style={{
         backgroundColor: 'transparent', border: 'none', padding: '8px', cursor: 'pointer',
         marginRight: '12px', fontSize: '18px', color: '#222222',
       }}><i className="fa-solid fa-bars" aria-hidden="true"></i></button>
       <div className="main-brand"><img src="/app-mark.png" alt=""/><h1>MotiBuddy</h1></div>
     </div>
-    <button type="button" onClick={() => navigate('/profile')} title={t('Profile & Settings')} aria-label={t('Profile & Settings')} style={{
+    <button type="button" className="neo-unframed" onClick={() => navigate('/profile')} title={t('Profile & Settings')} aria-label={t('Profile & Settings')} style={{
       backgroundColor: 'transparent', border: 'none', padding: '8px', cursor: 'pointer', fontSize: '18px', color: '#222222',
     }}><i className="fa-solid fa-gear" aria-hidden="true"></i></button>
   </div>;

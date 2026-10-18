@@ -413,14 +413,17 @@ const PetDisplay = ({ agentMessageId = 0 }: { agentMessageId?: number }) => {
     <div className="neo-pet-display flex flex-col items-center w-full">
       {/* Pet name and level */}
       <div className="neo-pet-heading">
+        <div className="neo-pet-title-row">
         <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#222222', marginBottom: '8px', fontFamily }}>
           {currentPet.name}
         </h2>
+        <span className="neo-pet-level" aria-label={`${t('Level')} ${currentPet.level}`}>Lv. {currentPet.level}</span>
+        </div>
         <p style={{ fontSize: '11px', color: '#222222', fontWeight: 'bold', marginTop: '4px', fontFamily }}>{t("Level")}{' '}{currentPet.level} • {currentPet.experience}/{currentPet.level * 50}{' '}{t("EXP")}</p>
       </div>
 
       {/* Experience bar */}
-      <div className="neo-pet-xp" style={{ width: '100%', maxWidth: '200px', height: '8px', backgroundColor: '#f0f0f0', borderRadius: '4px', marginBottom: '16px', border: '2px solid #222222' }}>
+      <div className="neo-pet-xp" role="progressbar" aria-label={t('EXP')} aria-valuemin={0} aria-valuemax={currentPet.level*50} aria-valuenow={currentPet.experience} style={{ width: '100%', maxWidth: '200px', height: '8px', backgroundColor: '#f0f0f0', borderRadius: '4px', marginBottom: '16px', border: '2px solid #222222' }}>
         <div style={{ height: '100%', backgroundColor: '#FFD700', borderRadius: '4px', width: `${(currentPet.experience / (currentPet.level * 50)) * 100}%`, borderRight: '2px solid #222222' }}></div>
       </div>
 
@@ -501,19 +504,18 @@ const PetDisplay = ({ agentMessageId = 0 }: { agentMessageId?: number }) => {
       </div>
 
       {/* Stats bars - 原始样式 */}
-      <div className="neo-pet-stats w-full space-y-2">
-        {([{ key: 'health', title: 'Health' }, { key: 'happiness', title: 'Happiness' }, { key: 'hunger', title: 'Fullness' }, { key: 'energy', title: 'Energy' }] as const).map((stat) => {
+      <div className="neo-pet-stats w-full">
+        {([{ key: 'health', title: 'Health', icon: 'fa-heart' }, { key: 'happiness', title: 'Happiness', icon: 'fa-face-smile' }, { key: 'hunger', title: 'Fullness', icon: 'fa-bowl-food' }, { key: 'energy', title: 'Energy', icon: 'fa-bolt' }] as const).map((stat) => {
           const value = stat.key === 'hunger' ? 100 - currentPet.hunger : currentPet[stat.key];
-          const color = value > 70 ? '#00CECB' : value > 30 ? '#FFD700' : '#FF5E5B';
+          const color = value <= 30 ? '#ff7a68' : stat.key === 'health' || stat.key === 'happiness' ? '#45d6c5' : '#ffe585';
           return (
-            <div key={stat.key} className="space-y-1">
-              <div className="flex justify-between text-xs">
-                <span style={{ fontWeight: 'bold', color: '#222222', fontFamily }}>{t(stat.title)}</span>
-                <span style={{ color: '#222222', fontWeight: 'bold', fontFamily }}>{value}/100</span>
-              </div>
-              <div className="neo-pet-stat-track" style={{ width: '100%', height: '8px', backgroundColor: '#f0f0f0', borderRadius: '4px', border: '2px solid #222222' }}>
+            <div key={stat.key} className="neo-pet-stat-row">
+              <i className={`neo-pet-stat-icon fa-solid ${stat.icon}`} data-stat={stat.key} aria-hidden="true"/>
+              <span className="neo-pet-stat-label">{t(stat.title)}</span>
+              <div className="neo-pet-stat-track" role="progressbar" aria-label={t(stat.title)} aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} style={{ width: '100%', height: '8px', backgroundColor: '#f0f0f0', borderRadius: '4px', border: '2px solid #222222' }}>
                 <div style={{ height: '100%', backgroundColor: color, borderRadius: '4px', width: `${value}%`, borderRight: '2px solid #222222' }}></div>
               </div>
+              <span className="neo-pet-stat-value">{value}/100</span>
             </div>
           );
         })}

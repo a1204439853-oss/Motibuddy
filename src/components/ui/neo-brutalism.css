@@ -80,7 +80,7 @@ button:disabled { opacity: .55; }
 .neo-companion-panel { border: 2px solid var(--neo-ink); border-radius: var(--neo-radius); padding: 18px 14px; box-shadow: var(--neo-shadow) !important; min-height: 0 !important; max-height: none !important; }
 
 /* Pressable controls travel along the same down-right axis as their shadows. */
-:is(.neo-workspace,.profile-page,.neo-achievements,.neo-auth,.neo-adoption,.neo-widget,.focus-screen,.reward-celebration) :is(button,summary):where(:not(.neo-nav-item):not(.sidebar-avatar):not(.weather-open):not(.neo-task-toggle):not(.product-swatch):not(.language-switch button)) {
+:is(.neo-workspace,.profile-page,.neo-achievements,.neo-auth,.neo-adoption,.neo-widget,.focus-screen,.reward-celebration) :is(button,summary):where(:not(.neo-nav-item):not(.sidebar-avatar):not(.weather-open):not(.neo-task-toggle):not(.product-swatch):not(.neo-unframed):not(.language-switch button)) {
   border: 2px solid var(--neo-ink) !important; border-radius: var(--neo-radius) !important;
   background: var(--neo-paper); color: var(--neo-ink) !important;
   box-shadow: 2px 2px 0 var(--neo-ink) !important;
@@ -88,7 +88,7 @@ button:disabled { opacity: .55; }
   font-weight: 700; text-transform: none !important; letter-spacing: 0 !important;
 }
 :is(.neo-workspace,.profile-page,.neo-achievements,.neo-auth,.neo-adoption,.neo-widget,.focus-screen,.reward-celebration) button:disabled { box-shadow: none !important; transform: none !important; }
-:is(.neo-workspace,.profile-page,.neo-achievements,.neo-auth,.neo-adoption,.neo-widget,.focus-screen,.reward-celebration) :is(button,summary):active:not(:disabled):not(.weather-open):not(.sidebar-avatar):not(.neo-task-toggle):not(.language-switch button) { transform: translate(2px,2px) !important; box-shadow: none !important; }
+:is(.neo-workspace,.profile-page,.neo-achievements,.neo-auth,.neo-adoption,.neo-widget,.focus-screen,.reward-celebration) :is(button,summary):active:not(:disabled):not(.weather-open):not(.sidebar-avatar):not(.neo-task-toggle):not(.neo-unframed):not(.language-switch button) { transform: translate(2px,2px) !important; box-shadow: none !important; }
 :is(.neo-button,.mb-agent-primary,.focus-primary,.product-primary,.profile-page button[type=submit],.reward-card button) { background: var(--neo-teal) !important; color: var(--neo-ink) !important; }
 .neo-page-heading .neo-primary { height: 36px !important; padding: 7px 13px !important; font-size: 13px !important; }
 :is(.module-panel,.mb-agent,.focus-setup,.mb-product,.notebook-module,.saved-assistant-view,.profile-panel,.neo-achievement-panel) {
@@ -346,6 +346,65 @@ button:disabled { opacity: .55; }
   .mb-agent-carousel.is-compact .mb-agent-shortcut { flex-basis: calc((100% - 12px)/3); }
   .mb-agent-log { padding: 12px 10px; }
   .focus-settings { grid-template-columns: 1fr; }
+}
+/* Compact identity cards and chat details share the same desktop proportions. */
+.neo-sidebar .sidebar-profile { margin: 12px 12px 8px; padding: 9px 10px; gap: 9px; border: 2px solid var(--neo-ink); border-radius: 6px; background: var(--neo-paper); box-shadow: 3px 3px 0 var(--neo-ink); min-height: 67px; }
+.neo-sidebar .sidebar-profile .sidebar-avatar { display: block; width: 36px; height: 36px; border: 1.5px solid var(--neo-ink); }
+.neo-sidebar .sidebar-profile .sidebar-clock { min-width: 0; padding: 0; border: 0 !important; border-radius: 0; box-shadow: none !important; background: transparent !important; }
+.neo-sidebar .sidebar-clock p { font-size: 11px; line-height: 1.4; color: var(--neo-ink); }
+.neo-sidebar .sidebar-clock time { display: block; font-size: 23px; line-height: 1.2; letter-spacing: 0; color: var(--neo-ink); }
+.neo-sidebar .weather-card:not(.weather-detail) { margin: 0 12px 12px; padding: 0; }
+.neo-sidebar .weather-card .weather-compact { display: grid; grid-template-columns: 30px minmax(0,1fr) 12px; gap: 9px; align-items: center; width: 100%; min-height: 62px; padding: 9px 10px; color: var(--neo-ink); }
+.weather-compact-copy { display: block; min-width: 0; }
+.weather-compact-city { display: block; font-size: 11px; font-weight: 500; line-height: 1.35; overflow-wrap: anywhere; }
+.weather-compact-reading { display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px; font-size: 11px; line-height: 1.35; }
+.weather-compact-reading strong { font-size: 20px; font-weight: 850; line-height: 1.2; }
+.weather-compact-icon { font-size: 27px; color: var(--neo-yellow); -webkit-text-stroke: .6px var(--neo-ink); }
+.weather-compact-chevron { font-size: 12px; }
+.neo-pet-title-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+.neo-pet-title-row h2 { min-width: 0; max-width: 100%; overflow-wrap: anywhere; margin: 0 !important; line-height: 1.25; }
+.neo-pet-level { display: inline-block; flex-shrink: 0; border: 1.5px solid #d9a700; border-radius: 6px; background: var(--neo-yellow); padding: 2px 9px; font-size: 11px; font-weight: 800; color: var(--neo-ink); }
+.neo-pet-heading p { margin: 0 !important; color: var(--neo-ink) !important; font-weight: 650 !important; font-size: 11px !important; }
+.neo-pet-xp { height: 9px !important; border: 1px solid var(--neo-ink) !important; border-radius: 999px !important; background: #dcdde0 !important; overflow: hidden; }
+.neo-pet-xp>div { height: 100%; background: var(--neo-teal) !important; border-right: 1px solid var(--neo-ink) !important; border-radius: 999px !important; }
+.neo-pet-stats { display: grid; gap: 10px; }
+.neo-pet-stat-row { display: grid; grid-template-columns: 15px 29px minmax(28px,1fr) 45px; align-items: center; gap: 7px; min-width: 0; font-size: 11px; line-height: 1.3; }
+html[lang^=en] .neo-pet-stat-row { grid-template-columns: 15px 66px minmax(28px,1fr) 45px; }
+.neo-pet-stat-icon { font-size: 13px; color: var(--neo-yellow); -webkit-text-stroke: .6px var(--neo-ink); text-align: center; }
+.neo-pet-stat-icon[data-stat=health] { color: var(--neo-coral); }
+.neo-pet-stat-label { font-weight: 650; }
+.neo-pet-stat-value { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.neo-pet-stat-row .neo-pet-stat-track { height: 9px !important; border: 1px solid var(--neo-ink) !important; border-radius: 999px !important; background: #ececee !important; overflow: hidden; }
+.neo-pet-stat-row .neo-pet-stat-track>div { border-radius: 999px !important; border-right: 1px solid var(--neo-ink) !important; }
+.mb-agent-message { display: grid; grid-template-columns: 34px minmax(0,1fr); align-items: start; gap: 5px 10px; }
+.mb-agent-message-avatar { grid-column: 1; grid-row: 1 / span 2; width: 34px; height: 34px; border: 1.5px solid var(--neo-ink); border-radius: 50%; overflow: hidden; background: #fff; display: grid; place-items: center; color: var(--neo-ink); }
+.mb-agent-message-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.mb-agent-message-avatar i { font-size: 19px; }
+.mb-agent-message-meta { grid-column: 2; display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.mb-agent-message-meta .mb-agent-speaker { font-size: 12px; font-weight: 800; color: var(--neo-ink); padding: 0; overflow-wrap: anywhere; }
+.mb-agent-message time { font-size: 10px; color: #74747b; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mb-agent-message>.mb-agent-bubble { grid-column: 2; grid-row: 2; justify-self: start; width: fit-content; min-width: 0; max-width: 100%; border-radius: 6px; background: #fafafa; border: 1px solid #b2b2b7; }
+.mb-agent-message-result>.mb-agent-bubble,.mb-agent-message-schedule>.mb-agent-bubble { width: 100%; }
+.mb-agent-message-user { grid-template-columns: minmax(0,1fr) 34px; }
+.mb-agent-message-user>.mb-agent-message-avatar { grid-column: 2; }
+.mb-agent-message-user>.mb-agent-bubble { grid-column: 1; grid-row: 1; justify-self: end; background: var(--neo-yellow); border: 1.5px solid var(--neo-ink); box-shadow: 2px 2px 0 var(--neo-ink); }
+.mb-agent-message-user>.mb-agent-user-time { grid-column: 1; grid-row: 2; justify-self: end; padding-top: 3px; }
+.neo-navbar button.neo-unframed,.neo-auth button.neo-unframed { border: 0 !important; background: transparent !important; box-shadow: none !important; border-radius: 0 !important; transform: none !important; }
+.neo-auth button.neo-unframed { color: var(--neo-teal-ink) !important; text-underline-offset: 3px; }
+.neo-navbar button.neo-unframed { min-width: 34px; min-height: 34px; }
+@media(max-width:600px) {
+  .neo-sidebar .sidebar-profile { margin: 10px 8px 8px; padding: 8px 6px; gap: 6px; }
+  .neo-sidebar .sidebar-profile .sidebar-avatar { width: 30px; height: 30px; }
+  .neo-sidebar .sidebar-clock p { font-size: 10px; }
+  .neo-sidebar .sidebar-clock time { font-size: 20px; }
+  .neo-sidebar .weather-card:not(.weather-detail) { margin: 0 8px 10px; }
+  .neo-sidebar .weather-card .weather-compact { grid-template-columns: 23px minmax(0,1fr) 9px; gap: 5px; padding: 8px 6px; }
+  .weather-compact-icon { font-size: 22px; }
+}
+@container(max-width:430px) {
+  .mb-agent-message { grid-template-columns: 28px minmax(0,1fr); column-gap: 7px; }
+  .mb-agent-message-user { grid-template-columns: minmax(0,1fr) 28px; }
+  .mb-agent-message-avatar { width: 28px; height: 28px; }
 }
 @media(prefers-reduced-motion:reduce) {
   *,*::before,*::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }

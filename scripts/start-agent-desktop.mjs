@@ -50,7 +50,7 @@ function startDetached(executable, args, options = {}) {
 async function main() {
   if (Number(process.versions.node.split('.')[0]) !== 24) throw new Error('NODE_VERSION');
   const serviceOnly = process.argv.includes('--service-only');
-  const exePath = resolve(root, 'MotiBuddy-Verify-neo-ui.exe');
+  const exePath = resolve(root, 'MotiBuddy-Verify-ui-details.exe');
   if (!serviceOnly) {
     try { await access(exePath); } catch { throw new Error('EXE_MISSING'); }
   }
@@ -78,7 +78,7 @@ async function main() {
 
 const messages = {
   NODE_VERSION: 'Node.js 24 is required. Install it before using this local launcher.',
-  EXE_MISSING: 'Cannot find MotiBuddy-Verify-neo-ui.exe beside the launcher.',
+  EXE_MISSING: 'Cannot find MotiBuddy-Verify-ui-details.exe beside the launcher.',
   CONFIG_INVALID: 'Private AI configuration is missing or invalid. See server/README.md.',
   PORT_CONFIG: 'This desktop build requires AGENT_PORT=8787 in the private server configuration.',
   PORT_UNAVAILABLE: 'Port 8787 has an incompatible or unresponsive service. Close the old AI server in its own terminal and retry. No process was stopped.',

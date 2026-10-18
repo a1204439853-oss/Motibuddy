@@ -27,7 +27,7 @@ import {claimFocusSuggestion} from '@/services/focusSuggestion';
 import { agentScenarios, scenarioInstruction, weeklyEvidence, weeklyComparison, type AgentScenario } from '@/services/agentScenarios';
 
 type Copy = [string, string];
-type Message = { id: number; role: 'user' | 'assistant'; text: string | Copy; image?: string; widget?:'schedule' };
+type Message = { id: number; role: 'user' | 'assistant'; text: string | Copy; createdAt?: string; image?: string; widget?:'schedule' };
 const stampKey = () => JSON.stringify(readSessionStamp(localStorage));
 export default function AgentPanel({ active, onMessageSent,onFocusRequested }: { active: boolean; onMessageSent: () => void;onFocusRequested:(minutes:number)=>void }) {
   const reducedMotion = useReducedMotion();
@@ -38,6 +38,8 @@ export default function AgentPanel({ active, onMessageSent,onFocusRequested }: {
   const settingsStore = useBusinessSettings();
   const shortcutsRef = useRef<HTMLDivElement>(null);
   const assistantName = currentPet?.name ?? s('宠物助手', 'Pet assistant');
+  const assistantAvatar = `/${currentPet?.type.toLowerCase() ?? 'cat'}.jpg`;
+  const messageTime = (at: string) => new Date(at).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false });
   const { tasks, importAgentTasks, isLoading, isSaving, loadError } = useContext(TaskContext);
   const owner = currentUser!.id, session = useRef(stampKey());
   const mounted = useRef(true), busyRef = useRef(false), visible = useRef(active);
@@ -70,7 +72,7 @@ export default function AgentPanel({ active, onMessageSent,onFocusRequested }: {
   const isCurrent = () => mounted.current && session.current === stampKey() && readSessionStamp(localStorage)?.userId === owner;
   const addMessage = (role: Message['role'], text: Message['text'], picture?: string,widget?:'schedule') => {
     const id = ++nextMessageId.current;
-    const next=[...messagesRef.current,{id,role,text,...(picture?{image:picture}:{}),...(widget?{widget}:{})}];
+    const next=[...messagesRef.current,{id,role,text,createdAt:new Date().toISOString(),...(picture?{image:picture}:{}),...(widget?{widget}:{})}];
     messagesRef.current=next;setMessages(next);setHistoryDirty(true);
     return id;
   };
@@ -275,7 +277,8 @@ export default function AgentPanel({ active, onMessageSent,onFocusRequested }: {
 
       {!messages.length && <div className="mb-agent-welcome"><span aria-hidden="true">✦</span><h2>{s('今天，想从哪件小事开始？', 'What would you like to start with today?')}</h2><p>{s('可以直接和我聊聊，也可以选择下方卡片，一起安排任务。', 'Chat with me, or choose a card below to work on your tasks.')}</p></div>}
       {messages.map(message => <article data-message-id={message.id} className={`mb-agent-message mb-agent-message-${message.role}${message.widget==='schedule'?' mb-agent-message-schedule':''}${result && resultMessageId === message.id && result.mode !== 'chat' ? ' mb-agent-message-result' : ''}`} key={message.id}>
-        <span className="mb-agent-speaker">{message.role === 'user' ? s('你', 'You') : assistantName}</span>
+        <div className="mb-agent-message-avatar" aria-hidden="true">{message.role === 'assistant' ? <img src={assistantAvatar} alt=""/> : currentUser?.avatar ? <img src={currentUser.avatar} alt=""/> : <i className="fa-solid fa-user"/>}</div>
+        {message.role === 'assistant' && <div className="mb-agent-message-meta"><span className="mb-agent-speaker">{assistantName}</span>{message.createdAt && <time dateTime={message.createdAt} title={new Date(message.createdAt).toLocaleString(locale)}>{messageTime(message.createdAt)}</time>}</div>}
         <div className="mb-agent-bubble">{scenario === 'review' && resultMessageId===message.id && <div className="mb-agent-weekly"><strong>{s('最近 7 天的完成记录', 'Completions in the last seven days')}</strong><div className="mb-agent-weekly-bars">{weeklyEvidence(tasks).days.map(day => <div key={day.date}><span>{day.completed}</span><i style={{ height: `${8 + Math.min(64, day.completed * 12)}px` }} /><small>{new Date(day.date).toLocaleDateString(locale, { month: 'numeric', day: 'numeric' })}</small></div>)}</div><p>{s(`完成 ${weeklyEvidence(tasks).completed} 项 · 未完成 ${weeklyEvidence(tasks).open} 项`, `${weeklyEvidence(tasks).completed} completed · ${weeklyEvidence(tasks).open} open`)}{weeklyEvidence(tasks).missingCompletionDate > 0 && s('（缺少完成日期的旧记录未计入图表）', ' (Legacy records without completion dates are excluded.)')}</p><div className="mb-agent-comparison"><strong>{s('本周与过去 3 周','This week and the previous three')}</strong>{weeklyComparison(tasks).weeks.map((week,index)=><div key={week.start}><span>{index===3?s('本周','This week'):new Date(week.start).toLocaleDateString(locale,{month:'numeric',day:'numeric'})}</span><i style={{width:`${12+week.total/Math.max(1,...weeklyComparison(tasks).weeks.map(w=>w.total))*70}%`}}/><b>{week.total}</b><small>{s(`同期 ${week.comparable} 项`,`${week.comparable} at the same point`)}</small></div>)}<p>{s('本周尚未结束，对比建议使用“同期”记录；未记录不等于没有努力。','This week is still in progress. Compare counts at the same point; missing records do not mean missing effort.')}</p></div></div>}{display(message.text)&&<FormattedText text={display(message.text)}/>}{message.widget==='schedule'&&(message.id===scheduleMessageId?<div className="mb-agent-schedule"><ScheduledTasks request={scheduleRequest}/></div>:<p>{s('定时任务可在「任务清单 → 定时任务」查看。','View schedules in Task list → Scheduled tasks.')}</p>)}{message.image && <img src={message.image} alt={s('本次上传的图片', 'Attached image')} />}
           {result && resultMessageId === message.id && <>
             {result.questions.length > 0 && <div className="mb-agent-note"><strong>{s('我们再确认一下', 'Let us clarify')}</strong><ul>{result.questions.map((question, index) => <li key={index}>{question}</li>)}</ul></div>}
@@ -292,6 +295,7 @@ export default function AgentPanel({ active, onMessageSent,onFocusRequested }: {
               onSaveDraft={() => void saveDraft()} onSaveResult={confirmed => void saveResult(confirmed)} />
           </>}
         </div>
+        {message.role === 'user' && message.createdAt && <time className="mb-agent-user-time" dateTime={message.createdAt} title={new Date(message.createdAt).toLocaleString(locale)}>{messageTime(message.createdAt)}</time>}
       </article>)}
       {busy && <p className="mb-agent-typing" role="status">{s(`${assistantName}正在想办法`, `${assistantName} is thinking`)}<span aria-hidden="true">···</span></p>}
       {notice && <p className="mb-agent-notice" role="status">{s(...notice)}</p>}

@@ -11,6 +11,11 @@ export async function runNeoSmoke({main, click, shot, passed, until, delay, rout
     assert.ok(await main.evaluate(`(()=>{const a=document.querySelector('.neo-primary-column').getBoundingClientRect(),b=document.querySelector('.neo-companion-column').getBoundingClientRect();return a.right<=b.left&&b.right<=innerWidth&&a.width>=380})()`),'working columns must not overlap');
     assert.equal(await main.evaluate(`getComputedStyle(document.querySelector('[data-main-shell]')).backgroundImage`),'none');
     assert.equal(await main.evaluate(`getComputedStyle(document.querySelector('.neo-companion-panel')).backdropFilter`),'none');
+    assert.ok(await main.evaluate(`(()=>{const card=document.querySelector('.sidebar-profile'),a=card.querySelector('.sidebar-avatar').getBoundingClientRect(),t=card.querySelector('.sidebar-clock').getBoundingClientRect();return a.right<t.left&&getComputedStyle(card).borderTopWidth==='2px'&&getComputedStyle(card.querySelector('.sidebar-clock')).boxShadow==='none';})()`),'avatar and time share one card');
+    assert.equal(await main.evaluate(`document.querySelectorAll('.weather-card:not(.weather-detail) button').length`),1);
+    assert.ok(await main.evaluate(`[...document.querySelectorAll('.neo-navbar .neo-unframed')].every(b=>getComputedStyle(b).borderTopWidth==='0px'&&getComputedStyle(b).boxShadow==='none')`));
+    assert.ok(await main.evaluate(`[...document.querySelectorAll('.neo-pet-stat-row')].every(row=>{const items=[...row.children].map(e=>e.getBoundingClientRect());return items.length===4&&items.every(r=>Math.abs(r.y+r.height/2-items[0].y-items[0].height/2)<2);})`),'pet status icon, label, meter and value align on a single row');
+    assert.ok(await main.evaluate(`(()=>{const a=document.querySelector('.neo-pet-title-row h2').getBoundingClientRect(),b=document.querySelector('.neo-pet-level').getBoundingClientRect();return a.right<b.left&&Math.abs(a.y+a.height/2-b.y-b.height/2)<2;})()`),'pet name sits beside the level badge');
     await shot(main,`neo-tasks-${width}`);
   }
   await main.send('Emulation.setDeviceMetricsOverride',{width:1200,height:675,deviceScaleFactor:1,mobile:false});
@@ -44,6 +49,8 @@ export async function runNeoSmoke({main, click, shot, passed, until, delay, rout
   assert.equal(await main.evaluate(`document.querySelector('.mb-agent-shortcuts').scrollLeft`),stopped,'changing OS motion preference stops carousel');
   await main.evaluate(`(()=>{const e=document.querySelector('.mb-agent-composer>textarea');Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set.call(e,'今天想从一件小事开始');e.dispatchEvent(new Event('input',{bubbles:true}));})()`);
   await click(main,'发送');await until(()=>main.evaluate(`document.querySelector('.mb-agent-log').getAttribute('aria-busy')==='false'&&document.querySelectorAll('.mb-agent-message').length>=2`),'assistant response');
+  await until(async()=>{const h=(await state()).data.settings.chatHistory;return h?.threads.find(t=>t.id===h.activeId)?.messages.every(m=>m.createdAt);},'message times saved');
+  assert.ok(await main.evaluate(`[...document.querySelectorAll('.mb-agent-message')].every(m=>!!m.querySelector('.mb-agent-message-avatar')&&!!m.querySelector('time[datetime]'))`),'both sides show an avatar and a real message time');
   assert.equal(await main.evaluate(`getComputedStyle(document.querySelector('.mb-agent-message:last-child')).animationDuration`),'0s');
   await shot(main,'neo-assistant-reduced-motion');
   await main.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
@@ -63,4 +70,13 @@ export async function runNeoSmoke({main, click, shot, passed, until, delay, rout
   await main.send('Emulation.setDeviceMetricsOverride',{width:440,height:800,deviceScaleFactor:1,mobile:false});
   await shot(main,'neo-profile-narrow');assert.ok(await main.evaluate(`document.documentElement.scrollWidth<=innerWidth`));
   passed('Calendar, statistics, focus, notebook and settings share the system with a narrow settings layout');
+  await main.evaluate(`document.querySelector('.profile-logout').click()`);
+  await until(()=>main.evaluate(`!!document.querySelector('.neo-auth-panel')`),'signed out for public account controls');
+  for(const url of ['/login','/register']){
+    await route(main,url);await until(()=>main.evaluate(`!!document.querySelector('.neo-auth-panel')`),'auth panel');
+    assert.ok(await main.evaluate(`(()=>{const buttons=[...document.querySelectorAll('.neo-auth-panel button.neo-unframed')];return buttons.length>0&&buttons.every(b=>getComputedStyle(b).borderTopWidth==='0px'&&getComputedStyle(b).boxShadow==='none');})()`),'secondary account actions are unframed');
+    assert.ok(await main.evaluate(`document.documentElement.scrollWidth<=innerWidth`));
+    await shot(main,`neo-unframed-${url.slice(1)}`);
+  }
+  passed('Secondary login and registration actions remain unframed and readable at narrow width');
 }

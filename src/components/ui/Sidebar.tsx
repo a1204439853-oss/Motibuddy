@@ -254,7 +254,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser, currentPet, isAuthent
   
   return (
     <div className="neo-sidebar flex flex-col h-full">
-      <section className="sidebar-profile"><button className="sidebar-avatar" aria-label={locale==='zh-CN'?'更换头像':'Change avatar'} onClick={()=>navigate('/profile')}><img src={getAvatarImage()} alt={currentUser.username}/></button><button className="sidebar-clock" aria-label={locale==='zh-CN'?'查看日历':'Open calendar'} aria-current={activeView==='calendar'?'page':undefined} onClick={()=>setActiveView('calendar')}><p>{now.toLocaleDateString(locale,{month:'long',day:'numeric',weekday:'short'})}</p><time>{now.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit',hour12:false})}</time><i className="fa-regular fa-calendar" aria-hidden="true"/></button></section><WeatherCard onOpen={()=>setActiveView('weather')} selected={activeView==='weather'}/>
+      <section className="sidebar-profile"><button className="sidebar-avatar" aria-label={locale==='zh-CN'?'更换头像':'Change avatar'} onClick={()=>navigate('/profile')}><img src={getAvatarImage()} alt={currentUser.username}/></button><button className="sidebar-clock" aria-label={locale==='zh-CN'?'查看日历':'Open calendar'} aria-current={activeView==='calendar'?'page':undefined} onClick={()=>setActiveView('calendar')}><p>{now.toLocaleDateString(locale,{month:'long',day:'numeric',weekday:'short'})}</p><time>{now.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit',hour12:false})}</time></button></section><WeatherCard onOpen={()=>setActiveView('weather')} selected={activeView==='weather'}/>
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto py-3">
         <div className="px-4 mb-3">

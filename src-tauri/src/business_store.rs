@@ -185,6 +185,7 @@ pub fn validate_data(data: &BusinessData, owner: &str) -> Result<(), String> {
             for message in messages{require(message["id"].as_u64().map_or(false,|id|id>0&&message_ids.insert(id))&&["user","assistant"].contains(&message["role"].as_str().unwrap_or(""))&&message["text"].as_str().map_or(false,|s|s.chars().count()<=8000))?;
                 if let Some(image)=message.get("image"){require(image.as_str().map_or(false,|s|s.len()<=600000&&["data:image/png;base64,","data:image/jpeg;base64,","data:image/webp;base64,"].iter().any(|p|s.starts_with(p))))?;}
                 if let Some(widget)=message.get("widget"){require(widget=="schedule")?;}
+                if let Some(at)=message.get("createdAt"){require(date(at))?;}
             }
             if let Some(workspace)=thread.get("workspace"){require(workspace["version"]==1&&date(&workspace["savedAt"])&&workspace["result"].is_object())?;}
         }
@@ -650,12 +651,15 @@ mod tests {
     #[test]
     fn chat_history_profile_and_volume_roundtrip_and_reject_invalid_edits() {
         let directory=Directory::new();let store=directory.store();let initial=store.initialize("A",empty()).unwrap();let mut data=initial.data;
-        data.settings["chatHistory"]=json!({"version":1,"activeId":"chat-one","threads":[{"id":"chat-one","title":"Read","createdAt":"2026-10-17T01:00:00Z","updatedAt":"2026-10-17T01:01:00Z","messages":[{"id":1,"role":"user","text":"Read chapter one"},{"id":2,"role":"assistant","text":"One small step"}]}]});
+        data.settings["chatHistory"]=json!({"version":1,"activeId":"chat-one","threads":[{"id":"chat-one","title":"Read","createdAt":"2026-10-17T01:00:00Z","updatedAt":"2026-10-17T01:01:00Z","messages":[{"id":1,"role":"user","text":"Read chapter one","createdAt":"2026-10-17T01:00:00Z"},{"id":2,"role":"assistant","text":"One small step"}]}]});
         data.settings["soundVolume"]=json!(35);data.settings["ttsEnabled"]=json!(false);data.settings["weatherPlace"]=json!({"name":"Hangzhou","latitude":30.25,"longitude":120.16});data.settings["focusMusic"]=json!({"enabled":true,"volume":40,"track":"dream"});
         data.settings["profileSurvey"]=json!({"status":"complete","goals":"Read","interests":"Books","minutes":60,"rhythm":"evening","ageGroup":"25-34","occupation":"office","habits":["learning","rest"]});
         data.settings["assistantFocusPromptedAt"]=json!("2026-10-17T01:00:00Z");
         let saved=store.commit("A",initial.revision,"chat-save",data.clone()).unwrap();assert_eq!(store.read("A").unwrap().unwrap(),saved);
         for (key,value) in [("assistantFocusPromptedAt",json!("invalid")),("soundVolume",json!(101)),("weatherPlace",json!({"name":"X","latitude":91,"longitude":0})),("chatHistory",json!({"version":1,"activeId":"missing","threads":[]}))]{let mut bad=data.clone();bad.settings[key]=value;assert!(store.commit("A",saved.revision,"invalid-chat-edit",bad).is_err());assert_eq!(store.read("A").unwrap().unwrap(),saved);}
+        let mut bad=data.clone();bad.settings["chatHistory"]["threads"][0]["messages"][0]["createdAt"]=json!("invalid");
+        assert!(store.commit("A",saved.revision,"invalid-message-date",bad).is_err());
+        assert_eq!(store.read("A").unwrap().unwrap(),saved);
     }
     #[test]
     fn journal_edit_draft_and_voice_preferences_persist_without_damaging_prior_record() {

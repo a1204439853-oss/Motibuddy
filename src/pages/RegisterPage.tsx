@@ -326,6 +326,7 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
             <p style={{ color: '#222222', fontWeight: 'bold', fontSize: '14px' }}>{t("Already have an account?")}</p>
             {onSwitchToLogin ? (
               <button
+                className="neo-unframed"
                 onClick={onSwitchToLogin}
                 style={{
                   color: '#FF5E5B',
@@ -341,6 +342,7 @@ const RegisterPage: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
             ) : (
               <Link to="/login">
                 <button
+                  className="neo-unframed"
                   style={{
                     color: '#FF5E5B',
                     fontWeight: 'bold',

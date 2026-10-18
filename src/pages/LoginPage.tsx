@@ -306,6 +306,7 @@ const LoginPage = () => {
               {/* Forgot Password Link - inside password box */}
               <div style={{ textAlign: 'right', marginTop: '6px' }}>
                 <button
+                  className="neo-unframed"
                   type="button"
                   onClick={() => setShowForgotPassword(true)}
                   style={{
@@ -370,6 +371,7 @@ const LoginPage = () => {
             <p style={{ color: '#222222', fontWeight: 'bold', fontSize: '14px', fontFamily }}>{t("Don't have an account?")}</p>
             <Link to="/register">
               <button
+                className="neo-unframed"
                 style={{
                   color: '#00CECB',
                   fontWeight: 'bold',
